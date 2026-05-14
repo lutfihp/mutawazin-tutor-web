@@ -1,0 +1,113 @@
+<script lang="ts">
+	import { page } from '$app/stores';
+	import { user } from '$lib/stores/auth';
+	import { sidebarOpen } from '$lib/stores/sidebar';
+	import { setLang, type Lang } from '$lib/i18n';
+	import { locale, t } from 'svelte-i18n';
+	import Logo from '$lib/components/Logo.svelte';
+	import Avatar from '$lib/components/ui/Avatar.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import { Bell, Menu, X } from 'lucide-svelte';
+
+	let scrolled = $state(false);
+	let currentLang = $derived($locale === 'id' ? 'id' : 'en');
+
+	function handleScroll() {
+		scrolled = window.scrollY > 4;
+	}
+
+	function toggleSidebar() {
+		sidebarOpen.update((v) => !v);
+	}
+
+	function switchLang(lang: Lang) {
+		setLang(lang);
+	}
+
+	// Landing page detection
+	const isLanding = $derived(!$user);
+</script>
+
+<svelte:window onscroll={handleScroll} />
+
+<header
+	class="sticky top-0 z-40 h-16 flex items-center gap-4 px-6
+	       {isLanding
+		? `bg-white/80 backdrop-blur-md transition-shadow duration-150 ${scrolled ? 'border-b border-border shadow-sm' : ''}`
+		: 'bg-white border-b border-border'}"
+>
+	<!-- Hamburger (authenticated, mobile only) -->
+	{#if $user}
+		<button
+			onclick={toggleSidebar}
+			class="sidebar-collapse:hidden w-9 h-9 flex items-center justify-center rounded-sm text-text2 hover:text-text hover:bg-bgGray transition-colors"
+			aria-label={$sidebarOpen ? $t('common.close') + ' navigation menu' : 'Open navigation menu'}
+			aria-expanded={$sidebarOpen}
+			aria-controls="sidebar-drawer"
+		>
+			{#if $sidebarOpen}
+				<X size={20} aria-hidden="true" />
+			{:else}
+				<Menu size={20} aria-hidden="true" />
+			{/if}
+		</button>
+	{/if}
+
+	<Logo />
+
+	<!-- Landing nav links (desktop only) -->
+	{#if isLanding}
+		<nav class="hidden nav-collapse:flex items-center gap-1 ml-4" aria-label="Main navigation">
+			<a href="/#" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.home')}</a>
+			<a href="/#courses" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.courses')}</a>
+			<a href="/#teachers" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.teachers')}</a>
+			<a href="/#about" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.about')}</a>
+		</nav>
+	{/if}
+
+	<div class="flex-1"></div>
+
+	<!-- Language switcher -->
+	<div
+		class="inline-flex bg-bgGray border border-border rounded-pill p-0.5 gap-0.5"
+		role="group"
+		aria-label="Language selection"
+	>
+		{#each (['en', 'id'] as Lang[]) as lang}
+			<button
+				onclick={() => switchLang(lang)}
+				class="px-2.5 py-1 text-xs font-medium rounded-pill transition-all duration-120
+				       {currentLang === lang
+					? 'bg-white text-text shadow-sm'
+					: 'text-text2 hover:text-text'}"
+				aria-pressed={currentLang === lang}
+				aria-label={lang === 'en' ? 'English' : 'Bahasa Indonesia'}
+			>
+				{lang.toUpperCase()}
+			</button>
+		{/each}
+	</div>
+
+	<!-- Authenticated: bell + avatar -->
+	{#if $user}
+		<button
+			class="relative w-9 h-9 flex items-center justify-center rounded-pill border border-border text-text2 hover:text-text transition-colors"
+			aria-label="Notifications"
+		>
+			<Bell size={16} aria-hidden="true" />
+			<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-pill border-2 border-white" aria-hidden="true"></span>
+		</button>
+		<Avatar name={$user.id} id={$user.id} size="sm" />
+	{:else}
+		<!-- Landing CTAs -->
+		<a href="/login" class="hidden nav-collapse:inline-flex items-center px-3 py-1.5 text-sm font-semibold text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">
+			{$t('nav.login')}
+		</a>
+		<Button variant="secondary" size="sm" href="/register/teacher">
+			{$t('nav.joinTeacher')}
+		</Button>
+		<Button variant="primary" size="sm" href="/register/student">
+			{$t('nav.joinStudent')}
+		</Button>
+	{/if}
+</header>

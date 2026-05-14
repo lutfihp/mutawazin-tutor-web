@@ -1,0 +1,241 @@
+<script lang="ts">
+	import { t } from 'svelte-i18n';
+	import { api } from '$lib/api';
+	import Logo from '$lib/components/Logo.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import { ChevronDown, Trash2 } from 'lucide-svelte';
+
+	let fullName = $state('');
+	let email = $state('');
+	let password = $state('');
+	let showPassword = $state(false);
+	let bio = $state('');
+	let subjects = $state<string[]>([]);
+	let tagInput = $state('');
+	let credentialsOpen = $state(false);
+	let credentials = $state([{ title: '', institution: '', year: '' }]);
+	let loading = $state(false);
+	let success = $state(false);
+	let error = $state('');
+
+	function addTag() {
+		const val = tagInput.trim().replace(/,+$/, '');
+		if (val && !subjects.includes(val)) {
+			subjects = [...subjects, val];
+		}
+		tagInput = '';
+	}
+
+	function removeTag(i: number) {
+		subjects = subjects.filter((_, idx) => idx !== i);
+	}
+
+	function handleTagKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ',') {
+			e.preventDefault();
+			addTag();
+		} else if (e.key === 'Backspace' && !tagInput) {
+			subjects = subjects.slice(0, -1);
+		}
+	}
+
+	function addCredential() {
+		credentials = [...credentials, { title: '', institution: '', year: '' }];
+	}
+
+	function removeCredential(i: number) {
+		if (credentials.length > 1) {
+			credentials = credentials.filter((_, idx) => idx !== i);
+		}
+	}
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		error = '';
+		loading = true;
+		// Commit any pending tag
+		if (tagInput.trim()) addTag();
+		try {
+			await api.post('/auth/register/teacher', {
+				full_name: fullName,
+				email,
+				password,
+				bio,
+				subjects,
+				credentials: credentials.filter((c) => c.title || c.institution || c.year).map((c) => ({
+					title: c.title,
+					institution: c.institution,
+					year: parseInt(c.year) || 0,
+				})),
+			});
+			success = true;
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : '';
+			if (msg.includes('409') || msg.toLowerCase().includes('already')) {
+				error = $t('auth.registerTeacher.errors.emailTaken');
+			} else {
+				error = $t('auth.registerTeacher.errors.unknown');
+			}
+		} finally {
+			loading = false;
+		}
+	}
+</script>
+
+<svelte:head>
+	<title>{$t('auth.registerTeacher.title')} — Mutawazin</title>
+</svelte:head>
+
+<div class="min-h-screen bg-bgGray flex flex-col items-center justify-start py-10 px-6">
+	<a href="/" class="mb-6"><Logo /></a>
+
+	<div class="w-full max-w-auth bg-white border border-border rounded-lg shadow-sm p-8">
+		{#if success}
+			<div class="text-center py-4">
+				<div class="w-16 h-16 bg-successBg rounded-pill flex items-center justify-center mx-auto mb-4">
+					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<polyline points="20 6 9 17 4 12" />
+					</svg>
+				</div>
+				<h1 class="text-[22px] font-semibold mb-2">{$t('auth.verifyEmail.successRegister.title')}</h1>
+				<p class="text-sm text-text2 mb-6">{$t('auth.verifyEmail.successRegister.body')}</p>
+				<Button variant="secondary" href="/">{$t('auth.verifyEmail.successRegister.cta')}</Button>
+			</div>
+		{:else}
+			<h1 class="text-[22px] font-semibold tracking-tight">{$t('auth.registerTeacher.title')}</h1>
+			<p class="mt-2 text-sm text-text2 mb-6">{$t('auth.registerTeacher.subtitle')}</p>
+
+			{#if error}
+				<div class="mb-4 p-3 bg-errorBg rounded-sm text-sm text-errorText" role="alert" aria-live="assertive">{error}</div>
+			{/if}
+
+			<form onsubmit={handleSubmit} novalidate class="flex flex-col gap-4">
+				<!-- Full name -->
+				<div class="flex flex-col gap-1.5">
+					<label for="fullName" class="text-[13px] font-medium">{$t('auth.registerTeacher.fullName')}</label>
+					<input id="fullName" type="text" bind:value={fullName} required placeholder={$t('auth.registerTeacher.fullNamePlaceholder')}
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+				</div>
+
+				<!-- Email -->
+				<div class="flex flex-col gap-1.5">
+					<label for="regEmail" class="text-[13px] font-medium">{$t('auth.registerTeacher.email')}</label>
+					<input id="regEmail" type="email" bind:value={email} required placeholder={$t('auth.registerTeacher.emailPlaceholder')} autocomplete="email"
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+				</div>
+
+				<!-- Password -->
+				<div class="flex flex-col gap-1.5">
+					<label for="regPassword" class="text-[13px] font-medium">{$t('auth.registerTeacher.password')}</label>
+					<div class="relative">
+						<input id="regPassword" type={showPassword ? 'text' : 'password'} bind:value={password} required placeholder={$t('auth.registerTeacher.passwordPlaceholder')} autocomplete="new-password"
+							class="w-full bg-white border border-border rounded-sm px-3 py-2.5 pr-16 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+						<button type="button" onclick={() => (showPassword = !showPassword)}
+							class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs font-semibold text-text2 hover:text-text hover:bg-bgGray rounded"
+							aria-label={showPassword ? $t('common.hide') + ' password' : $t('common.show') + ' password'}>
+							{showPassword ? $t('common.hide') : $t('common.show')}
+						</button>
+					</div>
+				</div>
+
+				<!-- Bio -->
+				<div class="flex flex-col gap-1.5">
+					<label for="bio" class="text-[13px] font-medium">{$t('auth.registerTeacher.bio')}</label>
+					<textarea id="bio" bind:value={bio} placeholder={$t('auth.registerTeacher.bioPlaceholder')} rows={3}
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-vertical min-h-[84px]"></textarea>
+				</div>
+
+				<!-- Subjects tag input -->
+				<div class="flex flex-col gap-1.5">
+					<label for="subjectInput" class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
+					<div
+						role="group"
+						aria-label={$t('auth.registerTeacher.subjects')}
+						class="flex flex-wrap gap-1.5 items-center p-2 border border-border rounded-sm bg-white min-h-[44px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+					>
+						{#each subjects as subject, i}
+							<span class="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-primary-light text-primary-dark text-xs font-medium rounded-pill">
+								{subject}
+								<button type="button" onclick={() => removeTag(i)}
+									class="w-4 h-4 grid place-items-center rounded-pill hover:bg-primary-dark/20 transition-colors"
+									aria-label="Remove {subject}">
+									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+								</button>
+							</span>
+						{/each}
+						<input
+							id="subjectInput"
+							type="text"
+							bind:value={tagInput}
+							onkeydown={handleTagKeydown}
+							onblur={addTag}
+							placeholder={subjects.length === 0 ? $t('auth.registerTeacher.subjectsPlaceholder') : ''}
+							class="flex-1 min-w-[100px] border-0 outline-none bg-transparent text-sm text-text placeholder:text-text3"
+							aria-label={$t('auth.registerTeacher.subjects')}
+						/>
+					</div>
+				</div>
+
+				<!-- Collapsible credentials -->
+				<div>
+					<button
+						type="button"
+						onclick={() => (credentialsOpen = !credentialsOpen)}
+						class="flex items-center justify-between w-full py-3 border-y border-border text-sm font-medium"
+						aria-expanded={credentialsOpen}
+						aria-controls="credentials-panel"
+					>
+						<span>{$t('auth.registerTeacher.credentials')}</span>
+						<ChevronDown size={16} class="text-text2 transition-transform duration-200 {credentialsOpen ? 'rotate-180' : ''}" aria-hidden="true" />
+					</button>
+
+					{#if credentialsOpen}
+						<div id="credentials-panel" class="pt-3 flex flex-col gap-2">
+							{#each credentials as cred, i}
+								<div class="grid grid-cols-[2fr_2fr_1fr_auto] gap-2 items-start">
+									<input type="text" bind:value={cred.title} placeholder={$t('auth.registerTeacher.credTitlePlaceholder')}
+										aria-label={$t('auth.registerTeacher.credTitle')}
+										class="w-full bg-white border border-border rounded-sm px-2.5 py-2 text-[13px] placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+									<input type="text" bind:value={cred.institution} placeholder={$t('auth.registerTeacher.credInstitutionPlaceholder')}
+										aria-label={$t('auth.registerTeacher.credInstitution')}
+										class="w-full bg-white border border-border rounded-sm px-2.5 py-2 text-[13px] placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+									<input type="number" bind:value={cred.year} placeholder="2020"
+										aria-label={$t('auth.registerTeacher.credYear')}
+										class="w-full bg-white border border-border rounded-sm px-2.5 py-2 text-[13px] placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+									<button type="button" onclick={() => removeCredential(i)} disabled={credentials.length === 1}
+										class="w-[38px] h-[38px] border border-border rounded-sm text-text2 hover:border-error hover:text-error disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+										aria-label={$t('common.removeRow')}>
+										<Trash2 size={14} aria-hidden="true" />
+									</button>
+								</div>
+							{/each}
+							<button type="button" onclick={addCredential}
+								class="text-sm font-semibold text-primary hover:text-primary-dark text-left py-1">
+								{$t('auth.registerTeacher.addCredential')}
+							</button>
+						</div>
+					{/if}
+				</div>
+
+				<Button type="submit" variant="primary" {loading} class="w-full mt-2">
+					{$t('auth.registerTeacher.submit')}
+				</Button>
+
+				<!-- Notice -->
+				<div class="flex gap-2.5 p-3 bg-bgGray border border-border rounded-sm text-[13px] text-text2">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" class="flex-none mt-0.5" aria-hidden="true">
+						<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+					</svg>
+					{$t('auth.registerTeacher.reviewNotice')}
+				</div>
+			</form>
+
+			<div class="mt-6 pt-5 border-t border-border text-sm text-text2 text-center">
+				{$t('auth.registerTeacher.alreadyHaveAccount')}
+				<a href="/login" class="ml-1 font-semibold text-primary hover:text-primary-dark hover:underline">
+					{$t('auth.registerTeacher.logIn')}
+				</a>
+			</div>
+		{/if}
+	</div>
+</div>
