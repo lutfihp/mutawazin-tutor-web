@@ -22,7 +22,7 @@
 		loading = true;
 		try {
 			await api.post('/auth/login', { identifier, password });
-			window.location.href = '/';
+			window.location.href = '/dashboard';
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : '';
 			if (msg.includes('401') || msg.toLowerCase().includes('invalid')) {
