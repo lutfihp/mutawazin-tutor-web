@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { invalidateAll } from '$app/navigation';
 	import { api } from '$lib/api';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Modal from '$lib/components/ui/Modal.svelte';
 
 	let { data } = $props();
 
@@ -15,6 +16,114 @@
 	let pendingStudents: any[] = $state([...(data.pendingStudents ?? [])]);
 	let activeTab = $state<'teachers' | 'students'>('teachers');
 	let actionLoading = $state<string | null>(null);
+
+	// All Users
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let allTeachers = $state<any[]>([]);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let allStudents = $state<any[]>([]);
+	let allUsersLoading = $state(false);
+	let statusFilter = $state('');
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const filteredUsers = $derived<any[]>(
+		(activeTab === 'teachers' ? allTeachers : allStudents).filter((u: any) =>
+			statusFilter ? (u.status ?? '').toLowerCase() === statusFilter : true
+		)
+	);
+
+	async function fetchAllUsers() {
+		allUsersLoading = true;
+		try {
+			const [teachers, students] = await Promise.all([
+				api.get<any[]>('/admin/teachers'),
+				api.get<any[]>('/admin/students'),
+			]);
+			allTeachers = Array.isArray(teachers) ? teachers : [];
+			allStudents = Array.isArray(students) ? students : [];
+		} catch {
+			allTeachers = [];
+			allStudents = [];
+		} finally {
+			allUsersLoading = false;
+		}
+	}
+
+	onMount(fetchAllUsers);
+
+	// Create user modal
+	let createOpen = $state(false);
+	let createError = $state('');
+	let createLoading = $state(false);
+	let formEl = $state<HTMLFormElement | null>(null);
+
+	let newFullName = $state('');
+	let newUsername = $state('');
+	let newPassword = $state('');
+	let showNewPassword = $state(false);
+	let newBio = $state('');
+	let newSubjects = $state<string[]>([]);
+	let newSubjectInput = $state('');
+	let newDob = $state('');
+
+	function openCreate() {
+		createOpen = true;
+		createError = '';
+		newFullName = '';
+		newUsername = '';
+		newPassword = '';
+		showNewPassword = false;
+		newBio = '';
+		newSubjects = [];
+		newSubjectInput = '';
+		newDob = '';
+	}
+
+	async function handleCreate(e: SubmitEvent) {
+		e.preventDefault();
+		createError = '';
+		createLoading = true;
+		try {
+			if (activeTab === 'teachers') {
+				await api.post('/admin/users/teacher', {
+					full_name: newFullName,
+					username: newUsername,
+					password: newPassword,
+					bio: newBio,
+					subjects: newSubjects,
+					credentials: [],
+				});
+			} else {
+				await api.post('/admin/users/student', {
+					full_name: newFullName,
+					username: newUsername,
+					password: newPassword,
+					date_of_birth: newDob,
+				});
+			}
+			createOpen = false;
+			await fetchAllUsers();
+		} catch (err: unknown) {
+			createError = err instanceof Error ? err.message : $t('auth.login.errors.unknown');
+		} finally {
+			createLoading = false;
+		}
+	}
+
+	function addNewTag() {
+		const val = newSubjectInput.trim().replace(/,+$/, '');
+		if (val && !newSubjects.includes(val)) newSubjects = [...newSubjects, val];
+		newSubjectInput = '';
+	}
+
+	function removeNewTag(i: number) {
+		newSubjects = newSubjects.filter((_, idx) => idx !== i);
+	}
+
+	function handleNewTagKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addNewTag(); }
+		else if (e.key === 'Backspace' && !newSubjectInput) newSubjects = newSubjects.slice(0, -1);
+	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const s = $derived(data.stats as any ?? {});
@@ -58,15 +167,9 @@
 
 <div class="flex flex-col gap-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between flex-wrap gap-3">
-		<div>
-			<h1 class="text-2xl font-bold">{$t('dashboard.admin.title')}</h1>
-			<p class="text-sm text-text2 mt-1 tabular">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-		</div>
-		<Button variant="secondary" size="sm">
-			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-			{$t('dashboard.admin.searchUsers')}
-		</Button>
+	<div>
+		<h1 class="text-2xl font-bold">{$t('dashboard.admin.title')}</h1>
+		<p class="text-sm text-text2 mt-1 tabular">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
 	</div>
 
 	<!-- Stats grid -->
@@ -94,6 +197,7 @@
 	</div>
 
 	<!-- Pending Teacher Approvals -->
+	<div id="pending-approvals"></div>
 	<Card padding="none">
 		{#snippet head()}
 			<h2 class="font-semibold">{$t('dashboard.admin.pendingTeachers')}</h2>
@@ -216,26 +320,185 @@
 	</Card>
 
 	<!-- All Users tabs -->
+	<div id="all-users"></div>
 	<Card padding="none">
 		{#snippet head()}
 			<h2 class="font-semibold">{$t('dashboard.admin.allUsers')}</h2>
-			<div class="flex gap-1 border border-border rounded-sm p-0.5 text-sm">
-				<button
-					onclick={() => (activeTab = 'teachers')}
-					class="px-3 py-1 rounded-sm font-medium transition-colors {activeTab === 'teachers' ? 'bg-white text-text shadow-sm' : 'text-text2 hover:text-text'}"
-					aria-pressed={activeTab === 'teachers'}
+			<div class="flex items-center gap-3 flex-wrap">
+				<div class="flex gap-1 border border-border rounded-sm p-0.5 text-sm">
+					<button
+						onclick={() => (activeTab = 'teachers')}
+						class="px-3 py-1 rounded-sm font-medium transition-colors {activeTab === 'teachers' ? 'bg-white text-text shadow-sm' : 'text-text2 hover:text-text'}"
+						aria-pressed={activeTab === 'teachers'}
+					>
+						{$t('dashboard.admin.teachersTab')}
+					</button>
+					<button
+						onclick={() => (activeTab = 'students')}
+						class="px-3 py-1 rounded-sm font-medium transition-colors {activeTab === 'students' ? 'bg-white text-text shadow-sm' : 'text-text2 hover:text-text'}"
+						aria-pressed={activeTab === 'students'}
+					>
+						{$t('dashboard.admin.studentsTab')}
+					</button>
+				</div>
+				<select
+					bind:value={statusFilter}
+					aria-label={$t('common.status')}
+					class="h-8 px-2 text-sm bg-white border border-border rounded-sm focus:outline-none focus:border-primary"
 				>
-					{$t('dashboard.admin.teachersTab')}
-				</button>
-				<button
-					onclick={() => (activeTab = 'students')}
-					class="px-3 py-1 rounded-sm font-medium transition-colors {activeTab === 'students' ? 'bg-white text-text shadow-sm' : 'text-text2 hover:text-text'}"
-					aria-pressed={activeTab === 'students'}
-				>
-					{$t('dashboard.admin.studentsTab')}
-				</button>
+					<option value="">{$t('dashboard.admin.allStatuses')}</option>
+					<option value="verified">{$t('status.verified')}</option>
+					<option value="pending">{$t('status.pending')}</option>
+					<option value="active">{$t('status.active')}</option>
+					<option value="rejected">{$t('status.rejected')}</option>
+				</select>
+				<Button variant="primary" size="sm" onclick={openCreate}>
+					{activeTab === 'teachers' ? $t('dashboard.admin.createTeacher') : $t('dashboard.admin.createStudent')}
+				</Button>
 			</div>
 		{/snippet}
-		<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.loading')}</p>
+		{#if allUsersLoading}
+			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.loading')}</p>
+		{:else if filteredUsers.length === 0}
+			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.noResults')}</p>
+		{:else}
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead class="bg-bgGray text-[13px] font-medium text-text2">
+						<tr>
+							<th class="px-5 py-3 text-left">{$t('common.name')}</th>
+							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.contact')}</th>
+							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('common.status')}</th>
+							<th class="px-5 py-3 text-left hidden lg:table-cell">{$t('common.type')}</th>
+							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-border">
+						{#each filteredUsers as user}
+							<tr class="hover:bg-bgGray/50 transition-colors">
+								<td class="px-5 py-3">
+									<div class="flex items-center gap-2.5">
+										<Avatar name={user.full_name ?? user.name ?? ''} id={user.user_id ?? user.id ?? ''} size="sm" />
+										<span class="font-medium">{user.full_name ?? user.name}</span>
+									</div>
+								</td>
+								<td class="px-5 py-3 text-text2 hidden sm:table-cell">{user.email ?? user.username ?? '—'}</td>
+								<td class="px-5 py-3 hidden md:table-cell">
+									<Badge variant={statusVariant(user.status ?? '')} label={user.status ?? ''} />
+								</td>
+								<td class="px-5 py-3 text-text2 text-xs hidden lg:table-cell">
+									{user.auth_type === 'username' || user.account_type === 'admin-created'
+										? $t('common.adminCreated')
+										: $t('common.selfRegistered')}
+								</td>
+								<td class="px-5 py-3 text-right">
+									<a
+										href={activeTab === 'teachers'
+											? `/teachers/${user.user_id ?? user.id}`
+											: `/students/${user.user_id ?? user.id}`}
+										class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline"
+									>
+										{$t('common.viewProfile')}
+									</a>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	</Card>
+
+	<!-- Create User Modal -->
+	<Modal
+		open={createOpen}
+		title={activeTab === 'teachers' ? $t('dashboard.admin.createTeacherTitle') : $t('dashboard.admin.createStudentTitle')}
+		onclose={() => (createOpen = false)}
+	>
+		{#if createError}
+			<div class="mb-4 p-3 bg-errorBg rounded-sm text-sm text-errorText" role="alert" aria-live="assertive">
+				{createError}
+			</div>
+		{/if}
+		<form bind:this={formEl} onsubmit={handleCreate} class="flex flex-col gap-4">
+			<!-- Full name -->
+			<div class="flex flex-col gap-1.5">
+				<label for="newFullName" class="text-[13px] font-medium">{$t('auth.registerTeacher.fullName')}</label>
+				<input id="newFullName" type="text" bind:value={newFullName} required
+					placeholder={$t('auth.registerTeacher.fullNamePlaceholder')}
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			</div>
+
+			<!-- Username -->
+			<div class="flex flex-col gap-1.5">
+				<label for="newUsername" class="text-[13px] font-medium">{$t('dashboard.admin.usernameLabel')}</label>
+				<input id="newUsername" type="text" bind:value={newUsername} required
+					placeholder={$t('dashboard.admin.usernamePlaceholder')}
+					autocomplete="off"
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			</div>
+
+			<!-- Password -->
+			<div class="flex flex-col gap-1.5">
+				<label for="newPassword" class="text-[13px] font-medium">{$t('auth.registerTeacher.password')}</label>
+				<div class="relative">
+					<input id="newPassword" type={showNewPassword ? 'text' : 'password'} bind:value={newPassword} required
+						autocomplete="new-password"
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 pr-16 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+					<button type="button" onclick={() => (showNewPassword = !showNewPassword)}
+						class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs font-semibold text-text2 hover:text-text hover:bg-bgGray rounded"
+						aria-label={showNewPassword ? $t('common.hide') + ' password' : $t('common.show') + ' password'}>
+						{showNewPassword ? $t('common.hide') : $t('common.show')}
+					</button>
+				</div>
+			</div>
+
+			{#if activeTab === 'teachers'}
+				<!-- Bio (optional) -->
+				<div class="flex flex-col gap-1.5">
+					<label for="newBio" class="text-[13px] font-medium">{$t('auth.registerTeacher.bio')}</label>
+					<textarea id="newBio" bind:value={newBio} rows={3}
+						placeholder={$t('auth.registerTeacher.bioPlaceholder')}
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm resize-vertical min-h-[84px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"></textarea>
+				</div>
+
+				<!-- Subjects (optional) -->
+				<div class="flex flex-col gap-1.5">
+					<label for="newSubjectInput" class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
+					<div role="group" aria-label={$t('auth.registerTeacher.subjects')}
+						class="flex flex-wrap gap-1.5 items-center p-2 border border-border rounded-sm bg-white min-h-[44px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+						{#each newSubjects as subject, i}
+							<span class="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-primary-light text-primary-dark text-xs font-medium rounded-pill">
+								{subject}
+								<button type="button" onclick={() => removeNewTag(i)}
+									class="w-4 h-4 grid place-items-center rounded-pill hover:bg-primary-dark/20 transition-colors"
+									aria-label="Remove {subject}">×</button>
+							</span>
+						{/each}
+						<input id="newSubjectInput" type="text" bind:value={newSubjectInput}
+							onkeydown={handleNewTagKeydown} onblur={addNewTag}
+							placeholder={newSubjects.length === 0 ? $t('auth.registerTeacher.subjectsPlaceholder') : ''}
+							class="flex-1 min-w-[100px] border-0 outline-none bg-transparent text-sm text-text placeholder:text-text3"
+							aria-label={$t('auth.registerTeacher.subjects')} />
+					</div>
+				</div>
+			{:else}
+				<!-- Date of birth -->
+				<div class="flex flex-col gap-1.5">
+					<label for="newDob" class="text-[13px] font-medium">{$t('auth.registerStudent.dob')}</label>
+					<input id="newDob" type="date" bind:value={newDob} required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+					<p class="text-xs text-text2">{$t('auth.registerStudent.dobHelper')}</p>
+				</div>
+			{/if}
+		</form>
+		{#snippet footer()}
+			<Button variant="secondary" size="sm" onclick={() => (createOpen = false)}>
+				{$t('common.cancel')}
+			</Button>
+			<Button variant="primary" size="sm" loading={createLoading} onclick={() => formEl?.requestSubmit()}>
+				{activeTab === 'teachers' ? $t('dashboard.admin.createTeacher') : $t('dashboard.admin.createStudent')}
+			</Button>
+		{/snippet}
+	</Modal>
 </div>
