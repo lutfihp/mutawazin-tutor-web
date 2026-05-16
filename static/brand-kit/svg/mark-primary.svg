@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Mutawazin">
+  <title>Mutawazin</title>
+  
+  <circle cx="32" cy="32" r="32" fill="#173343"></circle>
+
+  
+  <g fill="#f6f3ec">
+    
+    <path d="M6 28 Q20 30 32 33 L32 56 Q22 42 6 28 Z"></path>
+    
+    <path d="M58 28 Q44 30 32 33 L32 56 Q42 42 58 28 Z"></path>
+  </g>
+  
+  <line x1="32" y1="33" x2="32" y2="55" stroke="#2d6a5e" stroke-width="0.9" stroke-linecap="round"></line>
+
+  
+  
+  <path d="M32 33&#xA;           C 28 18, 22 12, 6 14&#xA;           C 12 28, 20 32, 32 33 Z" fill="#7ba37a"></path>
+  
+  <path d="M32 33&#xA;           C 36 18, 42 12, 58 14&#xA;           C 52 28, 44 32, 32 33 Z" fill="#7ba37a"></path>
+  
+  <path d="M32 33&#xA;           C 25 26, 23 16, 31 6&#xA;           C 41 16, 39 26, 32 33 Z" fill="#9bb39a"></path>
+
+  
+  <circle cx="31.5" cy="6.5" r="1.4" fill="#c9a35a"></circle>
+</svg>

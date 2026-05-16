@@ -361,9 +361,6 @@
     "h1Accent": "kecepatanmu sendiri",
     "h1Part2": ".",
     "subtext": "Mutawazin menghubungkan murid dengan tutor berpengalaman untuk kursus grup dan sesi 1-on-1 personal — pendidik terverifikasi, jadwal fleksibel, dan jalur yang seimbang ke depan.",
-    "trustedStudents": "2.400+",
-    "trustedTeachers": "180",
-    "trustedBy": "Dipercaya oleh {students} murid & {teachers} guru terverifikasi",
     "benefitsEyebrow": "Mengapa Mutawazin",
     "benefitsH2": "Jalur seimbang menuju pembelajaran yang lebih baik.",
     "benefitsSub": "Semua yang Anda butuhkan untuk belajar efektif — guru hebat, jadwal fleksibel, dan pelacakan kemajuan terperinci.",
@@ -390,24 +387,6 @@
     "footerBlog": "Blog",
     "footerContact": "Kontak",
     "footerPrivacy": "Kebijakan Privasi",
-    "footerCopyright": "© {year} Mutawazin. Semua hak dilindungi.",
-    "heroTeacherCard": {
-      "name": "Layla Haddad",
-      "role": "Tutor Matematika",
-      "rating": "4,9 · 128 sesi"
-    },
-    "heroProgressCard": {
-      "title": "Target minggu ini",
-      "progress": "5 dari 7 jam",
-      "sub": "Minggu ini · 72%"
-    },
-    "heroSessionCard": {
-      "badge": "Sesi grup",
-      "when": "Besok · 16:00",
-      "title": "Pengantar Kalkulus — Limit",
-      "with": "dengan Layla Haddad · 8 murid",
-      "status": "Dikonfirmasi",
-      "cta": "Lihat →"
-    }
+    "footerCopyright": "© {year} Mutawazin. Semua hak dilindungi."
   }
 }

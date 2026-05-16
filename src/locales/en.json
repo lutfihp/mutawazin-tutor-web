@@ -361,9 +361,6 @@
     "h1Accent": "your own pace",
     "h1Part2": ".",
     "subtext": "Mutawazin connects students with qualified tutors for group courses and personalized 1-on-1 sessions — verified educators, flexible scheduling, and a balanced path forward.",
-    "trustedStudents": "2,400+",
-    "trustedTeachers": "180",
-    "trustedBy": "Trusted by {students} students & {teachers} verified teachers",
     "benefitsEyebrow": "Why Mutawazin",
     "benefitsH2": "A balanced path to better learning.",
     "benefitsSub": "Everything you need to learn effectively — great teachers, flexible scheduling, and detailed progress tracking.",
@@ -390,24 +387,6 @@
     "footerBlog": "Blog",
     "footerContact": "Contact",
     "footerPrivacy": "Privacy Policy",
-    "footerCopyright": "© {year} Mutawazin. All rights reserved.",
-    "heroTeacherCard": {
-      "name": "Layla Haddad",
-      "role": "Mathematics Tutor",
-      "rating": "4.9 · 128 sessions"
-    },
-    "heroProgressCard": {
-      "title": "Your weekly goal",
-      "progress": "5 of 7 hours",
-      "sub": "This week · 72%"
-    },
-    "heroSessionCard": {
-      "badge": "Group session",
-      "when": "Tomorrow · 4:00 PM",
-      "title": "Intro to Calculus — Limits",
-      "with": "with Layla Haddad · 8 students",
-      "status": "Confirmed",
-      "cta": "View →"
-    }
+    "footerCopyright": "© {year} Mutawazin. All rights reserved."
   }
 }

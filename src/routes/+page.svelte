@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { avatarColor } from '$lib/utils/avatar';
+
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -68,65 +68,15 @@
 						</Button>
 					</div>
 
-					<div class="flex items-center gap-3">
-						<div class="flex -space-x-2" aria-hidden="true">
-							{#each ['#2563EB', '#0D9488', '#7C3AED', '#E11D48'] as color}
-								<span class="w-7 h-7 rounded-pill border-2 border-white" style="background: {color};"></span>
-							{/each}
-						</div>
-						<p class="text-[13px] text-text2">
-							{$t('landing.trustedBy', {
-								values: {
-									students: $t('landing.trustedStudents'),
-									teachers: $t('landing.trustedTeachers'),
-								},
-							})}
-						</p>
-					</div>
 				</div>
 
-				<!-- Right: UI vignette -->
-				<div class="relative hidden lg:block" style="aspect-ratio: 5/4.4;" aria-hidden="true">
-					<!-- Teacher card -->
-					<div class="absolute top-0 left-0 w-[62%] bg-white rounded-DEFAULT shadow-md p-4 border border-border">
-						<div class="flex items-center gap-3 mb-3">
-							<span class="w-10 h-10 rounded-pill flex items-center justify-center text-sm font-semibold text-white" style="background:#0D9488;">LH</span>
-							<div>
-								<div class="font-semibold text-sm">{$t('landing.heroTeacherCard.name')}</div>
-								<div class="text-xs text-text2">{$t('landing.heroTeacherCard.role')}</div>
-							</div>
-						</div>
-						<div class="flex gap-1.5 mb-2 flex-wrap">
-							<Badge variant="teal" label="Algebra" />
-							<Badge variant="teal" label="Calculus" />
-							<Badge variant="gold">★ {$t('status.featured')}</Badge>
-						</div>
-						<div class="text-xs text-text2">⭐⭐⭐⭐⭐ {$t('landing.heroTeacherCard.rating')}</div>
-					</div>
-
-					<!-- Progress card -->
-					<div class="absolute rounded-DEFAULT p-4 text-white" style="background:#2563EB; top:22%; right:0; width:44%;">
-						<div class="text-xs font-medium opacity-80 mb-1">{$t('landing.heroProgressCard.title')}</div>
-						<div class="text-xl font-bold mb-2">{$t('landing.heroProgressCard.progress')}</div>
-						<div class="h-1.5 bg-white/25 rounded-full mb-1.5">
-							<div class="h-1.5 bg-white rounded-full" style="width:72%;"></div>
-						</div>
-						<div class="text-xs opacity-70">{$t('landing.heroProgressCard.sub')}</div>
-					</div>
-
-					<!-- Session card -->
-					<div class="absolute bottom-0 bg-white rounded-DEFAULT shadow-md p-4 border border-border" style="right:5%; width:56%;">
-						<div class="flex items-center gap-2 mb-2">
-							<Badge variant="active" label={$t('landing.heroSessionCard.badge')} />
-							<span class="text-[11px] text-text2">{$t('landing.heroSessionCard.when')}</span>
-						</div>
-						<div class="font-semibold text-sm mb-1">{$t('landing.heroSessionCard.title')}</div>
-						<div class="text-xs text-text2 mb-2">{$t('landing.heroSessionCard.with')}</div>
-						<div class="flex items-center justify-between">
-							<Badge variant="success" label={$t('landing.heroSessionCard.status')} />
-							<a href="/courses" class="text-xs font-semibold text-primary hover:text-primary-dark">{$t('landing.heroSessionCard.cta')}</a>
-						</div>
-					</div>
+				<!-- Right: brand mark -->
+				<div class="hidden lg:flex items-center justify-center">
+					<img
+						src="/brand-kit/png/logo-mark-1024.png"
+						alt="Mutawazin"
+						class="w-full max-w-sm drop-shadow-md"
+					/>
 				</div>
 			</div>
 		</div>
@@ -242,7 +192,7 @@
 				{#each [
 					{ titleKey: 'landing.footerPlatformTitle', links: [['landing.footerHome', '/'], ['landing.footerCourses', '/courses'], ['landing.footerTeachers', '/teachers']] },
 					{ titleKey: 'landing.footerGetStartedTitle', links: [['landing.footerJoinTeacher', '/register/teacher'], ['landing.footerJoinStudent', '/register/student']] },
-					{ titleKey: 'landing.footerCompanyTitle', links: [['landing.footerBlog', '#'], ['landing.footerContact', '#'], ['landing.footerPrivacy', '#']] },
+					{ titleKey: 'landing.footerCompanyTitle', links: [['landing.footerContact', '#'], ['landing.footerPrivacy', '#']] },
 				] as col}
 					<nav aria-label={$t(col.titleKey)}>
 						<h3 class="text-[13px] font-semibold uppercase tracking-[0.06em] mb-4">{$t(col.titleKey)}</h3>
