@@ -6,7 +6,7 @@
 	import { locale, t } from 'svelte-i18n';
 	import Logo from '$lib/components/Logo.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+
 	import { Bell, Menu, X } from 'lucide-svelte';
 
 	let scrolled = $state(false);
@@ -95,7 +95,6 @@
 			aria-label="Notifications"
 		>
 			<Bell size={16} aria-hidden="true" />
-			<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-pill border-2 border-white" aria-hidden="true"></span>
 		</button>
 		<Avatar name={$user.id} id={$user.id} size="sm" />
 	{:else}
@@ -103,11 +102,5 @@
 		<a href="/login" class="hidden nav-collapse:inline-flex items-center px-3 py-1.5 text-sm font-semibold text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">
 			{$t('nav.login')}
 		</a>
-		<Button variant="secondary" size="sm" href="/register/teacher">
-			{$t('nav.joinTeacher')}
-		</Button>
-		<Button variant="primary" size="sm" href="/register/student">
-			{$t('nav.joinStudent')}
-		</Button>
 	{/if}
 </header>
