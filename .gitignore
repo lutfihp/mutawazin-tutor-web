@@ -22,6 +22,5 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Design handoff — local reference only, never committed
-design_handoff_mutawazin/
-2026-05-13-fe-handoff-sveltekit.md
+# Handoff documents — local reference only, never committed
+handoffs/
