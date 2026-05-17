@@ -49,7 +49,36 @@
 		}
 	}
 
-	onMount(fetchAllUsers);
+	// Catalog management
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let pendingCatalog = $state<any[]>([]);
+	let catalogActionLoading = $state<string | null>(null);
+
+	async function fetchPendingCatalog() {
+		try {
+			const entries = await api.get<any[]>('/admin/catalog?status=pending');
+			pendingCatalog = Array.isArray(entries) ? entries : [];
+		} catch {
+			pendingCatalog = [];
+		}
+	}
+
+	async function handleCatalogAction(id: string, action: 'approve' | 'reject') {
+		catalogActionLoading = `${id}-${action}`;
+		try {
+			await api.patch(`/admin/catalog/${id}/verify`, { action });
+			pendingCatalog = pendingCatalog.filter((e: any) => e.id !== id);
+		} catch {
+			// keep optimistic state
+		} finally {
+			catalogActionLoading = null;
+		}
+	}
+
+	onMount(() => {
+		fetchAllUsers();
+		fetchPendingCatalog();
+	});
 
 	// Create user modal
 	let createOpen = $state(false);
@@ -400,6 +429,66 @@
 									>
 										{$t('common.viewProfile')}
 									</a>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</Card>
+
+	<!-- Pending Catalog Suggestions -->
+	<div id="catalog"></div>
+	<Card padding="none">
+		{#snippet head()}
+			<h2 class="font-semibold">{$t('dashboard.admin.pendingCatalog')}</h2>
+			{#if pendingCatalog.length > 0}
+				<Badge variant="warning" label={$t('dashboard.admin.waitingTeachers', { values: { n: pendingCatalog.length } })} />
+			{/if}
+		{/snippet}
+		{#if pendingCatalog.length === 0}
+			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.admin.noPendingCatalog')}</p>
+		{:else}
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead class="bg-bgGray text-[13px] font-medium text-text2">
+						<tr>
+							<th class="px-5 py-3 text-left">{$t('dashboard.admin.catalogName')}</th>
+							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.status')}</th>
+							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('dashboard.admin.subjects')}</th>
+							<th class="px-5 py-3 text-left hidden lg:table-cell">{$t('dashboard.admin.ageCategory')}</th>
+							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-border">
+						{#each pendingCatalog as entry}
+							<tr class="hover:bg-bgGray/50 transition-colors">
+								<td class="px-5 py-3 font-medium">{entry.name}</td>
+								<td class="px-5 py-3 hidden sm:table-cell">
+									<Badge variant="warning" label={entry.status ?? 'pending'} />
+								</td>
+								<td class="px-5 py-3 text-text2 hidden md:table-cell">{entry.subject}</td>
+								<td class="px-5 py-3 hidden lg:table-cell">
+									<div class="flex flex-wrap gap-1">
+										{#each (entry.age_categories ?? []) as age}
+											<Badge variant="violet" label={age} />
+										{/each}
+									</div>
+								</td>
+								<td class="px-5 py-3 text-right">
+									<div class="flex items-center justify-end gap-2">
+										<Button variant="success" size="sm"
+											loading={catalogActionLoading === `${entry.id}-approve`}
+											onclick={() => handleCatalogAction(entry.id, 'approve')}>
+											{$t('dashboard.admin.catalogApprove')}
+										</Button>
+										<Button variant="danger" size="sm"
+											loading={catalogActionLoading === `${entry.id}-reject`}
+											onclick={() => handleCatalogAction(entry.id, 'reject')}>
+											{$t('dashboard.admin.catalogReject')}
+										</Button>
+									</div>
 								</td>
 							</tr>
 						{/each}
