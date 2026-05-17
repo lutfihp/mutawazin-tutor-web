@@ -40,12 +40,17 @@
 	let createOpen = $state(false);
 	let newCatalogId = $state('');
 	let newDesc = $state('');
+	let newCourseAges = $state<string[]>([]);
 	let createLoading = $state(false);
+
+	function toggleCourseAge(age: string) {
+		newCourseAges = newCourseAges.includes(age)
+			? newCourseAges.filter((a) => a !== age)
+			: [...newCourseAges, age];
+	}
 	let catalogEntries = $state<{ id: string; name: string; subject: string }[]>([]);
 	let suggestMode = $state(false);
 	let suggestName = $state('');
-	let suggestSubject = $state('');
-	let suggestAges = $state<string[]>([]);
 	let suggestLoading = $state(false);
 	let suggestSuccess = $state(false);
 	let catalogLoading = $state(false);
@@ -54,7 +59,7 @@
 		if (catalogEntries.length > 0) return;
 		catalogLoading = true;
 		try {
-			const entries = await api.get<{ id: string; name: string; subject: string; age_categories: string[]; status: string }[]>('/catalog?status=verified');
+			const entries = await api.get<{ id: string; name: string; status: string }[]>('/subjects?status=verified');
 			catalogEntries = Array.isArray(entries) ? entries : [];
 		} catch {
 			catalogEntries = [];
@@ -97,11 +102,13 @@
 		createLoading = true;
 		try {
 			await api.post('/courses', {
-				catalog_entry_id: newCatalogId,
+				subject_id: newCatalogId,
+				age_categories: newCourseAges,
 				description: newDesc,
 			});
 			createOpen = false;
 			newCatalogId = '';
+			newCourseAges = [];
 			newDesc = '';
 			await fetchCourses();
 		} finally {
@@ -113,25 +120,13 @@
 		e.preventDefault();
 		suggestLoading = true;
 		try {
-			await api.post('/catalog/suggest', {
-				name: suggestName,
-				subject: suggestSubject,
-				age_categories: suggestAges,
-			});
+			await api.post('/subjects/suggest', { name: suggestName });
 			suggestSuccess = true;
 			suggestName = '';
-			suggestSubject = '';
-			suggestAges = [];
 			await fetchCourses();
 		} finally {
 			suggestLoading = false;
 		}
-	}
-
-	function toggleSuggestAge(age: string) {
-		suggestAges = suggestAges.includes(age)
-			? suggestAges.filter((a) => a !== age)
-			: [...suggestAges, age];
 	}
 
 	onMount(fetchCourses);
@@ -193,7 +188,7 @@
 
 		<!-- Age chip group -->
 		<div class="inline-flex bg-white border border-border rounded-sm p-0.5 gap-0.5 h-10 items-center" role="group" aria-label="Age category filter">
-			{#each [['Kids', $t('courses.ageKids')], ['Teens', $t('courses.ageTeens')], ['Adults', $t('courses.ageAdults')]] as [val, label]}
+			{#each [['pre-school', $t('courses.agePreSchool')], ['elementary', $t('courses.ageElementary')], ['middle-school', $t('courses.ageMiddleSchool')], ['high-school', $t('courses.ageHighSchool')], ['general', $t('courses.ageGeneral')]] as [val, label]}
 				<button
 					onclick={() => toggleAge(val)}
 					aria-pressed={ageFilters.includes(val)}
@@ -280,7 +275,7 @@
 </div>
 
 <!-- Create Course Modal -->
-<Modal open={createOpen} title={$t('courses.modal.createTitle')} onclose={() => { createOpen = false; suggestMode = false; suggestSuccess = false; }} maxWidth="lg">
+<Modal open={createOpen} title={$t('courses.modal.createTitle')} onclose={() => { createOpen = false; suggestMode = false; suggestSuccess = false; newCourseAges = []; }} maxWidth="lg">
 	<form onsubmit={createCourse} class="flex flex-col gap-4">
 		<div class="flex flex-col gap-1.5">
 			<label for="catalogEntry" class="text-[13px] font-medium">{$t('courses.modal.catalogLabel')}</label>
@@ -291,11 +286,25 @@
 					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15">
 					<option value="">{$t('courses.modal.catalogPlaceholder')}</option>
 					{#each catalogEntries as entry}
-						<option value={entry.id}>{entry.name} ({entry.subject})</option>
+						<option value={entry.id}>{entry.name}</option>
 					{/each}
 				</select>
 			{/if}
 		</div>
+		<!-- Age categories for course -->
+		<div class="flex flex-col gap-1.5">
+			<p class="text-[13px] font-medium">{$t('courses.suggestAgeLabel')}</p>
+			<div class="flex flex-wrap gap-2">
+				{#each [['pre-school', $t('courses.agePreSchool')], ['elementary', $t('courses.ageElementary')], ['middle-school', $t('courses.ageMiddleSchool')], ['high-school', $t('courses.ageHighSchool')], ['general', $t('courses.ageGeneral')]] as [val, label]}
+					<button type="button" onclick={() => toggleCourseAge(val)}
+						class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+						       {newCourseAges.includes(val) ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+						{label}
+					</button>
+				{/each}
+			</div>
+		</div>
+
 		<!-- Suggest toggle -->
 		{#if !suggestMode && !suggestSuccess}
 			<button type="button" onclick={() => (suggestMode = true)}
@@ -323,24 +332,6 @@
 							<input id="suggestName" type="text" bind:value={suggestName} required
 								placeholder={$t('courses.suggestNamePlaceholder')}
 								class="w-full bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-						</div>
-						<div class="flex flex-col gap-1.5">
-							<label for="suggestSubject" class="text-[13px] font-medium">{$t('courses.suggestSubjectLabel')}</label>
-							<input id="suggestSubject" type="text" bind:value={suggestSubject} required
-								placeholder={$t('courses.suggestSubjectPlaceholder')}
-								class="w-full bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-						</div>
-						<div class="flex flex-col gap-1.5">
-							<p class="text-[13px] font-medium">{$t('courses.suggestAgeLabel')}</p>
-							<div class="flex gap-2">
-								{#each [['Kids', $t('courses.ageKids')], ['Teens', $t('courses.ageTeens')], ['Adults', $t('courses.ageAdults')]] as [val, label]}
-									<button type="button" onclick={() => toggleSuggestAge(val)}
-										class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
-										       {suggestAges.includes(val) ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
-										{label}
-									</button>
-								{/each}
-							</div>
 						</div>
 						<Button variant="teal" size="sm" loading={suggestLoading}
 							onclick={(e: MouseEvent) => { e.preventDefault(); suggestCatalogEntry(new SubmitEvent('submit')); }}>
