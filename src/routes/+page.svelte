@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	import Navbar from '$lib/components/layout/Navbar.svelte';
@@ -15,6 +16,41 @@
 	];
 
 	const year = new Date().getFullYear();
+
+	// Public search
+	const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+	let searchQuery = $state('');
+	let searchTab = $state<'courses' | 'teachers'>('courses');
+	let courseResults = $state<any[]>([]);
+	let teacherResults = $state<any[]>([]);
+	let searchLoading = $state(false);
+	let searchDebounce: ReturnType<typeof setTimeout>;
+
+	async function runSearch(q: string) {
+		searchLoading = true;
+		try {
+			const [courses, teachers] = await Promise.all([
+				fetch(`${BASE}/search/courses${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+					.then(r => r.ok ? r.json() : []),
+				fetch(`${BASE}/search/teachers${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+					.then(r => r.ok ? r.json() : []),
+			]);
+			courseResults = Array.isArray(courses) ? courses : [];
+			teacherResults = Array.isArray(teachers) ? teachers : [];
+		} catch {
+			courseResults = [];
+			teacherResults = [];
+		} finally {
+			searchLoading = false;
+		}
+	}
+
+	function handleSearchInput() {
+		clearTimeout(searchDebounce);
+		searchDebounce = setTimeout(() => runSearch(searchQuery), 300);
+	}
+
+	onMount(() => runSearch(''));
 </script>
 
 <svelte:head>
@@ -71,11 +107,12 @@
 				</div>
 
 				<!-- Right: brand mark -->
-				<div class="hidden lg:flex items-center justify-center">
+				<div class="hidden lg:flex items-start justify-center">
 					<img
 						src="/brand-kit/png/logo-mark-1024.png"
 						alt="Mutawazin"
-						class="w-full max-w-sm drop-shadow-md"
+						class="w-full max-w-lg"
+						style="mix-blend-mode: multiply;"
 					/>
 				</div>
 			</div>
@@ -113,6 +150,111 @@
 					</div>
 				{/each}
 			</div>
+		</div>
+	</section>
+
+	<!-- ── Search ── -->
+	<section id="courses" class="py-24 bg-white border-t border-border">
+		<div class="max-w-content mx-auto px-6 lg:px-12">
+			<div class="text-center mb-10">
+				<p class="text-xs font-semibold uppercase tracking-widest text-primary mb-2">{$t('landing.searchEyebrow')}</p>
+				<h2 class="text-3xl font-bold tracking-tight">{$t('landing.searchH2')}</h2>
+			</div>
+
+			<!-- Search bar -->
+			<div class="flex gap-3 max-w-xl mx-auto mb-8">
+				<input
+					type="search"
+					bind:value={searchQuery}
+					oninput={handleSearchInput}
+					placeholder={$t('landing.searchPlaceholder')}
+					class="flex-1 h-11 px-4 bg-white border border-border rounded-sm text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+				/>
+				<button
+					onclick={() => runSearch(searchQuery)}
+					class="h-11 px-5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-sm transition-colors"
+				>
+					{$t('landing.searchButton')}
+				</button>
+			</div>
+
+			<!-- Tab switcher -->
+			<div class="flex gap-1 bg-bgGray border border-border rounded-sm p-0.5 w-fit mx-auto mb-8">
+				{#each ([['courses', $t('landing.searchTabCourses')], ['teachers', $t('landing.searchTabTeachers')]] as const) as [tab, label]}
+					<button
+						onclick={() => (searchTab = tab)}
+						class="px-4 py-2 text-sm font-medium rounded-sm transition-colors
+						       {searchTab === tab ? 'bg-white text-text shadow-sm' : 'text-text2 hover:text-text'}"
+						aria-pressed={searchTab === tab}
+					>
+						{label}
+					</button>
+				{/each}
+			</div>
+
+			<!-- Results -->
+			{#if searchLoading}
+				<div class="flex justify-center py-10" role="status">
+					<div class="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+				</div>
+			{:else if searchTab === 'courses'}
+				{#if courseResults.length === 0}
+					<p class="text-center text-text2 py-10">
+						{searchQuery ? $t('landing.searchEmpty', { values: { q: searchQuery } }) : $t('landing.searchDefaultEmpty')}
+					</p>
+				{:else}
+					<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+						{#each courseResults as course}
+							<div class="bg-white border border-border rounded-DEFAULT shadow-sm p-5 flex flex-col gap-3">
+								<div class="flex flex-wrap gap-1.5">
+									<Badge variant="active" label={course.subject} />
+									{#each (course.age_categories ?? []) as age}
+										<Badge variant="violet" label={age} />
+									{/each}
+								</div>
+								<div class="font-semibold text-base">{course.name}</div>
+								{#if course.teachers?.length}
+									<div class="flex -space-x-2">
+										{#each course.teachers.slice(0, 4) as teacher}
+											<Avatar name={teacher.full_name} id={teacher.user_id} size="sm" src={teacher.photo_url} class="border-2 border-white" />
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{:else}
+				{#if teacherResults.length === 0}
+					<p class="text-center text-text2 py-10">
+						{searchQuery ? $t('landing.searchEmpty', { values: { q: searchQuery } }) : $t('landing.searchDefaultEmpty')}
+					</p>
+				{:else}
+					<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+						{#each teacherResults as teacher}
+							<div class="bg-white border border-border rounded-DEFAULT shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 flex flex-col p-5 gap-3">
+								<div class="flex items-center gap-3">
+									<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={teacher.photo_url} />
+									<div>
+										<div class="font-semibold">{teacher.full_name}</div>
+										<div class="text-xs text-text2">{$t('landing.searchActiveCourses', { values: { n: teacher.active_course_count ?? 0 } })}</div>
+									</div>
+								</div>
+								{#if teacher.subjects?.length}
+									<div class="flex flex-wrap gap-1.5">
+										{#each teacher.subjects.slice(0, 3) as subject}
+											<Badge variant="teal" label={subject} />
+										{/each}
+									</div>
+								{/if}
+								<a href="/teachers/{teacher.user_id}" class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
+									{$t('common.viewProfile')}
+								</a>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{/if}
 		</div>
 	</section>
 
@@ -178,12 +320,18 @@
 			<div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
 				<div class="col-span-2 lg:col-span-1">
 					<a href="/" class="inline-flex items-center gap-2 font-bold text-lg mb-4" aria-label="Mutawazin">
-						<span class="relative w-7 h-7 rounded-sm overflow-hidden grid place-items-center" style="background:#2563EB;">
-							<span class="absolute inset-x-0 bottom-0 h-1/2" style="background:#0D9488;"></span>
-							<svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="relative z-10" aria-hidden="true">
-								<path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
-							</svg>
-						</span>
+						<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 flex-none" aria-hidden="true">
+							<circle cx="32" cy="32" r="32" fill="#173343" />
+							<g fill="#f6f3ec">
+								<path d="M6 28 Q20 30 32 33 L32 56 Q22 42 6 28 Z" />
+								<path d="M58 28 Q44 30 32 33 L32 56 Q42 42 58 28 Z" />
+							</g>
+							<line x1="32" y1="33" x2="32" y2="55" stroke="#2d6a5e" stroke-width="0.9" stroke-linecap="round" />
+							<path d="M32 33 C 28 18, 22 12, 6 14 C 12 28, 20 32, 32 33 Z" fill="#7ba37a" />
+							<path d="M32 33 C 36 18, 42 12, 58 14 C 52 28, 44 32, 32 33 Z" fill="#7ba37a" />
+							<path d="M32 33 C 25 26, 23 16, 31 6 C 41 16, 39 26, 32 33 Z" fill="#9bb39a" />
+							<circle cx="31.5" cy="6.5" r="1.4" fill="#c9a35a" />
+						</svg>
 						Mutawazin
 					</a>
 					<p class="text-sm max-w-[280px]" style="color:#94A3B8;">{$t('landing.footerAbout')}</p>
