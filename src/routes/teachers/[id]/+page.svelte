@@ -89,11 +89,6 @@
 					{#each (profile.subjects ?? []) as subject}
 						<Badge variant="teal" label={subject} />
 					{/each}
-					{#if isOwn && editMode}
-						<button class="inline-flex items-center gap-1 px-2.5 py-0.5 border border-dashed border-primary text-primary text-xs font-medium rounded-pill hover:bg-primary-light transition-colors">
-							{$t('profile.teacher.addSubject')}
-						</button>
-					{/if}
 				</div>
 				<p class="text-sm text-text2">
 					{$t('profile.teacher.yearsExperience', { values: { n: profile.years_experience ?? 0 } })}
