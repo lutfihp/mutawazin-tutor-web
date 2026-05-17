@@ -16,7 +16,8 @@
     "myReports": "My Reports",
     "overview": "Overview",
     "pendingApprovals": "Pending Approvals",
-    "settings": "Settings"
+    "settings": "Settings",
+    "catalog": "Catalog"
   },
   "auth": {
     "login": {

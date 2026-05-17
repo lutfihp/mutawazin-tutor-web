@@ -16,7 +16,8 @@
     "myReports": "Laporan Saya",
     "overview": "Ringkasan",
     "pendingApprovals": "Menunggu Persetujuan",
-    "settings": "Pengaturan"
+    "settings": "Pengaturan",
+    "catalog": "Katalog"
   },
   "auth": {
     "login": {

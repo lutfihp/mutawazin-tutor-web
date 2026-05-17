@@ -11,7 +11,6 @@
 		FileText,
 		Users,
 		ShieldCheck,
-		Settings,
 	} from 'lucide-svelte';
 
 	let { role }: { role: 'admin' | 'teacher' | 'student' } = $props();
@@ -26,11 +25,10 @@
 
 	const navByRole: Record<'admin' | 'teacher' | 'student', NavItem[]> = {
 		admin: [
-			{ id: 'overview',  labelKey: 'nav.overview',          href: '/admin',       icon: Home },
-			{ id: 'approvals', labelKey: 'nav.pendingApprovals',  href: '/admin?tab=approvals', icon: ShieldCheck, count: 0 },
-			{ id: 'teachers',  labelKey: 'nav.teachers',          href: '/admin?tab=teachers',  icon: Users },
-			{ id: 'students',  labelKey: 'nav.students',          href: '/admin?tab=students',  icon: Users },
-			{ id: 'settings',  labelKey: 'nav.settings',          href: '/admin?tab=settings',  icon: Settings },
+			{ id: 'overview',  labelKey: 'nav.overview',              href: '/admin',                   icon: Home },
+			{ id: 'approvals', labelKey: 'nav.pendingApprovals',      href: '/admin#pending-approvals', icon: ShieldCheck },
+			{ id: 'users',     labelKey: 'dashboard.admin.allUsers',  href: '/admin#all-users',         icon: Users },
+			{ id: 'catalog',   labelKey: 'nav.catalog',               href: '/admin#catalog',           icon: BookOpen },
 		],
 		teacher: [
 			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',  icon: Home },
@@ -52,7 +50,9 @@
 	const items = $derived(navByRole[role] ?? []);
 
 	function isActive(href: string): boolean {
-		return $page.url.pathname === href.split('?')[0];
+		const [path, hash] = href.split('#');
+		if (hash) return $page.url.pathname === path && $page.url.hash === `#${hash}`;
+		return $page.url.pathname === path && !$page.url.hash;
 	}
 
 	function closeSidebar() {
