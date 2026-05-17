@@ -86,7 +86,108 @@
 	}
 
 	$effect(() => { year; month; fetchSessions(); });
-	onMount(fetchAvailability);
+
+	// Recurring templates (teacher only)
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let recurringTemplates = $state<any[]>([]);
+	let recurringOpen = $state(false);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let editingTemplate = $state<any | null>(null);
+	let recurringDeleteLoading = $state<string | null>(null);
+
+	let rType = $state<'group' | 'private'>('group');
+	let rCourseId = $state('');
+	let rStudentId = $state('');
+	let rTitle = $state('');
+	let rDayOfWeek = $state(0);
+	let rStartTime = $state('');
+	let rDuration = $state(60);
+	let rLoading = $state(false);
+	let rFormEl = $state<HTMLFormElement | null>(null);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let teacherCourses = $state<any[]>([]);
+
+	async function fetchRecurringTemplates() {
+		if (!isTeacher) return;
+		try {
+			const d = await api.get<any[]>('/sessions/recurring');
+			recurringTemplates = Array.isArray(d) ? d : [];
+		} catch {
+			recurringTemplates = [];
+		}
+	}
+
+	async function fetchTeacherCourses() {
+		if (!isTeacher) return;
+		try {
+			const d = await api.get<any[]>('/courses');
+			teacherCourses = Array.isArray(d) ? d : [];
+		} catch {
+			teacherCourses = [];
+		}
+	}
+
+	function openAddRecurring() {
+		editingTemplate = null;
+		rType = 'group'; rCourseId = ''; rStudentId = '';
+		rTitle = ''; rDayOfWeek = 0; rStartTime = ''; rDuration = 60;
+		recurringOpen = true;
+	}
+
+	function openEditRecurring(template: any) {
+		editingTemplate = template;
+		rType = template.type ?? 'group';
+		rCourseId = template.course_id ?? '';
+		rStudentId = template.student_id ?? '';
+		rTitle = template.title ?? '';
+		rDayOfWeek = template.day_of_week ?? 0;
+		rStartTime = template.start_time ?? '';
+		rDuration = template.duration_minutes ?? 60;
+		recurringOpen = true;
+	}
+
+	async function handleRecurringSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		rLoading = true;
+		try {
+			const body = {
+				type: rType,
+				course_id: rType === 'group' ? rCourseId : undefined,
+				student_id: rType === 'private' ? rStudentId : undefined,
+				title: rTitle,
+				day_of_week: rDayOfWeek,
+				start_time: rStartTime,
+				duration_minutes: rDuration,
+			};
+			if (editingTemplate) {
+				await api.put(`/sessions/recurring/${editingTemplate.id}`, body);
+			} else {
+				await api.post('/sessions/recurring', body);
+			}
+			recurringOpen = false;
+			await Promise.all([fetchSessions(), fetchRecurringTemplates()]);
+		} finally {
+			rLoading = false;
+		}
+	}
+
+	async function deleteRecurringTemplate(id: string) {
+		if (!confirm($t('calendar.deleteRecurringConfirm'))) return;
+		recurringDeleteLoading = id;
+		try {
+			await api.delete(`/sessions/recurring/${id}`);
+			recurringTemplates = recurringTemplates.filter((t: any) => t.id !== id);
+			await fetchSessions();
+		} finally {
+			recurringDeleteLoading = null;
+		}
+	}
+
+	onMount(() => {
+		fetchAvailability();
+		fetchRecurringTemplates();
+		fetchTeacherCourses();
+	});
 </script>
 
 <svelte:head>
@@ -128,6 +229,9 @@
 				{$t('common.today')}
 			</button>
 			{#if isTeacher}
+				<Button variant="secondary" size="sm" onclick={openAddRecurring}>
+					{$t('calendar.addRecurring')}
+				</Button>
 				<Button variant="primary" size="sm" onclick={() => (addOpen = true)}>
 					{$t('calendar.addSession')}
 				</Button>
@@ -173,7 +277,7 @@
 										class="w-full text-left text-[11px] font-medium rounded px-1.5 py-0.5 truncate tabular {pillClass(session.type, session.status)}"
 										title={session.title}
 									>
-										{session.starts_at?.slice(11, 16)} {session.title}
+										{session.recurring_template_id ? '↻ ' : ''}{session.starts_at?.slice(11, 16)} {session.title}
 									</button>
 								{/each}
 								{#if daySessions.length > 2}
@@ -194,6 +298,44 @@
 		<!-- Right panel -->
 		<div class="flex flex-col gap-4">
 			{#if isTeacher}
+				<!-- Recurring templates panel -->
+				<div class="bg-white border border-border rounded-DEFAULT p-4">
+					<div class="flex items-center justify-between mb-3">
+						<h2 class="font-semibold">{$t('calendar.recurringTitle')}</h2>
+						<Button variant="secondary" size="sm" onclick={openAddRecurring}>{$t('calendar.addRecurring')}</Button>
+					</div>
+					{#if recurringTemplates.length === 0}
+						<p class="text-sm text-text2">{$t('calendar.noRecurring')}</p>
+					{:else}
+						<div class="flex flex-col gap-1.5">
+							{#each recurringTemplates as tmpl}
+								<div class="flex items-center justify-between text-sm py-1 border-b border-border last:border-0">
+									<div>
+										<span class="font-medium tabular">
+											{($t('calendar.modal.days') as unknown as string[])[tmpl.day_of_week] ?? tmpl.day_of_week}
+											· {tmpl.start_time}
+										</span>
+										<span class="text-text2 ml-1.5">— {tmpl.title}</span>
+									</div>
+									<div class="flex gap-1">
+										<button onclick={() => openEditRecurring(tmpl)}
+											class="text-text2 hover:text-text p-1"
+											aria-label="Edit recurring session">
+											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+										</button>
+										<button onclick={() => deleteRecurringTemplate(tmpl.id)}
+											class="text-text2 hover:text-error p-1"
+											aria-label="Delete recurring session"
+											disabled={recurringDeleteLoading === tmpl.id}>
+											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+										</button>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+
 				<div class="bg-white border border-border rounded-DEFAULT p-4">
 					<div class="flex items-center justify-between mb-3">
 						<h2 class="font-semibold">{$t('calendar.myAvailability')}</h2>
@@ -266,6 +408,12 @@
 					<Badge variant={selectedSession.status === 'Confirmed' ? 'active' : selectedSession.status === 'Completed' ? 'gray' : 'error'} label={selectedSession.status} />
 				</div>
 			</div>
+			{#if selectedSession.recurring_template_id}
+				<p class="text-sm text-text2 flex items-center gap-1.5">
+					<span class="text-primary font-medium">↻</span>
+					{$t('calendar.recurringBadge')}
+				</p>
+			{/if}
 		</div>
 		{#snippet footer()}
 			{#if isTeacher && (selectedSession.status === 'Confirmed' || selectedSession.status === 'confirmed')}
@@ -286,6 +434,90 @@
 		</div>
 		{#snippet footer()}
 			<Button variant="secondary" size="sm" onclick={() => (addOpen = false)}>{$t('common.cancel')}</Button>
+		{/snippet}
+	</Modal>
+
+	<!-- Recurring Session modal -->
+	<Modal
+		open={recurringOpen}
+		title={editingTemplate ? $t('calendar.modal.recurringEditTitle') : $t('calendar.modal.recurringTitle')}
+		onclose={() => (recurringOpen = false)}
+	>
+		<form bind:this={rFormEl} onsubmit={handleRecurringSubmit} class="flex flex-col gap-4">
+			<!-- Type -->
+			<div>
+				<p class="text-[13px] font-medium mb-2">{$t('calendar.modal.typeLabel')}</p>
+				<div class="flex gap-2" role="radiogroup" aria-label={$t('calendar.modal.typeLabel')}>
+					{#each ([['group', $t('calendar.modal.typeGroup')], ['private', $t('calendar.modal.typePrivate')]] as const) as [val, label]}
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="rType" value={val} bind:group={rType} class="sr-only" />
+							<span class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+							             {rType === val ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+								{label}
+							</span>
+						</label>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Course (group) or Student (private) -->
+			{#if rType === 'group'}
+				<div class="flex flex-col gap-1.5">
+					<label for="rCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
+					<select id="rCourseId" bind:value={rCourseId} required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+						<option value="">— {$t('calendar.modal.courseLabel')}</option>
+						{#each teacherCourses as course}
+							<option value={course.id}>{course.name ?? course.title}</option>
+						{/each}
+					</select>
+				</div>
+			{:else}
+				<div class="flex flex-col gap-1.5">
+					<label for="rStudentId" class="text-[13px] font-medium">{$t('calendar.modal.studentLabel')}</label>
+					<input id="rStudentId" type="text" bind:value={rStudentId} required
+						placeholder="Student ID"
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+				</div>
+			{/if}
+
+			<!-- Title -->
+			<div class="flex flex-col gap-1.5">
+				<label for="rTitle" class="text-[13px] font-medium">{$t('calendar.modal.addTitle')}</label>
+				<input id="rTitle" type="text" bind:value={rTitle} required
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			</div>
+
+			<!-- Day of week -->
+			<div class="flex flex-col gap-1.5">
+				<label for="rDay" class="text-[13px] font-medium">{$t('calendar.modal.dayLabel')}</label>
+				<select id="rDay" bind:value={rDayOfWeek}
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+					{#each ($t('calendar.modal.days') as unknown as string[]) as day, i}
+						<option value={i}>{day}</option>
+					{/each}
+				</select>
+			</div>
+
+			<!-- Start time + Duration -->
+			<div class="grid grid-cols-2 gap-3">
+				<div class="flex flex-col gap-1.5">
+					<label for="rStart" class="text-[13px] font-medium">{$t('calendar.modal.startLabel')}</label>
+					<input id="rStart" type="time" bind:value={rStartTime} required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+				</div>
+				<div class="flex flex-col gap-1.5">
+					<label for="rDuration" class="text-[13px] font-medium">{$t('calendar.modal.durationLabel')}</label>
+					<input id="rDuration" type="number" bind:value={rDuration} min="15" step="15" required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary tabular" />
+				</div>
+			</div>
+		</form>
+		{#snippet footer()}
+			<Button variant="secondary" size="sm" onclick={() => (recurringOpen = false)}>{$t('common.cancel')}</Button>
+			<Button variant="primary" size="sm" loading={rLoading} onclick={() => rFormEl?.requestSubmit()}>
+				{editingTemplate ? $t('common.save') : $t('calendar.addRecurring')}
+			</Button>
 		{/snippet}
 	</Modal>
 {/if}

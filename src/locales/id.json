@@ -301,6 +301,11 @@
     "legendPrivate": "Sesi privat",
     "legendCompleted": "Selesai",
     "legendAvailability": "Ketersediaan Anda",
+    "recurringTitle": "Sesi Berulang",
+    "addRecurring": "+ Berulang",
+    "noRecurring": "Tidak ada sesi berulang.",
+    "recurringBadge": "Bagian dari seri berulang",
+    "deleteRecurringConfirm": "Ini akan menghapus semua sesi mendatang dalam seri ini. Lanjutkan?",
     "daysShort": ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
     "modal": {
       "detailTitle": "Detail sesi",
@@ -316,7 +321,12 @@
       "markCompleted": "Tandai Selesai",
       "cancelSession": "Batalkan Sesi",
       "when": "Waktu",
-      "status": "Status"
+      "status": "Status",
+      "recurringTitle": "Tambah Sesi Berulang",
+      "recurringEditTitle": "Edit Sesi Berulang",
+      "dayLabel": "Hari dalam seminggu",
+      "durationLabel": "Durasi (menit)",
+      "days": ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]
     }
   },
   "reports": {

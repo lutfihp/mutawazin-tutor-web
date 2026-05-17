@@ -301,6 +301,11 @@
     "legendPrivate": "Private session",
     "legendCompleted": "Completed",
     "legendAvailability": "Your availability",
+    "recurringTitle": "Recurring Sessions",
+    "addRecurring": "+ Recurring",
+    "noRecurring": "No recurring sessions.",
+    "recurringBadge": "Part of a recurring series",
+    "deleteRecurringConfirm": "This will delete all future sessions in this series. Continue?",
     "daysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     "modal": {
       "detailTitle": "Session details",
@@ -316,7 +321,12 @@
       "markCompleted": "Mark Completed",
       "cancelSession": "Cancel Session",
       "when": "When",
-      "status": "Status"
+      "status": "Status",
+      "recurringTitle": "Add Recurring Session",
+      "recurringEditTitle": "Edit Recurring Session",
+      "dayLabel": "Day of week",
+      "durationLabel": "Duration (minutes)",
+      "days": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     }
   },
   "reports": {
