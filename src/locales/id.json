@@ -124,6 +124,28 @@
       "confirmPassword": "Konfirmasi kata sandi baru",
       "newPasswordHelper": "Gunakan minimal 8 karakter, termasuk satu angka.",
       "updateButton": "Perbarui Kata Sandi"
+    },
+    "forgotPassword": {
+      "title": "Lupa kata sandi?",
+      "subtitle": "Masukkan email Anda dan kami akan mengirimkan tautan reset.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "anda@contoh.com",
+      "submit": "Kirim Tautan Reset",
+      "successTitle": "Periksa kotak masuk Anda",
+      "successBody": "Jika akun dengan email tersebut ada, tautan reset sedang dalam perjalanan."
+    },
+    "resetPassword": {
+      "title": "Buat kata sandi baru",
+      "subtitle": "Pilih kata sandi yang kuat untuk akun Anda.",
+      "newPassword": "Kata sandi baru",
+      "confirmPassword": "Konfirmasi kata sandi baru",
+      "submit": "Perbarui Kata Sandi",
+      "mismatch": "Kata sandi tidak cocok.",
+      "invalidToken": "Tautan reset ini tidak valid.",
+      "expiredToken": "Tautan reset ini telah kedaluwarsa.",
+      "requestNew": "Minta yang baru",
+      "successTitle": "Kata sandi diperbarui!",
+      "successBody": "Mengalihkan Anda ke halaman masuk…"
     }
   },
   "common": {

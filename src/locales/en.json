@@ -124,6 +124,28 @@
       "confirmPassword": "Confirm new password",
       "newPasswordHelper": "Use at least 8 characters, including a number.",
       "updateButton": "Update Password"
+    },
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email and we'll send you a reset link.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send Reset Link",
+      "successTitle": "Check your inbox",
+      "successBody": "If an account exists for that email, a reset link is on its way."
+    },
+    "resetPassword": {
+      "title": "Set a new password",
+      "subtitle": "Choose a strong password for your account.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Update Password",
+      "mismatch": "Passwords do not match.",
+      "invalidToken": "This reset link is invalid.",
+      "expiredToken": "This reset link has expired.",
+      "requestNew": "Request a new one",
+      "successTitle": "Password updated!",
+      "successBody": "Redirecting you to login…"
     }
   },
   "common": {
