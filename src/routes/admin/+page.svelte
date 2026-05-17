@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
+	import { pendingApprovalCount } from '$lib/stores/adminBadge';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
@@ -14,6 +15,10 @@
 	let pendingTeachers: any[] = $state([...(data.pendingTeachers ?? [])]);
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let pendingStudents: any[] = $state([...(data.pendingStudents ?? [])]);
+
+	$effect(() => {
+		pendingApprovalCount.set(pendingTeachers.length + pendingStudents.length);
+	});
 	let activeTab = $state<'teachers' | 'students'>('teachers');
 	let actionLoading = $state<string | null>(null);
 
@@ -53,6 +58,38 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let pendingCatalog = $state<any[]>([]);
 	let catalogActionLoading = $state<string | null>(null);
+	let createCatalogOpen = $state(false);
+	let newCatalogName = $state('');
+	let newCatalogSubject = $state('');
+	let newCatalogAges = $state<string[]>([]);
+	let createCatalogLoading = $state(false);
+	let createCatalogFormEl = $state<HTMLFormElement | null>(null);
+
+	function toggleCatalogAge(age: string) {
+		newCatalogAges = newCatalogAges.includes(age)
+			? newCatalogAges.filter((a) => a !== age)
+			: [...newCatalogAges, age];
+	}
+
+	async function handleCreateCatalog(e: SubmitEvent) {
+		e.preventDefault();
+		createCatalogLoading = true;
+		try {
+			await api.post('/admin/catalog', {
+				name: newCatalogName,
+				subject: newCatalogSubject,
+				age_categories: newCatalogAges,
+			});
+			createCatalogOpen = false;
+			newCatalogName = '';
+			newCatalogSubject = '';
+			newCatalogAges = [];
+		} catch {
+			// stay open on error
+		} finally {
+			createCatalogLoading = false;
+		}
+	}
 
 	async function fetchPendingCatalog() {
 		try {
@@ -443,9 +480,14 @@
 	<Card padding="none">
 		{#snippet head()}
 			<h2 class="font-semibold">{$t('dashboard.admin.pendingCatalog')}</h2>
-			{#if pendingCatalog.length > 0}
-				<Badge variant="warning" label={$t('dashboard.admin.waitingTeachers', { values: { n: pendingCatalog.length } })} />
-			{/if}
+			<div class="flex items-center gap-2">
+				{#if pendingCatalog.length > 0}
+					<Badge variant="warning" label={$t('dashboard.admin.waitingCatalog', { values: { n: pendingCatalog.length } })} />
+				{/if}
+				<Button variant="primary" size="sm" onclick={() => (createCatalogOpen = true)}>
+					{$t('dashboard.admin.createCatalog')}
+				</Button>
+			</div>
 		{/snippet}
 		{#if pendingCatalog.length === 0}
 			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.admin.noPendingCatalog')}</p>
@@ -497,6 +539,46 @@
 			</div>
 		{/if}
 	</Card>
+
+	<!-- Create Catalog Modal -->
+	<Modal
+		open={createCatalogOpen}
+		title={$t('dashboard.admin.createCatalogTitle')}
+		onclose={() => (createCatalogOpen = false)}
+	>
+		<form bind:this={createCatalogFormEl} onsubmit={handleCreateCatalog} class="flex flex-col gap-4">
+			<div class="flex flex-col gap-1.5">
+				<label for="catalogName" class="text-[13px] font-medium">{$t('dashboard.admin.catalogName')}</label>
+				<input id="catalogName" type="text" bind:value={newCatalogName} required
+					placeholder="e.g. Introduction to Algebra"
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			</div>
+			<div class="flex flex-col gap-1.5">
+				<label for="catalogSubject" class="text-[13px] font-medium">{$t('dashboard.admin.subjects')}</label>
+				<input id="catalogSubject" type="text" bind:value={newCatalogSubject} required
+					placeholder="e.g. Mathematics"
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			</div>
+			<div class="flex flex-col gap-1.5">
+				<p class="text-[13px] font-medium">{$t('dashboard.admin.ageCategory')}</p>
+				<div class="flex gap-2">
+					{#each [['Kids', $t('courses.ageKids')], ['Teens', $t('courses.ageTeens')], ['Adults', $t('courses.ageAdults')]] as [val, label]}
+						<button type="button" onclick={() => toggleCatalogAge(val)}
+							class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+							       {newCatalogAges.includes(val) ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+							{label}
+						</button>
+					{/each}
+				</div>
+			</div>
+		</form>
+		{#snippet footer()}
+			<Button variant="secondary" size="sm" onclick={() => (createCatalogOpen = false)}>{$t('common.cancel')}</Button>
+			<Button variant="primary" size="sm" loading={createCatalogLoading} onclick={() => createCatalogFormEl?.requestSubmit()}>
+				{$t('dashboard.admin.createCatalog')}
+			</Button>
+		{/snippet}
+	</Modal>
 
 	<!-- Create User Modal -->
 	<Modal
