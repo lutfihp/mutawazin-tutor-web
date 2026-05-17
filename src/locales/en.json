@@ -17,7 +17,7 @@
     "overview": "Overview",
     "pendingApprovals": "Pending Approvals",
     "settings": "Settings",
-    "catalog": "Catalog"
+    "catalog": "Subjects"
   },
   "auth": {
     "login": {
@@ -225,6 +225,9 @@
       "waitingTeachers": "{n} waiting",
       "pendingStudents": "Pending Student Approvals",
       "waitingStudents": "{n} waiting",
+      "waitingCatalog": "{n} pending",
+      "createCatalog": "+ Create Entry",
+      "createCatalogTitle": "Create Subject Entry",
       "noPendingTeachers": "No pending teacher approvals.",
       "noPendingStudents": "No pending student approvals.",
       "allUsers": "All Users",

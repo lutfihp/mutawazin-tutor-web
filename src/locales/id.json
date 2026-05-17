@@ -17,7 +17,7 @@
     "overview": "Ringkasan",
     "pendingApprovals": "Menunggu Persetujuan",
     "settings": "Pengaturan",
-    "catalog": "Katalog"
+    "catalog": "Mata Pelajaran"
   },
   "auth": {
     "login": {
@@ -225,6 +225,9 @@
       "waitingTeachers": "{n} menunggu",
       "pendingStudents": "Murid Menunggu Persetujuan",
       "waitingStudents": "{n} menunggu",
+      "waitingCatalog": "{n} menunggu",
+      "createCatalog": "+ Buat Entri",
+      "createCatalogTitle": "Buat Entri Mata Pelajaran",
       "noPendingTeachers": "Tidak ada guru yang menunggu persetujuan.",
       "noPendingStudents": "Tidak ada murid yang menunggu persetujuan.",
       "allUsers": "Semua Pengguna",
