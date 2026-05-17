@@ -42,6 +42,12 @@
 	let newDesc = $state('');
 	let createLoading = $state(false);
 	let catalogEntries = $state<{ id: string; name: string; subject: string }[]>([]);
+	let suggestMode = $state(false);
+	let suggestName = $state('');
+	let suggestSubject = $state('');
+	let suggestAges = $state<string[]>([]);
+	let suggestLoading = $state(false);
+	let suggestSuccess = $state(false);
 	let catalogLoading = $state(false);
 
 	async function loadCatalog() {
@@ -101,6 +107,31 @@
 		} finally {
 			createLoading = false;
 		}
+	}
+
+	async function suggestCatalogEntry(e: SubmitEvent) {
+		e.preventDefault();
+		suggestLoading = true;
+		try {
+			await api.post('/catalog/suggest', {
+				name: suggestName,
+				subject: suggestSubject,
+				age_categories: suggestAges,
+			});
+			suggestSuccess = true;
+			suggestName = '';
+			suggestSubject = '';
+			suggestAges = [];
+			await fetchCourses();
+		} finally {
+			suggestLoading = false;
+		}
+	}
+
+	function toggleSuggestAge(age: string) {
+		suggestAges = suggestAges.includes(age)
+			? suggestAges.filter((a) => a !== age)
+			: [...suggestAges, age];
 	}
 
 	onMount(fetchCourses);
@@ -249,7 +280,7 @@
 </div>
 
 <!-- Create Course Modal -->
-<Modal open={createOpen} title={$t('courses.modal.createTitle')} onclose={() => (createOpen = false)} maxWidth="lg">
+<Modal open={createOpen} title={$t('courses.modal.createTitle')} onclose={() => { createOpen = false; suggestMode = false; suggestSuccess = false; }} maxWidth="lg">
 	<form onsubmit={createCourse} class="flex flex-col gap-4">
 		<div class="flex flex-col gap-1.5">
 			<label for="catalogEntry" class="text-[13px] font-medium">{$t('courses.modal.catalogLabel')}</label>
@@ -265,6 +296,61 @@
 				</select>
 			{/if}
 		</div>
+		<!-- Suggest toggle -->
+		{#if !suggestMode && !suggestSuccess}
+			<button type="button" onclick={() => (suggestMode = true)}
+				class="text-sm font-semibold text-primary hover:text-primary-dark text-left">
+				{$t('courses.suggestEntry')}
+			</button>
+		{/if}
+
+		<!-- Suggest form -->
+		{#if suggestMode}
+			<div class="border border-border rounded-sm p-4 bg-bgGray flex flex-col gap-4">
+				<div class="flex items-center justify-between">
+					<p class="text-sm font-semibold">{$t('courses.suggestTitle')}</p>
+					<button type="button" onclick={() => (suggestMode = false)}
+						class="text-xs font-semibold text-primary hover:text-primary-dark">
+						{$t('courses.suggestCancelBack')}
+					</button>
+				</div>
+				{#if suggestSuccess}
+					<p class="text-sm text-successText">{$t('courses.suggestSuccess')}</p>
+				{:else}
+					<div class="flex flex-col gap-3">
+						<div class="flex flex-col gap-1.5">
+							<label for="suggestName" class="text-[13px] font-medium">{$t('courses.suggestNameLabel')}</label>
+							<input id="suggestName" type="text" bind:value={suggestName} required
+								placeholder={$t('courses.suggestNamePlaceholder')}
+								class="w-full bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+						</div>
+						<div class="flex flex-col gap-1.5">
+							<label for="suggestSubject" class="text-[13px] font-medium">{$t('courses.suggestSubjectLabel')}</label>
+							<input id="suggestSubject" type="text" bind:value={suggestSubject} required
+								placeholder={$t('courses.suggestSubjectPlaceholder')}
+								class="w-full bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+						</div>
+						<div class="flex flex-col gap-1.5">
+							<p class="text-[13px] font-medium">{$t('courses.suggestAgeLabel')}</p>
+							<div class="flex gap-2">
+								{#each [['Kids', $t('courses.ageKids')], ['Teens', $t('courses.ageTeens')], ['Adults', $t('courses.ageAdults')]] as [val, label]}
+									<button type="button" onclick={() => toggleSuggestAge(val)}
+										class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+										       {suggestAges.includes(val) ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+										{label}
+									</button>
+								{/each}
+							</div>
+						</div>
+						<Button variant="teal" size="sm" loading={suggestLoading}
+							onclick={(e: MouseEvent) => { e.preventDefault(); suggestCatalogEntry(new SubmitEvent('submit')); }}>
+							{$t('courses.suggestEntry')}
+						</Button>
+					</div>
+				{/if}
+			</div>
+		{/if}
+
 		<div class="flex flex-col gap-1.5">
 			<label for="courseDesc" class="text-[13px] font-medium">{$t('courses.modal.descLabel')}</label>
 			<textarea id="courseDesc" bind:value={newDesc} rows={3} placeholder={$t('courses.modal.descPlaceholder')}
