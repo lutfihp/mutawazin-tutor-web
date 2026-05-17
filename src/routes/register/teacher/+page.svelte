@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import Logo from '$lib/components/Logo.svelte';
@@ -10,34 +11,22 @@
 	let password = $state('');
 	let showPassword = $state(false);
 	let bio = $state('');
-	let subjects = $state<string[]>([]);
-	let tagInput = $state('');
+	let catalogEntryIds = $state<string[]>([]);
+	let catalogEntries = $state<{ id: string; name: string; subject: string }[]>([]);
 	let credentialsOpen = $state(false);
 	let credentials = $state([{ title: '', institution: '', year: '' }]);
 	let loading = $state(false);
 	let success = $state(false);
 	let error = $state('');
 
-	function addTag() {
-		const val = tagInput.trim().replace(/,+$/, '');
-		if (val && !subjects.includes(val)) {
-			subjects = [...subjects, val];
+	onMount(async () => {
+		try {
+			const entries = await api.get<{ id: string; name: string; subject: string }[]>('/catalog?status=verified');
+			catalogEntries = Array.isArray(entries) ? entries : [];
+		} catch {
+			catalogEntries = [];
 		}
-		tagInput = '';
-	}
-
-	function removeTag(i: number) {
-		subjects = subjects.filter((_, idx) => idx !== i);
-	}
-
-	function handleTagKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter' || e.key === ',') {
-			e.preventDefault();
-			addTag();
-		} else if (e.key === 'Backspace' && !tagInput) {
-			subjects = subjects.slice(0, -1);
-		}
-	}
+	});
 
 	function addCredential() {
 		credentials = [...credentials, { title: '', institution: '', year: '' }];
@@ -53,15 +42,13 @@
 		e.preventDefault();
 		error = '';
 		loading = true;
-		// Commit any pending tag
-		if (tagInput.trim()) addTag();
 		try {
 			await api.post('/auth/register/teacher', {
 				full_name: fullName,
 				email,
 				password,
 				bio,
-				subjects,
+				catalog_entry_ids: catalogEntryIds,
 				credentials: credentials.filter((c) => c.title || c.institution || c.year).map((c) => ({
 					title: c.title,
 					institution: c.institution,
@@ -145,35 +132,37 @@
 						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-vertical min-h-[84px]"></textarea>
 				</div>
 
-				<!-- Subjects tag input -->
+				<!-- Catalog entry multi-select -->
 				<div class="flex flex-col gap-1.5">
-					<label for="subjectInput" class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
-					<div
-						role="group"
-						aria-label={$t('auth.registerTeacher.subjects')}
-						class="flex flex-wrap gap-1.5 items-center p-2 border border-border rounded-sm bg-white min-h-[44px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
-					>
-						{#each subjects as subject, i}
-							<span class="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-primary-light text-primary-dark text-xs font-medium rounded-pill">
-								{subject}
-								<button type="button" onclick={() => removeTag(i)}
-									class="w-4 h-4 grid place-items-center rounded-pill hover:bg-primary-dark/20 transition-colors"
-									aria-label="Remove {subject}">
-									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-								</button>
-							</span>
-						{/each}
-						<input
-							id="subjectInput"
-							type="text"
-							bind:value={tagInput}
-							onkeydown={handleTagKeydown}
-							onblur={addTag}
-							placeholder={subjects.length === 0 ? $t('auth.registerTeacher.subjectsPlaceholder') : ''}
-							class="flex-1 min-w-[100px] border-0 outline-none bg-transparent text-sm text-text placeholder:text-text3"
-							aria-label={$t('auth.registerTeacher.subjects')}
-						/>
-					</div>
+					<label class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
+					{#if catalogEntries.length === 0}
+						<p class="text-sm text-text2">{$t('common.loading')}</p>
+					{:else}
+						<div class="border border-border rounded-sm bg-white max-h-48 overflow-y-auto divide-y divide-border">
+							{#each catalogEntries as entry}
+								<label class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-bgGray">
+									<input
+										type="checkbox"
+										value={entry.id}
+										checked={catalogEntryIds.includes(entry.id)}
+										onchange={(e) => {
+											if ((e.target as HTMLInputElement).checked) {
+												catalogEntryIds = [...catalogEntryIds, entry.id];
+											} else {
+												catalogEntryIds = catalogEntryIds.filter(id => id !== entry.id);
+											}
+										}}
+										class="w-4 h-4 rounded text-primary focus:ring-primary/15"
+									/>
+									<div>
+										<div class="text-sm font-medium">{entry.name}</div>
+										<div class="text-xs text-text2">{entry.subject}</div>
+									</div>
+								</label>
+							{/each}
+						</div>
+						<p class="text-xs text-text2">{$t('auth.registerTeacher.catalogHelper')}</p>
+					{/if}
 				</div>
 
 				<!-- Collapsible credentials -->

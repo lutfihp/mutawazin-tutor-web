@@ -55,6 +55,7 @@
       "credInstitution": "Institution",
       "credInstitutionPlaceholder": "e.g. University of Jordan",
       "credYear": "Year",
+      "catalogHelper": "Optional — select courses you'd like to offer. You can add more later.",
       "addCredential": "+ Add another credential",
       "submit": "Create Teacher Account",
       "reviewNotice": "Your account will be reviewed by our team before you can start teaching.",
