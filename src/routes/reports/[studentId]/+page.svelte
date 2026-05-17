@@ -26,7 +26,30 @@
 	let attendance = $state<'Present' | 'Late' | 'Absent'>('Present');
 	let scores = $state([{ topic: '', score: '', max: '10' }]);
 	let notes = $state('');
+	let understandingLevel = $state<'A' | 'B' | 'C' | 'D' | 'E' | ''>('');
 	let saveLoading = $state(false);
+	let shareLoading = $state<string | null>(null);
+	let shareData = $state<Record<string, { url: string; expires_at: string }>>({});
+	let copiedId = $state<string | null>(null);
+
+	async function handleShare(reportId: string) {
+		shareLoading = reportId;
+		try {
+			const result = await api.post<{ share_url: string; expires_at: string }>(`/reports/${reportId}/share`, {});
+			shareData = { ...shareData, [reportId]: { url: result.share_url, expires_at: result.expires_at } };
+		} finally {
+			shareLoading = null;
+		}
+	}
+
+	async function copyShareLink(reportId: string) {
+		const url = shareData[reportId]?.url;
+		if (url) {
+			await navigator.clipboard.writeText(url);
+			copiedId = reportId;
+			setTimeout(() => (copiedId = null), 2000);
+		}
+	}
 
 	async function fetchReports() {
 		loading = true;
@@ -49,6 +72,7 @@
 		attendance = 'Present';
 		scores = [{ topic: '', score: '', max: '10' }];
 		notes = '';
+		understandingLevel = '';
 		modalOpen = true;
 	}
 
@@ -57,6 +81,7 @@
 		attendance = report.attendance ?? 'Present';
 		scores = report.scores?.map((s: any) => ({ topic: s.topic, score: String(s.score), max: String(s.max) })) ?? [{ topic: '', score: '', max: '10' }];
 		notes = report.notes ?? '';
+		understandingLevel = report.understanding_level ?? '';
 		modalOpen = true;
 	}
 
@@ -69,6 +94,7 @@
 				attendance,
 				scores: scores.filter((s) => s.topic).map((s) => ({ topic: s.topic, score: Number(s.score), max: Number(s.max) })),
 				notes,
+				understanding_level: understandingLevel || undefined,
 			};
 			if (editingReport) {
 				await api.put(`/reports/${editingReport.id}`, payload);
@@ -172,6 +198,10 @@
 							</div>
 						</div>
 						<Badge variant={attendanceVariant(report.attendance)} label={report.attendance} />
+						{#if report.understanding_level}
+							{@const ulVariant = report.understanding_level === 'A' ? 'success' : report.understanding_level === 'B' ? 'active' : report.understanding_level === 'C' ? 'warning' : 'error'}
+							<Badge variant={ulVariant} label={`${report.understanding_level} — ${$t(`reports.understanding_${report.understanding_level}`)}`} />
+						{/if}
 					</div>
 
 					<!-- Score grid -->
@@ -197,11 +227,18 @@
 					{/if}
 
 					<!-- Footer -->
-					<div class="flex items-center justify-between pt-3 border-t border-border">
+					<div class="flex items-center justify-between pt-3 border-t border-border flex-wrap gap-2">
 						{#if isTeacher}
-							<button onclick={() => openEdit(report)} class="text-sm font-medium text-text2 hover:text-text">
-								{$t('reports.editReport')}
-							</button>
+							<div class="flex items-center gap-3">
+								<button onclick={() => openEdit(report)} class="text-sm font-medium text-text2 hover:text-text">
+									{$t('reports.editReport')}
+								</button>
+								<button onclick={() => handleShare(report.id)}
+									class="text-sm font-medium text-primary hover:text-primary-dark"
+									disabled={shareLoading === report.id}>
+									{shareLoading === report.id ? '…' : $t('reports.share')}
+								</button>
+							</div>
 						{:else}
 							<span></span>
 						{/if}
@@ -209,6 +246,20 @@
 							{$t('reports.viewFull')}
 						</a>
 					</div>
+					{#if shareData[report.id]}
+						<div class="mt-2 p-3 bg-bgGray border border-border rounded-sm text-sm flex flex-col gap-2">
+							<p class="text-xs font-medium text-text2">{$t('reports.shareLinkTitle')}</p>
+							<div class="flex items-center gap-2">
+								<input type="text" readonly value={shareData[report.id].url}
+									class="flex-1 bg-white border border-border rounded-sm px-2.5 py-1.5 text-xs text-text focus:outline-none" />
+								<button onclick={() => copyShareLink(report.id)}
+									class="px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-sm hover:bg-primary-dark transition-colors">
+									{copiedId === report.id ? $t('reports.shareCopied') : $t('reports.shareCopy')}
+								</button>
+							</div>
+							<p class="text-xs text-text2">{$t('reports.shareExpires', { values: { date: new Date(shareData[report.id].expires_at).toLocaleDateString() } })}</p>
+						</div>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -279,6 +330,32 @@
 			<label for="reportNotes" class="text-[13px] font-medium">{$t('reports.modal.notesLabel')}</label>
 			<textarea id="reportNotes" bind:value={notes} rows={4} placeholder={$t('reports.modal.notesPlaceholder')}
 				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm resize-vertical focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"></textarea>
+		</div>
+
+		<!-- Understanding level (optional) -->
+		<div>
+			<p class="text-[13px] font-medium mb-2">{$t('reports.understandingLevel')}</p>
+			<div class="flex gap-2 flex-wrap" role="radiogroup" aria-label={$t('reports.understandingLevel')}>
+				{#each [
+					['A', $t('reports.understanding_A'), 'bg-successBg text-successText border-successText'],
+					['B', $t('reports.understanding_B'), 'bg-primary-light text-primary-dark border-primary'],
+					['C', $t('reports.understanding_C'), 'bg-warningBg text-warningText border-warningText'],
+					['D', $t('reports.understanding_D'), 'bg-errorBg text-errorText border-errorText'],
+					['E', $t('reports.understanding_E'), 'bg-errorBg text-errorText border-errorText'],
+				] as [val, label, activeClass]}
+					<label class="flex items-center gap-1.5 cursor-pointer">
+						<input type="radio" name="understanding" value={val} bind:group={understandingLevel} class="sr-only" />
+						<span class="px-2.5 py-1 text-xs font-medium rounded-sm border transition-colors
+						             {understandingLevel === val ? activeClass : 'border-border text-text2 hover:bg-bgGray'}">
+							{val} — {label}
+						</span>
+					</label>
+				{/each}
+				{#if understandingLevel}
+					<button type="button" onclick={() => (understandingLevel = '')}
+						class="px-2 py-1 text-xs text-text2 hover:text-error">✕ clear</button>
+				{/if}
+			</div>
 		</div>
 	</form>
 	{#snippet footer()}
