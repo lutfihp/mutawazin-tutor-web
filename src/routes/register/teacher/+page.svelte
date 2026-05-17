@@ -21,7 +21,7 @@
 
 	onMount(async () => {
 		try {
-			const entries = await api.get<{ id: string; name: string; subject: string }[]>('/catalog?status=verified');
+			const entries = await api.get<{ id: string; name: string }[]>('/subjects?status=verified');
 			catalogEntries = Array.isArray(entries) ? entries : [];
 		} catch {
 			catalogEntries = [];
@@ -48,7 +48,7 @@
 				email,
 				password,
 				bio,
-				catalog_entry_ids: catalogEntryIds,
+				subject_ids: catalogEntryIds,
 				credentials: credentials.filter((c) => c.title || c.institution || c.year).map((c) => ({
 					title: c.title,
 					institution: c.institution,
@@ -154,10 +154,7 @@
 										}}
 										class="w-4 h-4 rounded text-primary focus:ring-primary/15"
 									/>
-									<div>
-										<div class="text-sm font-medium">{entry.name}</div>
-										<div class="text-xs text-text2">{entry.subject}</div>
-									</div>
+									<div class="text-sm font-medium">{entry.name}</div>
 								</label>
 							{/each}
 						</div>
