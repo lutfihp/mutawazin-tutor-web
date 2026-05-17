@@ -261,6 +261,8 @@
     "modal": {
       "createTitle": "Create New Course",
       "editTitle": "Edit Course",
+      "catalogLabel": "Course from catalog",
+      "catalogPlaceholder": "Select a course entry...",
       "titleLabel": "Course title",
       "titlePlaceholder": "e.g. Intro to Calculus",
       "descLabel": "Description",

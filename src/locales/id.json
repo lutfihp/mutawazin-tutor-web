@@ -261,6 +261,8 @@
     "modal": {
       "createTitle": "Buat Kursus Baru",
       "editTitle": "Edit Kursus",
+      "catalogLabel": "Kursus dari katalog",
+      "catalogPlaceholder": "Pilih entri kursus...",
       "titleLabel": "Judul kursus",
       "titlePlaceholder": "mis. Pengantar Kalkulus",
       "descLabel": "Deskripsi",

@@ -8,7 +8,7 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 
 	let { data } = $props();
-	const isTeacher = $derived(data.user?.role === 'teacher');
+	const isTeacher = $derived(data.user?.role === 'teacher' || data.user?.role === 'admin');
 
 	// Course band gradient classes — static for Tailwind purge
 	const BAND_VARIANTS = [
@@ -38,10 +38,24 @@
 
 	// Create modal
 	let createOpen = $state(false);
-	let newTitle = $state('');
+	let newCatalogId = $state('');
 	let newDesc = $state('');
-	let newSubject = $state('');
 	let createLoading = $state(false);
+	let catalogEntries = $state<{ id: string; name: string; subject: string }[]>([]);
+	let catalogLoading = $state(false);
+
+	async function loadCatalog() {
+		if (catalogEntries.length > 0) return;
+		catalogLoading = true;
+		try {
+			const entries = await api.get<{ id: string; name: string; subject: string; age_categories: string[]; status: string }[]>('/catalog?status=verified');
+			catalogEntries = Array.isArray(entries) ? entries : [];
+		} catch {
+			catalogEntries = [];
+		} finally {
+			catalogLoading = false;
+		}
+	}
 
 	let debounceTimer: ReturnType<typeof setTimeout>;
 
@@ -77,12 +91,12 @@
 		createLoading = true;
 		try {
 			await api.post('/courses', {
-				title: newTitle,
+				catalog_entry_id: newCatalogId,
 				description: newDesc,
-				subject: newSubject,
-				age_categories: [],
 			});
 			createOpen = false;
+			newCatalogId = '';
+			newDesc = '';
 			await fetchCourses();
 		} finally {
 			createLoading = false;
@@ -112,7 +126,7 @@
 			{/if}
 		</div>
 		{#if isTeacher}
-			<Button variant="primary" onclick={() => (createOpen = true)}>
+			<Button variant="primary" onclick={() => { createOpen = true; loadCatalog(); }}>
 				{$t('courses.createNew')}
 			</Button>
 		{/if}
@@ -202,7 +216,7 @@
 
 					<!-- Body -->
 					<div class="p-4 flex-1 flex flex-col gap-2.5">
-						<div class="font-semibold text-[17px] leading-snug">{course.title}</div>
+						<div class="font-semibold text-[17px] leading-snug">{course.name ?? course.title}</div>
 						{#if course.teacher_name}
 							<div class="flex items-center gap-2">
 								<Avatar name={course.teacher_name} id={course.teacher_id ?? ''} size="sm" />
@@ -238,24 +252,28 @@
 <Modal open={createOpen} title={$t('courses.modal.createTitle')} onclose={() => (createOpen = false)} maxWidth="lg">
 	<form onsubmit={createCourse} class="flex flex-col gap-4">
 		<div class="flex flex-col gap-1.5">
-			<label for="courseTitle" class="text-[13px] font-medium">{$t('courses.modal.titleLabel')}</label>
-			<input id="courseTitle" type="text" bind:value={newTitle} required placeholder={$t('courses.modal.titlePlaceholder')}
-				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			<label for="catalogEntry" class="text-[13px] font-medium">{$t('courses.modal.catalogLabel')}</label>
+			{#if catalogLoading}
+				<p class="text-sm text-text2">{$t('common.loading')}</p>
+			{:else}
+				<select id="catalogEntry" bind:value={newCatalogId} required
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15">
+					<option value="">{$t('courses.modal.catalogPlaceholder')}</option>
+					{#each catalogEntries as entry}
+						<option value={entry.id}>{entry.name} ({entry.subject})</option>
+					{/each}
+				</select>
+			{/if}
 		</div>
 		<div class="flex flex-col gap-1.5">
 			<label for="courseDesc" class="text-[13px] font-medium">{$t('courses.modal.descLabel')}</label>
 			<textarea id="courseDesc" bind:value={newDesc} rows={3} placeholder={$t('courses.modal.descPlaceholder')}
 				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm resize-vertical focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"></textarea>
 		</div>
-		<div class="flex flex-col gap-1.5">
-			<label for="courseSubject" class="text-[13px] font-medium">{$t('courses.modal.subjectLabel')}</label>
-			<input id="courseSubject" type="text" bind:value={newSubject} placeholder={$t('courses.modal.subjectPlaceholder')}
-				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-		</div>
 	</form>
 	{#snippet footer()}
 		<Button variant="secondary" size="sm" onclick={() => (createOpen = false)}>{$t('common.cancel')}</Button>
-		<Button variant="primary" size="sm" loading={createLoading} onclick={(e: MouseEvent) => { const form = document.querySelector('form'); form?.requestSubmit(); }}>
+		<Button variant="primary" size="sm" loading={createLoading} onclick={() => { document.getElementById('catalogEntry')?.closest('form')?.requestSubmit(); }}>
 			{$t('courses.modal.createTitle')}
 		</Button>
 	{/snippet}
