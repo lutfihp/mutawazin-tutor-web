@@ -48,7 +48,7 @@
 			? newCourseAges.filter((a) => a !== age)
 			: [...newCourseAges, age];
 	}
-	let catalogEntries = $state<{ id: string; name: string; subject: string }[]>([]);
+	let catalogEntries = $state<{ id: string; name: string; status: string }[]>([]);
 	let suggestMode = $state(false);
 	let suggestName = $state('');
 	let suggestLoading = $state(false);

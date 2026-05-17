@@ -75,15 +75,11 @@
 		e.preventDefault();
 		createCatalogLoading = true;
 		try {
-			await api.post('/admin/catalog', {
+			await api.post('/admin/subjects', {
 				name: newCatalogName,
-				subject: newCatalogSubject,
-				age_categories: newCatalogAges,
 			});
 			createCatalogOpen = false;
 			newCatalogName = '';
-			newCatalogSubject = '';
-			newCatalogAges = [];
 		} catch {
 			// stay open on error
 		} finally {
@@ -93,7 +89,7 @@
 
 	async function fetchPendingCatalog() {
 		try {
-			const entries = await api.get<any[]>('/admin/catalog?status=pending');
+			const entries = await api.get<any[]>('/admin/subjects?status=pending');
 			pendingCatalog = Array.isArray(entries) ? entries : [];
 		} catch {
 			pendingCatalog = [];
@@ -103,7 +99,7 @@
 	async function handleCatalogAction(id: string, action: 'approve' | 'reject') {
 		catalogActionLoading = `${id}-${action}`;
 		try {
-			await api.patch(`/admin/catalog/${id}/verify`, { action });
+			await api.patch(`/admin/subjects/${id}/verify`, { action });
 			pendingCatalog = pendingCatalog.filter((e: any) => e.id !== id);
 		} catch {
 			// keep optimistic state
@@ -498,8 +494,6 @@
 						<tr>
 							<th class="px-5 py-3 text-left">{$t('dashboard.admin.catalogName')}</th>
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.status')}</th>
-							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('dashboard.admin.subjects')}</th>
-							<th class="px-5 py-3 text-left hidden lg:table-cell">{$t('dashboard.admin.ageCategory')}</th>
 							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
 						</tr>
 					</thead>
@@ -509,14 +503,6 @@
 								<td class="px-5 py-3 font-medium">{entry.name}</td>
 								<td class="px-5 py-3 hidden sm:table-cell">
 									<Badge variant="warning" label={entry.status ?? 'pending'} />
-								</td>
-								<td class="px-5 py-3 text-text2 hidden md:table-cell">{entry.subject}</td>
-								<td class="px-5 py-3 hidden lg:table-cell">
-									<div class="flex flex-wrap gap-1">
-										{#each (entry.age_categories ?? []) as age}
-											<Badge variant="violet" label={age} />
-										{/each}
-									</div>
 								</td>
 								<td class="px-5 py-3 text-right">
 									<div class="flex items-center justify-end gap-2">
@@ -552,24 +538,6 @@
 				<input id="catalogName" type="text" bind:value={newCatalogName} required
 					placeholder="e.g. Introduction to Algebra"
 					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-			</div>
-			<div class="flex flex-col gap-1.5">
-				<label for="catalogSubject" class="text-[13px] font-medium">{$t('dashboard.admin.subjects')}</label>
-				<input id="catalogSubject" type="text" bind:value={newCatalogSubject} required
-					placeholder="e.g. Mathematics"
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-			</div>
-			<div class="flex flex-col gap-1.5">
-				<p class="text-[13px] font-medium">{$t('dashboard.admin.ageCategory')}</p>
-				<div class="flex gap-2">
-					{#each [['Kids', $t('courses.ageKids')], ['Teens', $t('courses.ageTeens')], ['Adults', $t('courses.ageAdults')]] as [val, label]}
-						<button type="button" onclick={() => toggleCatalogAge(val)}
-							class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
-							       {newCatalogAges.includes(val) ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
-							{label}
-						</button>
-					{/each}
-				</div>
 			</div>
 		</form>
 		{#snippet footer()}

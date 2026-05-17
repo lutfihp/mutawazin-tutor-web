@@ -12,7 +12,7 @@
 	let showPassword = $state(false);
 	let bio = $state('');
 	let catalogEntryIds = $state<string[]>([]);
-	let catalogEntries = $state<{ id: string; name: string; subject: string }[]>([]);
+	let catalogEntries = $state<{ id: string; name: string }[]>([]);
 	let credentialsOpen = $state(false);
 	let credentials = $state([{ title: '', institution: '', year: '' }]);
 	let loading = $state(false);
