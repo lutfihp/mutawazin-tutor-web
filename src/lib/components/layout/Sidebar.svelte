@@ -12,6 +12,7 @@
 		Users,
 		ShieldCheck,
 	} from 'lucide-svelte';
+	import { pendingApprovalCount } from '$lib/stores/adminBadge';
 
 	let { role }: { role: 'admin' | 'teacher' | 'student' } = $props();
 
@@ -88,7 +89,11 @@
 				{/if}
 				<item.icon size={18} aria-hidden="true" />
 				{$t(item.labelKey)}
-				{#if item.count && item.count > 0}
+				{#if item.id === 'approvals' && $pendingApprovalCount > 0}
+					<span class="ml-auto bg-error text-white text-[11px] font-bold rounded-pill px-1.5 py-0.5 min-w-[20px] text-center">
+						{$pendingApprovalCount}
+					</span>
+				{:else if item.id !== 'approvals' && item.count && item.count > 0}
 					<span class="ml-auto bg-error text-white text-[11px] font-bold rounded-pill px-1.5 py-0.5 min-w-[20px] text-center">
 						{item.count}
 					</span>
