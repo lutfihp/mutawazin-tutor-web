@@ -237,7 +237,13 @@
 									<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={teacher.photo_url} />
 									<div>
 										<div class="font-semibold">{teacher.full_name}</div>
-										<div class="text-xs text-text2">{$t('landing.searchActiveCourses', { values: { n: teacher.active_course_count ?? 0 } })}</div>
+										<div class="text-xs text-text2 flex items-center gap-2">
+										{$t('landing.searchActiveCourses', { values: { n: teacher.active_course_count ?? 0 } })}
+										{#if teacher.average_rating && (teacher.total_ratings ?? 0) > 0}
+											<span class="text-[#F59E0B]">★</span>
+											<span>{Number(teacher.average_rating).toFixed(1)}</span>
+										{/if}
+									</div>
 									</div>
 								</div>
 								{#if teacher.subjects?.length}

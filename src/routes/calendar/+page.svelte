@@ -73,9 +73,36 @@
 		month = now.getMonth();
 	}
 
+	let ratingValue = $state(0);
+	let ratingComment = $state('');
+	let ratingLoading = $state(false);
+	let ratingSubmitted = $state(false);
+	let ratingAlready = $state(false);
+
+	async function submitRating() {
+		if (!selectedSession || ratingValue === 0) return;
+		ratingLoading = true;
+		try {
+			await api.post(`/sessions/${selectedSession.id}/rating`, {
+				rating: ratingValue,
+				comment: ratingComment || undefined,
+			});
+			ratingSubmitted = true;
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : '';
+			if (msg.includes('409')) ratingAlready = true;
+		} finally {
+			ratingLoading = false;
+		}
+	}
+
 	function openSession(session: any) {
 		selectedSession = session;
 		detailOpen = true;
+		ratingValue = 0;
+		ratingComment = '';
+		ratingSubmitted = false;
+		ratingAlready = false;
 	}
 
 	function pillClass(type: string, status: string): string {
@@ -102,6 +129,8 @@
 	let rDayOfWeek = $state(0);
 	let rStartTime = $state('');
 	let rDuration = $state(60);
+	let rMode = $state<'online' | 'offline'>('online');
+	let rPrice = $state<number | undefined>(undefined);
 	let rLoading = $state(false);
 	let rFormEl = $state<HTMLFormElement | null>(null);
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -131,6 +160,7 @@
 		editingTemplate = null;
 		rType = 'group'; rCourseId = ''; rStudentId = '';
 		rTitle = ''; rDayOfWeek = 0; rStartTime = ''; rDuration = 60;
+		rMode = 'online'; rPrice = undefined;
 		recurringOpen = true;
 	}
 
@@ -143,6 +173,8 @@
 		rDayOfWeek = template.day_of_week ?? 0;
 		rStartTime = template.start_time ?? '';
 		rDuration = template.duration_minutes ?? 60;
+		rMode = (template.mode ?? 'online') as 'online' | 'offline';
+		rPrice = template.price ?? undefined;
 		recurringOpen = true;
 	}
 
@@ -158,6 +190,8 @@
 				day_of_week: rDayOfWeek,
 				start_time: rStartTime,
 				duration_minutes: rDuration,
+				mode: rMode,
+				price: rPrice || undefined,
 			};
 			if (editingTemplate) {
 				await api.put(`/sessions/recurring/${editingTemplate.id}`, body);
@@ -408,11 +442,55 @@
 					<Badge variant={selectedSession.status === 'Confirmed' ? 'active' : selectedSession.status === 'Completed' ? 'gray' : 'error'} label={selectedSession.status} />
 				</div>
 			</div>
+			{#if selectedSession.mode || selectedSession.price}
+				<div class="flex gap-4 text-sm">
+					{#if selectedSession.mode}
+						<div>
+							<span class="text-text2">{$t('calendar.modal.modeLabel')}</span><br/>
+							<Badge variant={selectedSession.mode === 'online' ? 'active' : 'gray'} label={selectedSession.mode === 'online' ? $t('calendar.modal.modeOnline') : $t('calendar.modal.modeOffline')} />
+						</div>
+					{/if}
+					{#if selectedSession.price}
+						<div>
+							<span class="text-text2">{$t('calendar.modal.priceLabel')}</span><br/>
+							<span class="font-medium tabular">{selectedSession.price}</span>
+						</div>
+					{/if}
+				</div>
+			{/if}
 			{#if selectedSession.recurring_template_id}
 				<p class="text-sm text-text2 flex items-center gap-1.5">
 					<span class="text-primary font-medium">↻</span>
 					{$t('calendar.recurringBadge')}
 				</p>
+			{/if}
+			{#if data.user?.role === 'student' && (selectedSession.status === 'Completed' || selectedSession.status === 'completed')}
+				<div class="border-t border-border pt-3">
+					<p class="text-[13px] font-medium mb-2">{$t('calendar.modal.rateSession')}</p>
+					{#if ratingAlready}
+						<p class="text-sm text-text2">{$t('calendar.modal.ratingAlready')}</p>
+					{:else if ratingSubmitted}
+						<p class="text-sm text-successText">{'★'.repeat(ratingValue)} Submitted!</p>
+					{:else}
+						<div class="flex flex-col gap-2">
+							<div class="flex gap-1">
+								{#each [1, 2, 3, 4, 5] as star}
+									<button type="button" onclick={() => (ratingValue = star)}
+										class="text-2xl transition-colors {ratingValue >= star ? 'text-[#F59E0B]' : 'text-border hover:text-[#F59E0B]'}"
+										aria-label="Rate {star} stars">★</button>
+								{/each}
+							</div>
+							{#if ratingValue > 0}
+								<textarea bind:value={ratingComment} rows={2}
+									placeholder={$t('calendar.modal.ratingCommentPlaceholder')}
+									class="w-full bg-white border border-border rounded-sm px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15"></textarea>
+								<Button variant="primary" size="sm" loading={ratingLoading} onclick={submitRating}>
+									{$t('calendar.modal.ratingSubmit')}
+								</Button>
+							{/if}
+						</div>
+					{/if}
+				</div>
 			{/if}
 		</div>
 		{#snippet footer()}
@@ -511,6 +589,27 @@
 					<input id="rDuration" type="number" bind:value={rDuration} min="15" step="15" required
 						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary tabular" />
 				</div>
+			</div>
+
+			<!-- Mode -->
+			<div class="flex flex-col gap-1.5">
+				<p class="text-[13px] font-medium">{$t('calendar.modal.modeLabel')}</p>
+				<div class="flex gap-2">
+					{#each [['online', $t('calendar.modal.modeOnline')], ['offline', $t('calendar.modal.modeOffline')]] as [val, label]}
+						<button type="button" onclick={() => (rMode = val as 'online' | 'offline')}
+							class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+							       {rMode === val ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+							{label}
+						</button>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Price -->
+			<div class="flex flex-col gap-1.5">
+				<label for="rPrice" class="text-[13px] font-medium">{$t('calendar.modal.priceLabel')}</label>
+				<input id="rPrice" type="number" bind:value={rPrice} min="0" step="0.01"
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary tabular" />
 			</div>
 		</form>
 		{#snippet footer()}
