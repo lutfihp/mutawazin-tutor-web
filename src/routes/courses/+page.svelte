@@ -35,6 +35,7 @@
 	// Course data
 	let courses = $state<any[]>([]);
 	let loading = $state(true);
+	let subjects = $state<{ id: string; name: string }[]>([]);
 
 	// Create modal
 	let createOpen = $state(false);
@@ -129,7 +130,15 @@
 		}
 	}
 
-	onMount(fetchCourses);
+	onMount(async () => {
+		await fetchCourses();
+		try {
+			const result = await api.get<{ id: string; name: string; status: string }[]>('/subjects?status=verified');
+			subjects = Array.isArray(result) ? result : [];
+		} catch {
+			subjects = [];
+		}
+	});
 
 	$effect(() => {
 		subjectFilter;
@@ -180,10 +189,9 @@
 			class="h-10 px-3 bg-white border border-border rounded-sm text-sm focus:outline-none focus:border-primary"
 		>
 			<option value="">{$t('courses.allSubjects')}</option>
-			<option value="Math">Math</option>
-			<option value="English">English</option>
-			<option value="Science">Science</option>
-			<option value="Arabic">Arabic</option>
+			{#each subjects as subject}
+				<option value={subject.name}>{subject.name}</option>
+			{/each}
 		</select>
 
 		<!-- Age chip group -->
