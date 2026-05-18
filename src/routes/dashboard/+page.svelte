@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { api } from '$lib/api';
 
 	let { data } = $props();
 	const d = $derived(data.dashboardData ?? {});
@@ -18,6 +20,21 @@
 		};
 		return map[s] ?? 'gray';
 	}
+
+	let students = $state<any[]>([]);
+	let studentsLoading = $state(true);
+
+	onMount(async () => {
+		if (!isTeacher) return;
+		try {
+			const result = await api.get<any[]>('/students');
+			students = Array.isArray(result) ? result : [];
+		} catch {
+			students = [];
+		} finally {
+			studentsLoading = false;
+		}
+	});
 </script>
 
 <svelte:head>
@@ -151,6 +168,37 @@
 				{/each}
 			</div>
 		</div>
+
+		<!-- My Students roster -->
+		<Card padding="none">
+			{#snippet head()}
+				<h2 class="font-semibold">My Students</h2>
+			{/snippet}
+			{#if studentsLoading}
+				<div class="flex justify-center py-10" role="status">
+					<div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+				</div>
+			{:else if students.length === 0}
+				<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.teacher.noPrivateStudents')}</p>
+			{:else}
+				<div class="divide-y divide-border">
+					{#each students as student}
+						<div class="flex items-center gap-3 px-5 py-3">
+							<Avatar name={student.full_name} id={student.user_id} size="md" />
+							<div class="flex-1 min-w-0">
+								<div class="font-medium text-sm">{student.full_name}</div>
+							</div>
+							{#if student.age_category}
+								<Badge variant="violet" label={student.age_category} />
+							{/if}
+							<a href="/students/{student.user_id}" class="text-xs font-semibold text-primary">
+								{$t('dashboard.teacher.openStudent')}
+							</a>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</Card>
 	</div>
 
 {:else}
