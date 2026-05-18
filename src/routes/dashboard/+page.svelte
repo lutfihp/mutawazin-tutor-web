@@ -29,7 +29,7 @@
 	<div class="flex flex-col gap-6">
 		<!-- Welcome -->
 		<div>
-			<h1 class="text-2xl font-bold">{$t('dashboard.teacher.welcome', { values: { name: d.full_name ?? data.user?.name ?? '' } })}</h1>
+			<h1 class="text-2xl font-bold">{$t('dashboard.teacher.welcome', { values: { name: d.full_name ?? '' } })}</h1>
 			<p class="text-sm text-text2 mt-1">
 				{$t('dashboard.teacher.sessionMeta', { values: { count: d.upcoming_sessions?.length ?? 0 } })}
 			</p>
@@ -157,7 +157,7 @@
 	<!-- ── Student Dashboard ── -->
 	<div class="flex flex-col gap-6">
 		<div>
-			<h1 class="text-2xl font-bold">{$t('dashboard.student.welcome', { values: { name: d.full_name ?? data.user?.name ?? '' } })}</h1>
+			<h1 class="text-2xl font-bold">{$t('dashboard.student.welcome', { values: { name: d.full_name ?? '' } })}</h1>
 		</div>
 
 		<!-- Upcoming Sessions -->
