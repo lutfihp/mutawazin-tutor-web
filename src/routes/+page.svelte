@@ -282,7 +282,7 @@
 									<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={teacher.photo_url} />
 									<div>
 										<div class="font-semibold">{teacher.full_name}</div>
-										<div class="text-xs text-text2">Tutor</div>
+										<div class="text-xs text-text2">{$t('common.tutor')}</div>
 									</div>
 								</div>
 								{#if teacher.subjects?.length}
@@ -335,7 +335,6 @@
 				{#each [
 					{ titleKey: 'landing.footerPlatformTitle', links: [['landing.footerHome', '/'], ['landing.footerCourses', '/courses'], ['landing.footerTeachers', '/teachers']] },
 					{ titleKey: 'landing.footerGetStartedTitle', links: [['landing.footerJoinTeacher', '/register/teacher'], ['landing.footerJoinStudent', '/register/student']] },
-					{ titleKey: 'landing.footerCompanyTitle', links: [['landing.footerContact', '#'], ['landing.footerPrivacy', '#']] },
 				] as col}
 					<nav aria-label={$t(col.titleKey)}>
 						<h3 class="text-[13px] font-semibold uppercase tracking-[0.06em] mb-4">{$t(col.titleKey)}</h3>
