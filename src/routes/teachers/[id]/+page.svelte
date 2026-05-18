@@ -141,7 +141,6 @@
 
 			{#if !isOwn}
 				<div class="flex gap-2">
-					<Button variant="secondary">Message</Button>
 					<Button variant="primary">{$t('profile.teacher.bookSession')}</Button>
 				</div>
 			{/if}
