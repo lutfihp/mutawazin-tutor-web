@@ -58,7 +58,7 @@
 		sessionActionLoading = true;
 		sessionActionError = '';
 		try {
-			await api.patch(`/sessions/${selectedSession.id}`, { status: 'cancelled' });
+			await api.patch(`/sessions/${selectedSession.id}/status`, { status: 'cancelled' });
 			const id = selectedSession.id;
 			selectedSession = { ...selectedSession, status: 'cancelled' };
 			sessions = sessions.map(s => s.id === id ? { ...s, status: 'cancelled' } : s);
@@ -76,7 +76,7 @@
 		sessionActionLoading = true;
 		sessionActionError = '';
 		try {
-			await api.patch(`/sessions/${selectedSession.id}`, { status: 'completed' });
+			await api.patch(`/sessions/${selectedSession.id}/status`, { status: 'completed' });
 			const id = selectedSession.id;
 			selectedSession = { ...selectedSession, status: 'completed' };
 			sessions = sessions.map(s => s.id === id ? { ...s, status: 'completed' } : s);
