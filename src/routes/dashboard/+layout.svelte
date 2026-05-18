@@ -6,6 +6,6 @@
 	const role = $derived((data.user?.role ?? 'student') as 'admin' | 'teacher' | 'student');
 </script>
 
-<AuthLayout {role}>
+<AuthLayout {role} userId={data.user?.id ?? ''}>
 	{#if children}{@render children()}{/if}
 </AuthLayout>

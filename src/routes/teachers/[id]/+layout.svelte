@@ -8,7 +8,7 @@
 
 <!-- Teachers profile is public but can also be viewed authenticated -->
 {#if data.user}
-	<AuthLayout role={data.user.role as 'admin' | 'teacher' | 'student'}>
+	<AuthLayout role={data.user.role as 'admin' | 'teacher' | 'student'} userId={data.user.id ?? ''}>
 		{#if children}{@render children()}{/if}
 	</AuthLayout>
 {:else}
