@@ -23,9 +23,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-18)
+## Current Status (as of 2026-05-19)
 
 ### Build status: ✅ Passes `npm run build` and `npm run check` (0 errors)
+
+### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main`
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -35,37 +37,31 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 |---|---|---|
 | Foundation | SvelteKit scaffold, Tailwind v3, svelte-i18n, ui components, layouts, auth | ✅ |
 | Auth | Login, Register (teacher/student), Email Verify, Account Step-Up, **Forgot Password**, **Reset Password** | ✅ |
-| Landing | Hero (brand mark), Benefits, **Public search** (courses+teachers tabs), Featured Teachers, Footer | ✅ |
+| Landing | Hero (brand mark), Benefits, **Public search** (courses+teachers tabs), Featured Teachers, Footer (clean — no dead links) | ✅ |
 | Admin | Stats, Pending approvals (approve/reject), All Users (wired), **Create Teacher/Student**, **Subjects management** (pending list + approve/reject + create), live badge count | ✅ |
-| Dashboards | Teacher dashboard, Student dashboard, Admin → `/admin` redirect | ✅ |
+| Dashboards | Teacher dashboard, Student dashboard (real names from API), Admin → `/admin` redirect | ✅ |
 | Profiles | Teacher profile (bio edit, photo, new fields: mode/city/methods/uni/experience/achievements, rating display), Student profile | ✅ |
-| Courses | Filter + grid, **create via subject picker**, **suggest new subject**, admin+teacher can create | ✅ |
-| Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating** | ✅ |
+| Courses | Filter + grid (subject filter dynamic from `/subjects`), **create via subject picker**, **suggest new subject**, admin+teacher can create | ✅ |
+| Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating**, **Cancel Session + Mark Completed wired** | ✅ |
 | Reports | Score grid, create/edit modal with **understanding_level A–E**, **Share button + panel**, public `/report/share/:token` page | ✅ |
 | Brand | SVG companion mark in Navbar+footer, brand kit in `static/brand-kit/`, `mark-light.svg` for dark footer | ✅ |
 | Subjects | Renamed from "Catalog"; 5-level age categories (pre-school/elementary/middle-school/high-school/general) | ✅ |
+| Navigation | **Logout button** in Navbar, **Sidebar profile/reports hrefs** wired via `userId` prop chain, My Students removed | ✅ |
+| `/teachers` public page | Featured teachers grid (`GET /teachers/featured`), footer + landing "Browse all" links now live | ✅ |
 
 ### What is NOT done yet (known gaps for next session)
 
-1. **Logout** — no logout button anywhere. Add to Navbar (authenticated mode). Calls `POST /auth/logout` then redirects to `/`.
+1. **Calendar Add Session modal** — still a placeholder `<p>` inside the modal. Needs full form: type radio-pills, course/student select, date + start/end time pickers, `POST /sessions`.
 
-2. **Sidebar profile hrefs** — "My Profile" links still point to `/dashboard`. Need `/teachers/{id}` and `/students/{id}` using `data.user.id` passed into the Sidebar.
+2. **Availability CRUD** — right panel "Add Slot" button and edit/delete icons are not wired. Needs `POST /availability`, `PUT /availability/:id`, `DELETE /availability/:id`.
 
-3. **Calendar Add Session modal** — still a placeholder. Needs full form: type radio-pills, course/student select, date + start/end time, `POST /sessions`.
+3. **Course enrollment** — `POST /courses/:id/enroll` button not built on the course card/detail.
 
-4. **Availability CRUD** — right panel "Add Slot" and edit/delete are not wired. Needs `POST /availability`, `PUT /availability/:id`, `DELETE /availability/:id`.
+4. **Mobile testing** — hamburger sidebar untested at 375px.
 
-5. **Course enrollment** — `POST /courses/:id/enroll` button not built.
+5. **Visual verification** — pages not checked against `handoffs/design_handoff_mutawazin/Stage*.html`.
 
-6. **Dashboard welcome names** — hardcoded `'Layla'` (teacher) and `'Nour'` (student). Should come from `dashboardData.full_name` or the JWT user.
-
-7. **Teacher profile "Tutor" label** — hardcoded `"Tutor"` in featured teachers section of landing and in teacher cards.
-
-8. **Mobile testing** — hamburger sidebar untested at 375px.
-
-9. **`/teachers` public directory** — footer "Teachers" link goes nowhere. Needs `GET /teachers` API (not yet in contract).
-
-10. **Content audit pre-mvp items** — Contact/Privacy Policy/Forgot Password links still `#` dead links. See `docs/content-audit.csv` for full list.
+6. **Content audit residuals** — see `docs/content-audit.csv` for full decisions. Remaining `advise` items with no confirmed API: Message buttons (hidden), Bell icon (removed). `/teachers` public directory is now built.
 
 ---
 
@@ -84,6 +80,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **Subjects = name only** | `Subject` model has only `{ id, name, status }` — no subject field or age_categories. Age categories live on `Course` directly. `/catalog` endpoints renamed to `/subjects`. |
 | **5-level age categories** | Values: `"pre-school"`, `"elementary"`, `"middle-school"`, `"high-school"`, `"general"`. Old `"kids"/"teens"/"adults"` are gone. |
 | **pendingApprovalCount store** | `src/lib/stores/adminBadge.ts` — written by the admin page, read by Sidebar for the live badge count. |
+| **Sidebar userId prop chain** | `userId` flows: sub-layout `data.user?.id` → `<AuthLayout userId>` → `<Sidebar userId>`. Required for My Profile and My Reports hrefs. All authenticated sub-layouts pass it. |
 
 ---
 
@@ -115,6 +112,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │       ├── verify-email/, account/step-up/
 │       ├── dashboard/              ← Role-aware (teacher/student; admin → /admin)
 │       ├── admin/
+│       ├── teachers/             ← Public featured teachers directory (GET /teachers/featured)
 │       ├── teachers/[id]/
 │       ├── students/[id]/
 │       ├── courses/
@@ -133,15 +131,16 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 
 Updated API contract is at `D:\Codading Repo\mutawazin-tutor-api\docs\api-contract\api-types.ts`.
 
-Key endpoints active as of 2026-05-18:
+Key endpoints active as of 2026-05-19:
 - Auth: login, register, verify-email, refresh, logout, forgot-password, reset-password, step-up
 - Subjects: `GET /subjects`, `POST /subjects/suggest`, admin CRUD at `/admin/subjects`
 - Courses: `POST /courses { subject_id, age_categories, description? }`
-- Sessions: `POST /sessions`, ratings at `/sessions/:id/rating`
+- Sessions: `POST /sessions`, `PATCH /sessions/:id { status }`, ratings at `/sessions/:id/rating`
 - Reports: `POST /reports/:id/share`, public `GET /reports/share/:token`
 - Recurring: `POST/GET/PUT/DELETE /sessions/recurring`
 - Search (public, no auth): `GET /search/courses`, `GET /search/teachers`
 - Ratings: `POST /sessions/:id/rating`, `GET /sessions/:id/rating`
+- Teachers (public, no auth): `GET /teachers/featured`, `GET /teachers/:user_id`
 
 ---
 
@@ -173,16 +172,11 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Quick wins**
-1. Logout button in Navbar (`POST /auth/logout` + redirect to `/`)
-2. Dashboard welcome names — use real name from `dashboardData` or API response
-3. Sidebar "My Profile" hrefs → `/teachers/{id}` and `/students/{id}`
+**Priority 1 — Calendar completions**
+1. Calendar Add Session full form — type radio-pills, course/student select, date + start/end time, `POST /sessions`
+2. Availability CRUD — "Add Slot" + edit/delete wired to `POST /availability`, `PUT/DELETE /availability/:id`
 
-**Priority 2 — Calendar completions**
-4. Calendar Add Session full form (type radio, course/student select, date/time, `POST /sessions`)
-5. Availability CRUD (`POST /availability`, `PUT/DELETE /availability/:id`)
-
-**Priority 3 — Remaining features**
-6. Course enrollment button (`POST /courses/:id/enroll`)
-7. Visual verification against `handoffs/design_handoff_mutawazin/Stage*.html`
-8. Mobile testing at 375px viewport
+**Priority 2 — Remaining features**
+3. Course enrollment button — `POST /courses/:id/enroll` on course card
+4. Visual verification against `handoffs/design_handoff_mutawazin/Stage*.html`
+5. Mobile testing at 375px viewport
