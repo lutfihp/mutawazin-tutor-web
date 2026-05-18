@@ -21,6 +21,9 @@
 	let selectedSession = $state<any | null>(null);
 	let detailOpen = $state(false);
 	let addOpen = $state(false);
+	let sessionActionLoading = $state(false);
+	let sessionActionError = $state('');
+	let cancelConfirming = $state(false);
 
 	const grid = $derived(calendarGrid(year, month));
 	const monthLabel = $derived(formatMonth(year, month));
@@ -47,6 +50,41 @@
 			sessions = [];
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function cancelSession() {
+		if (!selectedSession) return;
+		sessionActionLoading = true;
+		sessionActionError = '';
+		try {
+			await api.patch(`/sessions/${selectedSession.id}`, { status: 'cancelled' });
+			const id = selectedSession.id;
+			selectedSession = { ...selectedSession, status: 'cancelled' };
+			sessions = sessions.map(s => s.id === id ? { ...s, status: 'cancelled' } : s);
+			detailOpen = false;
+		} catch (e: any) {
+			sessionActionError = e?.message ?? 'Failed to cancel session.';
+		} finally {
+			sessionActionLoading = false;
+			cancelConfirming = false;
+		}
+	}
+
+	async function markCompleted() {
+		if (!selectedSession) return;
+		sessionActionLoading = true;
+		sessionActionError = '';
+		try {
+			await api.patch(`/sessions/${selectedSession.id}`, { status: 'completed' });
+			const id = selectedSession.id;
+			selectedSession = { ...selectedSession, status: 'completed' };
+			sessions = sessions.map(s => s.id === id ? { ...s, status: 'completed' } : s);
+			detailOpen = false;
+		} catch (e: any) {
+			sessionActionError = e?.message ?? 'Failed to update session.';
+		} finally {
+			sessionActionLoading = false;
 		}
 	}
 
@@ -425,7 +463,7 @@
 
 <!-- Session detail modal -->
 {#if selectedSession}
-	<Modal open={detailOpen} title={$t('calendar.modal.detailTitle')} onclose={() => (detailOpen = false)}>
+	<Modal open={detailOpen} title={$t('calendar.modal.detailTitle')} onclose={() => { detailOpen = false; cancelConfirming = false; sessionActionError = ''; }}>
 		<div class="flex flex-col gap-4">
 			<div class="flex items-center gap-3">
 				<div class="w-10 h-10 rounded-DEFAULT flex items-center justify-center {selectedSession.type === 'group' ? 'bg-primary-light text-primary' : 'bg-teal-light text-teal'}">
@@ -495,8 +533,17 @@
 		</div>
 		{#snippet footer()}
 			{#if isTeacher && (selectedSession.status === 'Confirmed' || selectedSession.status === 'confirmed')}
-				<Button variant="danger" size="sm" onclick={() => {}}>{$t('calendar.modal.cancelSession')}</Button>
-				<Button variant="primary" size="sm" onclick={() => {}}>{$t('calendar.modal.markCompleted')}</Button>
+				{#if sessionActionError}
+					<p class="text-xs text-error mr-auto">{sessionActionError}</p>
+				{/if}
+				{#if cancelConfirming}
+					<span class="text-sm text-text2 mr-auto">Are you sure?</span>
+					<Button variant="ghost" size="sm" onclick={() => (cancelConfirming = false)}>{$t('common.cancel')}</Button>
+					<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={cancelSession}>Confirm</Button>
+				{:else}
+					<Button variant="danger" size="sm" onclick={() => (cancelConfirming = true)}>{$t('calendar.modal.cancelSession')}</Button>
+					<Button variant="primary" size="sm" loading={sessionActionLoading} onclick={markCompleted}>{$t('calendar.modal.markCompleted')}</Button>
+				{/if}
 			{:else}
 				<Button variant="secondary" size="sm" onclick={() => (detailOpen = false)}>{$t('common.close')}</Button>
 			{/if}
