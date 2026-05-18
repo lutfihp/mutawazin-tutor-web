@@ -14,7 +14,7 @@
 	} from 'lucide-svelte';
 	import { pendingApprovalCount } from '$lib/stores/adminBadge';
 
-	let { role }: { role: 'admin' | 'teacher' | 'student' } = $props();
+	let { role, userId = '' }: { role: 'admin' | 'teacher' | 'student'; userId?: string } = $props();
 
 	type NavItem = {
 		id: string;
@@ -24,7 +24,7 @@
 		count?: number;
 	};
 
-	const navByRole: Record<'admin' | 'teacher' | 'student', NavItem[]> = {
+	const items = $derived(({
 		admin: [
 			{ id: 'overview',  labelKey: 'nav.overview',              href: '/admin',                   icon: Home },
 			{ id: 'approvals', labelKey: 'nav.pendingApprovals',      href: '/admin#pending-approvals', icon: ShieldCheck },
@@ -32,23 +32,20 @@
 			{ id: 'catalog',   labelKey: 'nav.catalog',               href: '/admin#catalog',           icon: BookOpen },
 		],
 		teacher: [
-			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',  icon: Home },
-			{ id: 'profile',   labelKey: 'nav.myProfile',  href: '/dashboard',  icon: User },
-			{ id: 'courses',   labelKey: 'nav.myCourses',  href: '/courses',    icon: BookOpen },
-			{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/calendar',   icon: Calendar },
-			{ id: 'students',  labelKey: 'nav.students',   href: '/dashboard',  icon: Users },
-			{ id: 'reports',   labelKey: 'nav.reports',    href: '/dashboard',  icon: FileText },
+			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',                  icon: Home },
+			{ id: 'profile',   labelKey: 'nav.myProfile',  href: `/teachers/${userId}`,          icon: User },
+			{ id: 'courses',   labelKey: 'nav.myCourses',  href: '/courses',                     icon: BookOpen },
+			{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/calendar',                    icon: Calendar },
+			{ id: 'reports',   labelKey: 'nav.reports',    href: '/dashboard#private-students',  icon: FileText },
 		],
 		student: [
-			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard', icon: Home },
-			{ id: 'profile',   labelKey: 'nav.myProfile',  href: '/dashboard', icon: User },
-			{ id: 'courses',   labelKey: 'nav.myCourses',  href: '/courses',   icon: BookOpen },
-			{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/calendar',  icon: Calendar },
-			{ id: 'reports',   labelKey: 'nav.myReports',  href: '/dashboard', icon: FileText },
+			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',          icon: Home },
+			{ id: 'profile',   labelKey: 'nav.myProfile',  href: `/students/${userId}`, icon: User },
+			{ id: 'courses',   labelKey: 'nav.myCourses',  href: '/courses',            icon: BookOpen },
+			{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/calendar',           icon: Calendar },
+			{ id: 'reports',   labelKey: 'nav.myReports',  href: `/reports/${userId}`,  icon: FileText },
 		],
-	};
-
-	const items = $derived(navByRole[role] ?? []);
+	} as Record<'admin' | 'teacher' | 'student', NavItem[]>)[role] ?? []);
 
 	function isActive(href: string): boolean {
 		const [path, hash] = href.split('#');
