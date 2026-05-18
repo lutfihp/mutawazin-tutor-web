@@ -29,6 +29,8 @@
 	let allStudents = $state<any[]>([]);
 	let allUsersLoading = $state(false);
 	let statusFilter = $state('');
+	let featuredMap = $state<Record<string, boolean>>({});
+	let featuredLoading = $state<Record<string, boolean>>({});
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const filteredUsers = $derived<any[]>(
@@ -46,12 +48,26 @@
 			]);
 			allTeachers = Array.isArray(teachers) ? teachers : [];
 			allStudents = Array.isArray(students) ? students : [];
+			featuredMap = Object.fromEntries(
+				allTeachers.map((t: any) => [t.user_id ?? t.id, t.is_featured ?? false])
+			);
 		} catch {
 			allTeachers = [];
 			allStudents = [];
 		} finally {
 			allUsersLoading = false;
 		}
+	}
+
+	async function toggleFeatured(teacherId: string) {
+		featuredLoading = { ...featuredLoading, [teacherId]: true };
+		try {
+			const res = await api.patch<{ user_id: string; is_featured: boolean }>(
+				`/admin/teachers/${teacherId}/featured`, {}
+			);
+			featuredMap = { ...featuredMap, [res.user_id]: res.is_featured };
+		} catch {}
+		featuredLoading = { ...featuredLoading, [teacherId]: false };
 	}
 
 	// Catalog management
@@ -454,6 +470,22 @@
 										: $t('common.selfRegistered')}
 								</td>
 								<td class="px-5 py-3 text-right">
+									{#if activeTab === 'teachers'}
+										{@const tid = user.user_id ?? user.id}
+										{@const isFeatured = featuredMap[tid] ?? false}
+										<button
+											onclick={() => toggleFeatured(tid)}
+											disabled={featuredLoading[tid]}
+											class="mr-3 text-sm font-medium px-2 py-1 rounded-sm transition-colors
+											       {isFeatured
+												? 'text-[#92400E] bg-[#FEF3C7] hover:bg-[#FDE68A]'
+												: 'text-text2 bg-bgGray hover:bg-border/50'}
+											       disabled:opacity-50"
+											title={isFeatured ? 'Remove featured' : 'Mark as featured'}
+										>
+											{isFeatured ? '★' : '☆'} {isFeatured ? 'Featured' : 'Feature'}
+										</button>
+									{/if}
 									<a
 										href={activeTab === 'teachers'
 											? `/teachers/${user.user_id ?? user.id}`
