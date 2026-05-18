@@ -6,9 +6,11 @@
 
 	let {
 		role,
+		userId = '',
 		children,
 	}: {
 		role: 'admin' | 'teacher' | 'student';
+		userId?: string;
 		children?: Snippet;
 	} = $props();
 
@@ -28,7 +30,7 @@
 <div class="min-h-screen flex flex-col bg-bgGray">
 	<Navbar />
 	<div class="flex flex-1 pt-16">
-		<Sidebar {role} />
+		<Sidebar {role} {userId} />
 		<main
 			id="main-content"
 			tabindex="-1"
