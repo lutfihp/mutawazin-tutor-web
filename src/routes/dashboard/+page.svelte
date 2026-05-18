@@ -29,7 +29,7 @@
 	<div class="flex flex-col gap-6">
 		<!-- Welcome -->
 		<div>
-			<h1 class="text-2xl font-bold">{$t('dashboard.teacher.welcome', { values: { name: 'Layla' } })}</h1>
+			<h1 class="text-2xl font-bold">{$t('dashboard.teacher.welcome', { values: { name: d.full_name ?? data.user?.name ?? '' } })}</h1>
 			<p class="text-sm text-text2 mt-1">
 				{$t('dashboard.teacher.sessionMeta', { values: { count: d.upcoming_sessions?.length ?? 0 } })}
 			</p>
@@ -85,7 +85,9 @@
 								<Avatar name={student.full_name} id={student.user_id} size="md" />
 								<div class="flex-1 min-w-0">
 									<div class="font-medium text-sm">{student.full_name}</div>
-									<div class="text-xs text-text2">{$t('dashboard.teacher.lastSession', { values: { when: 'recently' } })}</div>
+									{#if student.last_session_at}
+									<div class="text-xs text-text2">{$t('dashboard.teacher.lastSession', { values: { when: student.last_session_at } })}</div>
+								{/if}
 								</div>
 								<Badge variant="violet" label={student.age_category ?? ''} />
 								<a href="/students/{student.user_id}" class="text-xs font-semibold text-primary">{$t('dashboard.teacher.openStudent')}</a>
@@ -132,7 +134,7 @@
 				{#each [
 					{ titleKey: 'dashboard.teacher.createCourse',       descKey: 'dashboard.teacher.createCourseDesc',       href: '/courses',  icon: 'M2 3h20v18H2z M12 3v18' },
 					{ titleKey: 'dashboard.teacher.manageAvailability', descKey: 'dashboard.teacher.manageAvailabilityDesc', href: '/calendar', icon: 'M3 4h18v18H3z M16 2v4M8 2v4M3 10h18' },
-					{ titleKey: 'dashboard.teacher.writeReport',        descKey: 'dashboard.teacher.writeReportDesc',        href: '/reports/', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
+					{ titleKey: 'dashboard.teacher.writeReport',        descKey: 'dashboard.teacher.writeReportDesc',        href: '/dashboard#private-students', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
 				] as action}
 					<a
 						href={action.href}
@@ -155,8 +157,7 @@
 	<!-- ── Student Dashboard ── -->
 	<div class="flex flex-col gap-6">
 		<div>
-			<h1 class="text-2xl font-bold">{$t('dashboard.student.welcome', { values: { name: 'Nour' } })}</h1>
-			<p class="text-sm text-text2 mt-1">{$t('dashboard.student.streakMeta', { values: { weeks: 5 } })}</p>
+			<h1 class="text-2xl font-bold">{$t('dashboard.student.welcome', { values: { name: d.full_name ?? data.user?.name ?? '' } })}</h1>
 		</div>
 
 		<!-- Upcoming Sessions -->
@@ -262,7 +263,7 @@
 					<Avatar name={d.assigned_teacher.full_name} id={d.assigned_teacher.user_id} size="lg" />
 					<div class="flex-1 min-w-0">
 						<div class="font-semibold text-[17px]">{d.assigned_teacher.full_name}</div>
-						<div class="text-sm text-text2 mb-2">Tutor</div>
+						<div class="text-sm text-text2 mb-2">{$t('common.tutor')}</div>
 						{#if d.assigned_teacher.subjects?.length}
 							<div class="flex flex-wrap gap-1.5">
 								{#each d.assigned_teacher.subjects as s}
@@ -272,7 +273,6 @@
 						{/if}
 					</div>
 					<div class="flex gap-2">
-						<Button variant="secondary" size="sm">Message</Button>
 						<Button variant="primary" size="sm" href="/teachers/{d.assigned_teacher.user_id}">
 							{$t('common.viewProfile')}
 						</Button>
