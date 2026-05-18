@@ -17,7 +17,8 @@
     "overview": "Overview",
     "pendingApprovals": "Pending Approvals",
     "settings": "Settings",
-    "catalog": "Subjects"
+    "catalog": "Subjects",
+    "logout": "Sign out"
   },
   "auth": {
     "login": {
@@ -180,7 +181,8 @@
     "registered": "Registered",
     "type": "Type",
     "actions": "Actions",
-    "more": "+{n} more"
+    "more": "+{n} more",
+    "tutor": "Tutor"
   },
   "status": {
     "pending": "Pending",

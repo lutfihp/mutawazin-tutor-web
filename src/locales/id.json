@@ -17,7 +17,8 @@
     "overview": "Ringkasan",
     "pendingApprovals": "Menunggu Persetujuan",
     "settings": "Pengaturan",
-    "catalog": "Mata Pelajaran"
+    "catalog": "Mata Pelajaran",
+    "logout": "Keluar"
   },
   "auth": {
     "login": {
@@ -180,7 +181,8 @@
     "registered": "Terdaftar",
     "type": "Tipe",
     "actions": "Tindakan",
-    "more": "+{n} lainnya"
+    "more": "+{n} lainnya",
+    "tutor": "Guru"
   },
   "status": {
     "pending": "Menunggu",
