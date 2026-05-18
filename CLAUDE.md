@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-19)
+## Current Status (as of 2026-05-19 — session 2)
 
 ### Build status: ✅ Passes `npm run build` and `npm run check` (0 errors)
 
@@ -38,20 +38,29 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Foundation | SvelteKit scaffold, Tailwind v3, svelte-i18n, ui components, layouts, auth | ✅ |
 | Auth | Login, Register (teacher/student), Email Verify, Account Step-Up, **Forgot Password**, **Reset Password** | ✅ |
 | Landing | Hero (brand mark), Benefits, **Public search** (courses+teachers tabs), Featured Teachers, Footer (clean — no dead links) | ✅ |
-| Admin | Stats, Pending approvals (approve/reject), All Users (wired), **Create Teacher/Student**, **Subjects management** (pending list + approve/reject + create), live badge count | ✅ |
-| Dashboards | Teacher dashboard, Student dashboard (real names from API), Admin → `/admin` redirect | ✅ |
+| Admin | Stats, Pending approvals (approve/reject), All Users (wired), **Create Teacher/Student**, **Subjects management** (pending list + approve/reject + create), live badge count, **Featured teacher toggle** | ✅ |
+| Dashboards | Teacher dashboard (real names + **My Students roster**), Student dashboard, Admin → `/admin` redirect | ✅ |
 | Profiles | Teacher profile (bio edit, photo, new fields: mode/city/methods/uni/experience/achievements, rating display), Student profile | ✅ |
 | Courses | Filter + grid (subject filter dynamic from `/subjects`), **create via subject picker**, **suggest new subject**, admin+teacher can create | ✅ |
-| Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating**, **Cancel Session + Mark Completed wired** | ✅ |
+| Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating**, **Cancel Session + Mark Completed wired** (correct `/status` endpoint) | ✅ |
 | Reports | Score grid, create/edit modal with **understanding_level A–E**, **Share button + panel**, public `/report/share/:token` page | ✅ |
 | Brand | SVG companion mark in Navbar+footer, brand kit in `static/brand-kit/`, `mark-light.svg` for dark footer | ✅ |
 | Subjects | Renamed from "Catalog"; 5-level age categories (pre-school/elementary/middle-school/high-school/general) | ✅ |
 | Navigation | **Logout button** in Navbar, **Sidebar profile/reports hrefs** wired via `userId` prop chain, My Students removed | ✅ |
 | `/teachers` public page | Featured teachers grid (`GET /teachers/featured`), footer + landing "Browse all" links now live | ✅ |
 
+### Design handoff stage coverage (4 stages total)
+
+| Stage | Content | Status |
+|---|---|---|
+| Stage 1 — Landing | All sections ✅; trust row + vignette intentionally removed (fake data); footer social icons not added | ~95% |
+| Stage 2 — Auth | All 9 screens + bonus Forgot/Reset Password | 100% |
+| Stage 3 — Dashboards + Profiles | All 5 pages | 100% |
+| Stage 4 — Features | Courses ✅, Reports ✅, Calendar partial (Add Session + Availability CRUD missing) | ~75% |
+
 ### What is NOT done yet (known gaps for next session)
 
-1. **Calendar Add Session modal** — still a placeholder `<p>` inside the modal. Needs full form: type radio-pills, course/student select, date + start/end time pickers, `POST /sessions`.
+1. **Calendar Add Session modal** — still a placeholder `<p>` inside the modal. Needs full form: type radio-pills, course/student select, date + start/end time pickers, `POST /sessions`. Student dropdown should use `GET /students` (teacher auth).
 
 2. **Availability CRUD** — right panel "Add Slot" button and edit/delete icons are not wired. Needs `POST /availability`, `PUT /availability/:id`, `DELETE /availability/:id`.
 
@@ -60,8 +69,6 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 4. **Mobile testing** — hamburger sidebar untested at 375px.
 
 5. **Visual verification** — pages not checked against `handoffs/design_handoff_mutawazin/Stage*.html`.
-
-6. **Content audit residuals** — see `docs/content-audit.csv` for full decisions. Remaining `advise` items with no confirmed API: Message buttons (hidden), Bell icon (removed). `/teachers` public directory is now built.
 
 ---
 
@@ -135,12 +142,15 @@ Key endpoints active as of 2026-05-19:
 - Auth: login, register, verify-email, refresh, logout, forgot-password, reset-password, step-up
 - Subjects: `GET /subjects`, `POST /subjects/suggest`, admin CRUD at `/admin/subjects`
 - Courses: `POST /courses { subject_id, age_categories, description? }`
-- Sessions: `POST /sessions`, `PATCH /sessions/:id { status }`, ratings at `/sessions/:id/rating`
+- Sessions: `POST /sessions`, `PATCH /sessions/:id/status { status }`, ratings at `/sessions/:id/rating`
 - Reports: `POST /reports/:id/share`, public `GET /reports/share/:token`
 - Recurring: `POST/GET/PUT/DELETE /sessions/recurring`
 - Search (public, no auth): `GET /search/courses`, `GET /search/teachers`
 - Ratings: `POST /sessions/:id/rating`, `GET /sessions/:id/rating`
 - Teachers (public, no auth): `GET /teachers/featured`, `GET /teachers/:user_id`
+- Students: `GET /students` (teacher auth — returns assigned students list)
+- Admin: `PATCH /admin/teachers/:id/featured` (toggles is_featured, returns `{ user_id, is_featured }`)
+- Availability: `POST /availability`, `PUT /availability/:slot_id`, `DELETE /availability/:slot_id`
 
 ---
 
@@ -172,9 +182,9 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Calendar completions**
-1. Calendar Add Session full form — type radio-pills, course/student select, date + start/end time, `POST /sessions`
-2. Availability CRUD — "Add Slot" + edit/delete wired to `POST /availability`, `PUT/DELETE /availability/:id`
+**Priority 1 — Calendar completions (Stage 4 finish line)**
+1. Calendar Add Session full form — type radio-pills (group/private), course select (`GET /courses`), student select (`GET /students`), date + start/end time pickers, `POST /sessions { type, title, starts_at, ends_at, mode, course_id?, student_id?, price? }`
+2. Availability CRUD — "Add Slot" modal + edit/delete wired to `POST /availability { day_of_week?, specific_date?, start_time, end_time }`, `PUT /availability/:slot_id { start_time?, end_time? }`, `DELETE /availability/:slot_id`
 
 **Priority 2 — Remaining features**
 3. Course enrollment button — `POST /courses/:id/enroll` on course card
