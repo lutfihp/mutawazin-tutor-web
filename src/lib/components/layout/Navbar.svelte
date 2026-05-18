@@ -7,7 +7,9 @@
 	import Logo from '$lib/components/Logo.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 
-	import { Bell, Menu, X } from 'lucide-svelte';
+	import { Menu, X } from 'lucide-svelte';
+	import { api } from '$lib/api';
+	import { goto } from '$app/navigation';
 
 	let scrolled = $state(false);
 	let currentLang = $derived($locale === 'id' ? 'id' : 'en');
@@ -26,6 +28,12 @@
 
 	// Landing page detection
 	const isLanding = $derived(!$user);
+
+	async function logout() {
+		try { await api.post('/auth/logout', {}); } catch {}
+		user.set(null);
+		goto('/');
+	}
 </script>
 
 <svelte:window onscroll={handleScroll} />
@@ -58,7 +66,7 @@
 	<!-- Landing nav links (desktop only) -->
 	{#if isLanding}
 		<nav class="hidden nav-collapse:flex items-center gap-1 ml-4" aria-label="Main navigation">
-			<a href="/#" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.home')}</a>
+			<a href="/" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.home')}</a>
 			<a href="/#courses" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.courses')}</a>
 			<a href="/#teachers" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.teachers')}</a>
 			<a href="/#about" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.about')}</a>
@@ -88,15 +96,15 @@
 		{/each}
 	</div>
 
-	<!-- Authenticated: bell + avatar -->
+	<!-- Authenticated: avatar + logout -->
 	{#if $user}
-		<button
-			class="relative w-9 h-9 flex items-center justify-center rounded-pill border border-border text-text2 hover:text-text transition-colors"
-			aria-label="Notifications"
-		>
-			<Bell size={16} aria-hidden="true" />
-		</button>
 		<Avatar name={$user.id} id={$user.id} size="sm" />
+		<button
+			onclick={logout}
+			class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors"
+		>
+			{$t('nav.logout')}
+		</button>
 	{:else}
 		<!-- Landing CTAs -->
 		<a href="/login" class="hidden nav-collapse:inline-flex items-center px-3 py-1.5 text-sm font-semibold text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">
