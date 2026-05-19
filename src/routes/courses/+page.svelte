@@ -312,16 +312,58 @@
 					</div>
 
 					<!-- Footer -->
-					<div class="bg-bgGray px-4 py-3 border-t border-border">
-						<Button variant="primary" size="sm" href="/courses/{course.id}" class="w-full">
+					<div class="bg-bgGray px-4 py-3 border-t border-border flex gap-2">
+						<Button variant="primary" size="sm" href="/courses/{course.id}" class="flex-1">
 							{$t('courses.viewCourse')}
 						</Button>
+						{#if data.user?.role === 'admin'}
+							<Button variant="secondary" size="sm" onclick={() => openEnroll(course.id)}>
+								{$t('courses.enrollStudent')}
+							</Button>
+						{/if}
 					</div>
 				</div>
 			{/each}
 		</div>
 	{/if}
 </div>
+
+<!-- Enroll Student Modal -->
+{#if data.user?.role === 'admin'}
+	<Modal open={enrollOpen} title={$t('courses.enrollStudent')} onclose={() => (enrollOpen = false)}>
+		<div class="flex flex-col gap-4">
+			{#if adminStudentsLoading}
+				<div class="flex justify-center py-6" role="status">
+					<div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+				</div>
+			{:else}
+				<div class="flex flex-col gap-1.5">
+					<label for="enrollStudentId" class="text-[13px] font-medium">
+						{$t('courses.enrollSelectStudent')}
+					</label>
+					<select id="enrollStudentId" bind:value={enrollStudentId}
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+						<option value="">— {$t('courses.enrollSelectStudent')}</option>
+						{#each adminStudents as student}
+							<option value={student.user_id ?? student.id}>
+								{student.full_name ?? student.name}
+							</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
+		</div>
+		{#snippet footer()}
+			<Button variant="secondary" size="sm" onclick={() => (enrollOpen = false)}>
+				{$t('common.cancel')}
+			</Button>
+			<Button variant="primary" size="sm" loading={enrollLoading}
+				disabled={!enrollStudentId} onclick={submitEnroll}>
+				{$t('courses.enrollStudent')}
+			</Button>
+		{/snippet}
+	</Modal>
+{/if}
 
 <!-- Create Course Modal -->
 <Modal open={createOpen} title={$t('courses.modal.createTitle')} onclose={() => { createOpen = false; suggestMode = false; suggestSuccess = false; newCourseAges = []; }} maxWidth="lg">
