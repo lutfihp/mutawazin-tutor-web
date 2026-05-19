@@ -174,6 +174,21 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let teacherCourses = $state<any[]>([]);
 
+	// Add Session form state
+	let sType = $state<'group' | 'private'>('group');
+	let sTitle = $state('');
+	let sCourseId = $state('');
+	let sStudentId = $state('');
+	let sDate = $state('');
+	let sStartTime = $state('');
+	let sEndTime = $state('');
+	let sMode = $state<'online' | 'offline'>('online');
+	let sPrice = $state('');
+	let sLoading = $state(false);
+	let sFormEl = $state<HTMLFormElement | null>(null);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let calendarStudents = $state<any[]>([]);
+
 	async function fetchRecurringTemplates() {
 		if (!isTeacher) return;
 		try {
@@ -191,6 +206,16 @@
 			teacherCourses = Array.isArray(d) ? d : [];
 		} catch {
 			teacherCourses = [];
+		}
+	}
+
+	async function fetchCalendarStudents() {
+		if (!isTeacher) return;
+		try {
+			const d = await api.get<any[]>('/students');
+			calendarStudents = Array.isArray(d) ? d : [];
+		} catch {
+			calendarStudents = [];
 		}
 	}
 
@@ -255,10 +280,38 @@
 		}
 	}
 
+	async function handleAddSession(e: SubmitEvent) {
+		e.preventDefault();
+		if (!sDate || !sStartTime || !sEndTime) return;
+		sLoading = true;
+		try {
+			const starts_at = new Date(`${sDate}T${sStartTime}:00`).toISOString();
+			const ends_at = new Date(`${sDate}T${sEndTime}:00`).toISOString();
+			await api.post('/sessions', {
+				type: sType,
+				title: sTitle,
+				starts_at,
+				ends_at,
+				mode: sMode,
+				course_id: sType === 'group' ? sCourseId : undefined,
+				student_id: sType === 'private' ? sStudentId : undefined,
+				price: sPrice ? Number(sPrice) : undefined,
+			});
+			addOpen = false;
+			sType = 'group'; sTitle = ''; sCourseId = ''; sStudentId = '';
+			sDate = ''; sStartTime = ''; sEndTime = '';
+			sMode = 'online'; sPrice = '';
+			await fetchSessions();
+		} finally {
+			sLoading = false;
+		}
+	}
+
 	onMount(() => {
 		fetchAvailability();
 		fetchRecurringTemplates();
 		fetchTeacherCourses();
+		fetchCalendarStudents();
 	});
 </script>
 
