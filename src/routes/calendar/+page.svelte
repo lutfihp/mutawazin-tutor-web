@@ -607,11 +607,106 @@
 <!-- Add session modal -->
 {#if isTeacher}
 	<Modal open={addOpen} title={$t('calendar.modal.addTitle')} onclose={() => (addOpen = false)}>
-		<div class="flex flex-col gap-4 text-sm text-text2">
-			<p>Use the calendar to create sessions by selecting a date.</p>
-		</div>
+		<form bind:this={sFormEl} onsubmit={handleAddSession} class="flex flex-col gap-4">
+			<!-- Type -->
+			<div>
+				<p class="text-[13px] font-medium mb-2">{$t('calendar.modal.typeLabel')}</p>
+				<div class="flex gap-2" role="radiogroup" aria-label={$t('calendar.modal.typeLabel')}>
+					{#each ([['group', $t('calendar.modal.typeGroup')], ['private', $t('calendar.modal.typePrivate')]] as const) as [val, label]}
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="sType" value={val} bind:group={sType} class="sr-only" />
+							<span class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+							             {sType === val ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+								{label}
+							</span>
+						</label>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Title -->
+			<div class="flex flex-col gap-1.5">
+				<label for="sTitle" class="text-[13px] font-medium">{$t('calendar.modal.titleLabel')}</label>
+				<input id="sTitle" bind:value={sTitle} required
+					placeholder={$t('calendar.modal.titlePlaceholder')}
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15" />
+			</div>
+
+			<!-- Course (group) or Student (private) -->
+			{#if sType === 'group'}
+				<div class="flex flex-col gap-1.5">
+					<label for="sCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
+					<select id="sCourseId" bind:value={sCourseId} required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+						<option value="">— {$t('calendar.modal.courseLabel')}</option>
+						{#each teacherCourses as course}
+							<option value={course.id}>{course.name ?? course.title}</option>
+						{/each}
+					</select>
+				</div>
+			{:else}
+				<div class="flex flex-col gap-1.5">
+					<label for="sStudentId" class="text-[13px] font-medium">{$t('calendar.modal.studentLabel')}</label>
+					<select id="sStudentId" bind:value={sStudentId} required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+						<option value="">— {$t('calendar.modal.studentLabel')}</option>
+						{#each calendarStudents as student}
+							<option value={student.user_id}>{student.full_name}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
+
+			<!-- Date -->
+			<div class="flex flex-col gap-1.5">
+				<label for="sDate" class="text-[13px] font-medium">{$t('calendar.modal.dateLabel')}</label>
+				<input id="sDate" type="date" bind:value={sDate} required
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+			</div>
+
+			<!-- Start + End time -->
+			<div class="grid grid-cols-2 gap-3">
+				<div class="flex flex-col gap-1.5">
+					<label for="sStartTime" class="text-[13px] font-medium">{$t('calendar.modal.startLabel')}</label>
+					<input id="sStartTime" type="time" bind:value={sStartTime} required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+				</div>
+				<div class="flex flex-col gap-1.5">
+					<label for="sEndTime" class="text-[13px] font-medium">{$t('calendar.modal.endLabel')}</label>
+					<input id="sEndTime" type="time" bind:value={sEndTime} required
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+				</div>
+			</div>
+
+			<!-- Mode -->
+			<div>
+				<p class="text-[13px] font-medium mb-2">{$t('calendar.modal.modeLabel')}</p>
+				<div class="flex gap-2" role="radiogroup" aria-label={$t('calendar.modal.modeLabel')}>
+					{#each ([['online', $t('calendar.modal.modeOnline')], ['offline', $t('calendar.modal.modeOffline')]] as const) as [val, label]}
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="sMode" value={val} bind:group={sMode} class="sr-only" />
+							<span class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+							             {sMode === val ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+								{label}
+							</span>
+						</label>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Price (optional) -->
+			<div class="flex flex-col gap-1.5">
+				<label for="sPrice" class="text-[13px] font-medium">{$t('calendar.modal.priceLabel')}</label>
+				<input id="sPrice" type="number" min="0" step="0.01" bind:value={sPrice}
+					placeholder="0"
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+			</div>
+		</form>
 		{#snippet footer()}
 			<Button variant="secondary" size="sm" onclick={() => (addOpen = false)}>{$t('common.cancel')}</Button>
+			<Button variant="primary" size="sm" loading={sLoading} onclick={() => sFormEl?.requestSubmit()}>
+				{$t('common.save')}
+			</Button>
 		{/snippet}
 	</Modal>
 
