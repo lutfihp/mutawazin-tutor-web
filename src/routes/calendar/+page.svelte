@@ -189,6 +189,19 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let calendarStudents = $state<any[]>([]);
 
+	// Availability slot form state
+	let slotOpen = $state(false);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let editingSlot = $state<any | null>(null);
+	let slotMode = $state<'weekly' | 'specific'>('weekly');
+	let slotDayOfWeek = $state('0');
+	let slotSpecificDate = $state('');
+	let slotStartTime = $state('');
+	let slotEndTime = $state('');
+	let slotLoading = $state(false);
+	let slotDeleteLoading = $state<string | null>(null);
+	let slotConfirmDelete = $state<string | null>(null);
+
 	async function fetchRecurringTemplates() {
 		if (!isTeacher) return;
 		try {
@@ -216,6 +229,58 @@
 			calendarStudents = Array.isArray(d) ? d : [];
 		} catch {
 			calendarStudents = [];
+		}
+	}
+
+	function openAddSlot() {
+		editingSlot = null;
+		slotMode = 'weekly'; slotDayOfWeek = '0';
+		slotSpecificDate = ''; slotStartTime = ''; slotEndTime = '';
+		slotOpen = true;
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function openEditSlot(slot: any) {
+		editingSlot = slot;
+		slotMode = slot.specific_date ? 'specific' : 'weekly';
+		slotDayOfWeek = String(slot.day_of_week ?? 0);
+		slotSpecificDate = slot.specific_date ?? '';
+		slotStartTime = slot.start_time ?? '';
+		slotEndTime = slot.end_time ?? '';
+		slotOpen = true;
+	}
+
+	async function handleSlotSubmit() {
+		slotLoading = true;
+		try {
+			if (editingSlot) {
+				await api.put(`/availability/${editingSlot.id}`, {
+					start_time: slotStartTime,
+					end_time: slotEndTime,
+				});
+			} else {
+				await api.post('/availability', {
+					day_of_week: slotMode === 'weekly' ? Number(slotDayOfWeek) : undefined,
+					specific_date: slotMode === 'specific' ? slotSpecificDate : undefined,
+					start_time: slotStartTime,
+					end_time: slotEndTime,
+				});
+			}
+			slotOpen = false;
+			await fetchAvailability();
+		} finally {
+			slotLoading = false;
+		}
+	}
+
+	async function deleteSlot(id: string) {
+		slotDeleteLoading = id;
+		try {
+			await api.delete(`/availability/${id}`);
+			availability = availability.filter((s: any) => s.id !== id);
+		} finally {
+			slotDeleteLoading = null;
+			slotConfirmDelete = null;
 		}
 	}
 
