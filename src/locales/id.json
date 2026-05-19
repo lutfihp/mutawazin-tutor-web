@@ -359,6 +359,8 @@
       "modeOnline": "Online",
       "modeOffline": "Offline",
       "priceLabel": "Harga (opsional)",
+      "titleLabel": "Judul",
+      "titlePlaceholder": "mis. Kalkulus — Limit",
       "rateSession": "Nilai sesi ini",
       "ratingSubmit": "Kirim Penilaian",
       "ratingComment": "Komentar (opsional)",

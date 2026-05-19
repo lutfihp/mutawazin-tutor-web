@@ -359,6 +359,8 @@
       "modeOnline": "Online",
       "modeOffline": "Offline",
       "priceLabel": "Price (optional)",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g. Calculus — Limits",
       "rateSession": "Rate this session",
       "ratingSubmit": "Submit Rating",
       "ratingComment": "Comment (optional)",
