@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-19 — session 3)
+## Current Status (as of 2026-05-20 — session 4)
 
 ### Build status: ✅ Passes `npm run build` and `npm run check` (0 errors)
 
@@ -41,7 +41,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Admin | Stats, Pending approvals (approve/reject), All Users (wired), **Create Teacher/Student**, **Subjects management** (pending list + approve/reject + create), live badge count, **Featured teacher toggle** | ✅ |
 | Dashboards | Teacher dashboard (real names + **My Students roster**), Student dashboard, Admin → `/admin` redirect | ✅ |
 | Profiles | Teacher profile (bio edit, photo, new fields: mode/city/methods/uni/experience/achievements, rating display), Student profile | ✅ |
-| Courses | Filter + grid (subject filter dynamic from `/subjects`), **create via subject picker**, **suggest new subject**, admin+teacher can create | ✅ |
+| Courses | Filter + grid (subject filter dynamic from `/subjects`), **create via subject picker**, **suggest new subject**, admin+teacher can create, **admin Enroll Student** (`POST /courses/:id/enroll`) | ✅ |
 | Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating**, **Cancel Session + Mark Completed wired**, **Add Session full form** (7 fields, `POST /sessions`), **Availability CRUD** (Add Slot weekly/specific + edit/delete) | ✅ |
 | Reports | Score grid, create/edit modal with **understanding_level A–E**, **Share button + panel**, public `/report/share/:token` page | ✅ |
 | Brand | SVG companion mark in Navbar+footer, brand kit in `static/brand-kit/`, `mark-light.svg` for dark footer | ✅ |
@@ -56,17 +56,17 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Stage 1 — Landing | All sections ✅; trust row + vignette intentionally removed (fake data); footer social icons not added | ~95% |
 | Stage 2 — Auth | All 9 screens + bonus Forgot/Reset Password | 100% |
 | Stage 3 — Dashboards + Profiles | All 5 pages | 100% |
-| Stage 4 — Features | Courses ✅, Reports ✅, Calendar ✅ (Add Session + Availability CRUD now complete) | ~95% |
+| Stage 4 — Features | Courses ✅ (+ enrollment), Reports ✅, Calendar ✅ | ~98% |
 
 ### What is NOT done yet (known gaps for next session)
 
-1. **Course enrollment** — `POST /courses/:id/enroll` button not built on the course card/detail.
+1. **Runtime verification** — new calendar + enrollment features not yet tested against live backend. See `docs/qa-checklist.md` for full checklist.
 
-2. **Mobile testing** — hamburger sidebar untested at 375px.
+2. **Availability slot `id` field** — confirmed `id` from backend source code, but not yet tested live. If edit/delete fail at runtime, fix `{@const slotId = slot.id ?? slot.slot_id ?? ''}` in `src/routes/calendar/+page.svelte`.
 
-3. **Visual verification** — pages not checked against `handoffs/design_handoff_mutawazin/Stage*.html`.
+3. **Mobile testing** — hamburger sidebar untested at 375px viewport.
 
-4. **Availability slot `id` field** — edit/delete use `slot.id ?? slot.slot_id`. Verify which field name the backend returns at runtime; fix the one-liner in the calendar panel if needed.
+4. **Visual verification** — pages not checked against `handoffs/design_handoff_mutawazin/Stage*.html`.
 
 ---
 
@@ -180,11 +180,13 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Runtime verification**
-1. Test Add Session form end-to-end (check `POST /sessions` fires correctly, session appears on calendar)
-2. Test Availability CRUD end-to-end — confirm `slot.id` vs `slot.slot_id` field name from backend; fix in `calendar/+page.svelte` at `{@const slotId = slot.id ?? slot.slot_id ?? ''}` if needed
+The app is **feature-complete** against the design handoffs. Remaining work is QA only.
 
-**Priority 2 — Remaining features**
-3. Course enrollment button — `POST /courses/:id/enroll` on course card
-4. Visual verification against `handoffs/design_handoff_mutawazin/Stage*.html`
-5. Mobile testing at 375px viewport
+**Priority 1 — Runtime QA (use `docs/qa-checklist.md`)**
+1. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
+2. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
+3. Test Course enrollment (admin: "Enroll Student" → `POST /courses/:id/enroll`, count +1)
+
+**Priority 2 — Design + Mobile QA**
+4. Visual verification — open each `handoffs/design_handoff_mutawazin/Stage*.html` in browser, compare against live app, note and fix gaps
+5. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
