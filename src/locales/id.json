@@ -285,6 +285,8 @@
     "allStatuses": "Semua status",
     "createNew": "+ Buat Kursus Baru",
     "viewCourse": "Lihat Kursus",
+    "enrollStudent": "Daftarkan Murid",
+    "enrollSelectStudent": "Pilih murid",
     "enrolled": "{n} murid terdaftar",
     "nextSession": "Berikutnya: {when}",
     "noResults": "Tidak ada kursus. Coba sesuaikan filter Anda.",

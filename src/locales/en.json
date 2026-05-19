@@ -285,6 +285,8 @@
     "allStatuses": "All statuses",
     "createNew": "+ Create New Course",
     "viewCourse": "View Course",
+    "enrollStudent": "Enroll Student",
+    "enrollSelectStudent": "Select a student",
     "enrolled": "{n} students enrolled",
     "nextSession": "Next: {when}",
     "noResults": "No courses found. Try adjusting your filters.",
