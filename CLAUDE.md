@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-19 — session 2)
+## Current Status (as of 2026-05-19 — session 3)
 
 ### Build status: ✅ Passes `npm run build` and `npm run check` (0 errors)
 
@@ -42,7 +42,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Dashboards | Teacher dashboard (real names + **My Students roster**), Student dashboard, Admin → `/admin` redirect | ✅ |
 | Profiles | Teacher profile (bio edit, photo, new fields: mode/city/methods/uni/experience/achievements, rating display), Student profile | ✅ |
 | Courses | Filter + grid (subject filter dynamic from `/subjects`), **create via subject picker**, **suggest new subject**, admin+teacher can create | ✅ |
-| Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating**, **Cancel Session + Mark Completed wired** (correct `/status` endpoint) | ✅ |
+| Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating**, **Cancel Session + Mark Completed wired**, **Add Session full form** (7 fields, `POST /sessions`), **Availability CRUD** (Add Slot weekly/specific + edit/delete) | ✅ |
 | Reports | Score grid, create/edit modal with **understanding_level A–E**, **Share button + panel**, public `/report/share/:token` page | ✅ |
 | Brand | SVG companion mark in Navbar+footer, brand kit in `static/brand-kit/`, `mark-light.svg` for dark footer | ✅ |
 | Subjects | Renamed from "Catalog"; 5-level age categories (pre-school/elementary/middle-school/high-school/general) | ✅ |
@@ -56,19 +56,17 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Stage 1 — Landing | All sections ✅; trust row + vignette intentionally removed (fake data); footer social icons not added | ~95% |
 | Stage 2 — Auth | All 9 screens + bonus Forgot/Reset Password | 100% |
 | Stage 3 — Dashboards + Profiles | All 5 pages | 100% |
-| Stage 4 — Features | Courses ✅, Reports ✅, Calendar partial (Add Session + Availability CRUD missing) | ~75% |
+| Stage 4 — Features | Courses ✅, Reports ✅, Calendar ✅ (Add Session + Availability CRUD now complete) | ~95% |
 
 ### What is NOT done yet (known gaps for next session)
 
-1. **Calendar Add Session modal** — still a placeholder `<p>` inside the modal. Needs full form: type radio-pills, course/student select, date + start/end time pickers, `POST /sessions`. Student dropdown should use `GET /students` (teacher auth).
+1. **Course enrollment** — `POST /courses/:id/enroll` button not built on the course card/detail.
 
-2. **Availability CRUD** — right panel "Add Slot" button and edit/delete icons are not wired. Needs `POST /availability`, `PUT /availability/:id`, `DELETE /availability/:id`.
+2. **Mobile testing** — hamburger sidebar untested at 375px.
 
-3. **Course enrollment** — `POST /courses/:id/enroll` button not built on the course card/detail.
+3. **Visual verification** — pages not checked against `handoffs/design_handoff_mutawazin/Stage*.html`.
 
-4. **Mobile testing** — hamburger sidebar untested at 375px.
-
-5. **Visual verification** — pages not checked against `handoffs/design_handoff_mutawazin/Stage*.html`.
+4. **Availability slot `id` field** — edit/delete use `slot.id ?? slot.slot_id`. Verify which field name the backend returns at runtime; fix the one-liner in the calendar panel if needed.
 
 ---
 
@@ -182,9 +180,9 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Calendar completions (Stage 4 finish line)**
-1. Calendar Add Session full form — type radio-pills (group/private), course select (`GET /courses`), student select (`GET /students`), date + start/end time pickers, `POST /sessions { type, title, starts_at, ends_at, mode, course_id?, student_id?, price? }`
-2. Availability CRUD — "Add Slot" modal + edit/delete wired to `POST /availability { day_of_week?, specific_date?, start_time, end_time }`, `PUT /availability/:slot_id { start_time?, end_time? }`, `DELETE /availability/:slot_id`
+**Priority 1 — Runtime verification**
+1. Test Add Session form end-to-end (check `POST /sessions` fires correctly, session appears on calendar)
+2. Test Availability CRUD end-to-end — confirm `slot.id` vs `slot.slot_id` field name from backend; fix in `calendar/+page.svelte` at `{@const slotId = slot.id ?? slot.slot_id ?? ''}` if needed
 
 **Priority 2 — Remaining features**
 3. Course enrollment button — `POST /courses/:id/enroll` on course card
