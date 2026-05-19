@@ -529,21 +529,42 @@
 				<div class="bg-white border border-border rounded-DEFAULT p-4">
 					<div class="flex items-center justify-between mb-3">
 						<h2 class="font-semibold">{$t('calendar.myAvailability')}</h2>
-						<Button variant="secondary" size="sm">{$t('calendar.addSlot')}</Button>
+						<Button variant="secondary" size="sm" onclick={openAddSlot}>{$t('calendar.addSlot')}</Button>
 					</div>
 					{#if availability.length}
 						<div class="flex flex-col gap-1.5">
 							{#each availability as slot}
+								{@const slotId = slot.id ?? slot.slot_id ?? ''}
 								<div class="flex items-center justify-between text-sm py-1 border-b border-border last:border-0">
-									<span class="text-text2 tabular">{slot.day_of_week ?? slot.specific_date} · {slot.start_time}–{slot.end_time}</span>
-									<div class="flex gap-1">
-										<button class="text-text2 hover:text-text" aria-label="Edit slot">
-											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-										</button>
-										<button class="text-text2 hover:text-error" aria-label="Delete slot">
-											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-										</button>
-									</div>
+									<span class="text-text2 tabular">
+										{slot.day_of_week !== undefined && slot.day_of_week !== null
+											? ($t('calendar.modal.days') as unknown as string[])[slot.day_of_week]
+											: slot.specific_date}
+										· {slot.start_time}–{slot.end_time}
+									</span>
+									{#if slotConfirmDelete === slotId}
+										<div class="flex items-center gap-1">
+											<span class="text-xs text-text2">Sure?</span>
+											<button onclick={() => (slotConfirmDelete = null)}
+												class="text-xs text-text2 hover:text-text px-1">✕</button>
+											<button onclick={() => deleteSlot(slotId)}
+												disabled={slotDeleteLoading === slotId}
+												class="text-xs text-error font-medium px-1 disabled:opacity-50">
+												{slotDeleteLoading === slotId ? '…' : 'Delete'}
+											</button>
+										</div>
+									{:else}
+										<div class="flex gap-1">
+											<button onclick={() => openEditSlot(slot)}
+												class="text-text2 hover:text-text p-1" aria-label="Edit slot">
+												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+											</button>
+											<button onclick={() => (slotConfirmDelete = slotId)}
+												class="text-text2 hover:text-error p-1" aria-label="Delete slot">
+												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+											</button>
+										</div>
+									{/if}
 								</div>
 							{/each}
 						</div>
@@ -876,6 +897,79 @@
 			<Button variant="secondary" size="sm" onclick={() => (recurringOpen = false)}>{$t('common.cancel')}</Button>
 			<Button variant="primary" size="sm" loading={rLoading} onclick={() => rFormEl?.requestSubmit()}>
 				{editingTemplate ? $t('common.save') : $t('calendar.addRecurring')}
+			</Button>
+		{/snippet}
+	</Modal>
+
+	<!-- Add/Edit Slot modal -->
+	<Modal
+		open={slotOpen}
+		title={editingSlot ? 'Edit Availability Slot' : $t('calendar.addSlot')}
+		onclose={() => (slotOpen = false)}
+	>
+		<div class="flex flex-col gap-4">
+			<!-- Mode toggle — add only -->
+			{#if !editingSlot}
+				<div>
+					<p class="text-[13px] font-medium mb-2">Slot type</p>
+					<div class="flex gap-2" role="radiogroup" aria-label="Slot type">
+						{#each ([['weekly', 'Weekly (day of week)'], ['specific', 'Specific date']] as const) as [val, label]}
+							<label class="flex items-center gap-1.5 cursor-pointer">
+								<input type="radio" name="slotMode" value={val} bind:group={slotMode} class="sr-only" />
+								<span class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
+								             {slotMode === val ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
+									{label}
+								</span>
+							</label>
+						{/each}
+					</div>
+				</div>
+
+				<!-- Day of week or specific date -->
+				{#if slotMode === 'weekly'}
+					<div class="flex flex-col gap-1.5">
+						<label for="slotDayOfWeek" class="text-[13px] font-medium">{$t('calendar.modal.dayLabel')}</label>
+						<select id="slotDayOfWeek" bind:value={slotDayOfWeek}
+							class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+							{#each ($t('calendar.modal.days') as unknown as string[]) as day, i}
+								<option value={String(i)}>{day}</option>
+							{/each}
+						</select>
+					</div>
+				{:else}
+					<div class="flex flex-col gap-1.5">
+						<label for="slotSpecificDate" class="text-[13px] font-medium">{$t('calendar.modal.dateLabel')}</label>
+						<input id="slotSpecificDate" type="date" bind:value={slotSpecificDate}
+							class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+					</div>
+				{/if}
+			{:else}
+				<!-- Edit mode: show current slot label read-only -->
+				<p class="text-sm text-text2 font-medium">
+					{editingSlot.day_of_week !== undefined && editingSlot.day_of_week !== null
+						? ($t('calendar.modal.days') as unknown as string[])[editingSlot.day_of_week]
+						: editingSlot.specific_date}
+				</p>
+			{/if}
+
+			<!-- Start + End time -->
+			<div class="grid grid-cols-2 gap-3">
+				<div class="flex flex-col gap-1.5">
+					<label for="slotStartTime" class="text-[13px] font-medium">{$t('calendar.modal.startLabel')}</label>
+					<input id="slotStartTime" type="time" bind:value={slotStartTime}
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+				</div>
+				<div class="flex flex-col gap-1.5">
+					<label for="slotEndTime" class="text-[13px] font-medium">{$t('calendar.modal.endLabel')}</label>
+					<input id="slotEndTime" type="time" bind:value={slotEndTime}
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
+				</div>
+			</div>
+		</div>
+		{#snippet footer()}
+			<Button variant="secondary" size="sm" onclick={() => (slotOpen = false)}>{$t('common.cancel')}</Button>
+			<Button variant="primary" size="sm" loading={slotLoading} onclick={handleSlotSubmit}>
+				{$t('common.save')}
 			</Button>
 		{/snippet}
 	</Modal>
