@@ -44,6 +44,47 @@
 	let newCourseAges = $state<string[]>([]);
 	let createLoading = $state(false);
 
+	// Enrollment modal state
+	let enrollOpen = $state(false);
+	let enrollCourseId = $state('');
+	let enrollStudentId = $state('');
+	let enrollLoading = $state(false);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let adminStudents = $state<any[]>([]);
+	let adminStudentsLoading = $state(false);
+
+	async function openEnroll(courseId: string) {
+		enrollCourseId = courseId;
+		enrollStudentId = '';
+		enrollOpen = true;
+		if (adminStudents.length > 0) return;
+		adminStudentsLoading = true;
+		try {
+			const result = await api.get<any[]>('/admin/students');
+			adminStudents = Array.isArray(result) ? result : [];
+		} catch {
+			adminStudents = [];
+		} finally {
+			adminStudentsLoading = false;
+		}
+	}
+
+	async function submitEnroll() {
+		if (!enrollStudentId) return;
+		enrollLoading = true;
+		try {
+			await api.post(`/courses/${enrollCourseId}/enroll`, { student_id: enrollStudentId });
+			courses = courses.map((c: any) =>
+				c.id === enrollCourseId
+					? { ...c, enrolled_count: (c.enrolled_count ?? 0) + 1 }
+					: c
+			);
+			enrollOpen = false;
+		} finally {
+			enrollLoading = false;
+		}
+	}
+
 	function toggleCourseAge(age: string) {
 		newCourseAges = newCourseAges.includes(age)
 			? newCourseAges.filter((a) => a !== age)
