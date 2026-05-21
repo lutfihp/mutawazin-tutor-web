@@ -10,7 +10,6 @@
 		Calendar,
 		FileText,
 		Users,
-		ShieldCheck,
 	} from 'lucide-svelte';
 	import { pendingApprovalCount } from '$lib/stores/adminBadge';
 
@@ -26,10 +25,10 @@
 
 	const items = $derived(({
 		admin: [
-			{ id: 'overview',  labelKey: 'nav.overview',              href: '/admin',                   icon: Home },
-			{ id: 'approvals', labelKey: 'nav.pendingApprovals',      href: '/admin#pending-approvals', icon: ShieldCheck },
-			{ id: 'users',     labelKey: 'dashboard.admin.allUsers',  href: '/admin#all-users',         icon: Users },
-			{ id: 'subjects',  labelKey: 'nav.subjects',              href: '/admin#subjects',          icon: BookOpen },
+			{ id: 'overview',  labelKey: 'nav.overview',   href: '/admin',           icon: Home },
+			{ id: 'teachers',  labelKey: 'nav.teachers',   href: '/admin/teachers',  icon: Users },
+			{ id: 'students',  labelKey: 'nav.students',   href: '/admin/students',  icon: User },
+			{ id: 'subjects',  labelKey: 'nav.subjects',   href: '/admin/subjects',  icon: BookOpen },
 		],
 		teacher: [
 			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',                  icon: Home },
