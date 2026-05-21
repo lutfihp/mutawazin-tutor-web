@@ -70,63 +70,63 @@
 		featuredLoading = { ...featuredLoading, [teacherId]: false };
 	}
 
-	// Catalog management
+	// Subject management
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let pendingCatalog = $state<any[]>([]);
-	let catalogActionLoading = $state<string | null>(null);
-	let createCatalogOpen = $state(false);
-	let newCatalogName = $state('');
-	let newCatalogSubject = $state('');
-	let newCatalogAges = $state<string[]>([]);
-	let createCatalogLoading = $state(false);
-	let createCatalogFormEl = $state<HTMLFormElement | null>(null);
+	let pendingSubjects = $state<any[]>([]);
+	let subjectActionLoading = $state<string | null>(null);
+	let createSubjectOpen = $state(false);
+	let newSubjectName = $state('');
+	let newSubjectField = $state('');
+	let newSubjectAges = $state<string[]>([]);
+	let createSubjectLoading = $state(false);
+	let createSubjectFormEl = $state<HTMLFormElement | null>(null);
 
-	function toggleCatalogAge(age: string) {
-		newCatalogAges = newCatalogAges.includes(age)
-			? newCatalogAges.filter((a) => a !== age)
-			: [...newCatalogAges, age];
+	function toggleSubjectAge(age: string) {
+		newSubjectAges = newSubjectAges.includes(age)
+			? newSubjectAges.filter((a) => a !== age)
+			: [...newSubjectAges, age];
 	}
 
-	async function handleCreateCatalog(e: SubmitEvent) {
+	async function handleCreateSubject(e: SubmitEvent) {
 		e.preventDefault();
-		createCatalogLoading = true;
+		createSubjectLoading = true;
 		try {
 			await api.post('/admin/subjects', {
-				name: newCatalogName,
+				name: newSubjectName,
 			});
-			createCatalogOpen = false;
-			newCatalogName = '';
+			createSubjectOpen = false;
+			newSubjectName = '';
 		} catch {
 			// stay open on error
 		} finally {
-			createCatalogLoading = false;
+			createSubjectLoading = false;
 		}
 	}
 
-	async function fetchPendingCatalog() {
+	async function fetchPendingSubjects() {
 		try {
 			const entries = await api.get<any[]>('/admin/subjects?status=pending');
-			pendingCatalog = Array.isArray(entries) ? entries : [];
+			pendingSubjects = Array.isArray(entries) ? entries : [];
 		} catch {
-			pendingCatalog = [];
+			pendingSubjects = [];
 		}
 	}
 
-	async function handleCatalogAction(id: string, action: 'approve' | 'reject') {
-		catalogActionLoading = `${id}-${action}`;
+	async function handleSubjectAction(id: string, action: 'approve' | 'reject') {
+		subjectActionLoading = `${id}-${action}`;
 		try {
 			await api.patch(`/admin/subjects/${id}/verify`, { action });
-			pendingCatalog = pendingCatalog.filter((e: any) => e.id !== id);
+			pendingSubjects = pendingSubjects.filter((e: any) => e.id !== id);
 		} catch {
 			// keep optimistic state
 		} finally {
-			catalogActionLoading = null;
+			subjectActionLoading = null;
 		}
 	}
 
 	onMount(() => {
 		fetchAllUsers();
-		fetchPendingCatalog();
+		fetchPendingSubjects();
 	});
 
 	// Create user modal
@@ -503,34 +503,34 @@
 		{/if}
 	</Card>
 
-	<!-- Pending Catalog Suggestions -->
-	<div id="catalog"></div>
+	<!-- Pending Subject Suggestions -->
+	<div id="subjects"></div>
 	<Card padding="none">
 		{#snippet head()}
-			<h2 class="font-semibold">{$t('dashboard.admin.pendingCatalog')}</h2>
+			<h2 class="font-semibold">{$t('dashboard.admin.pendingSubjects')}</h2>
 			<div class="flex items-center gap-2">
-				{#if pendingCatalog.length > 0}
-					<Badge variant="warning" label={$t('dashboard.admin.waitingCatalog', { values: { n: pendingCatalog.length } })} />
+				{#if pendingSubjects.length > 0}
+					<Badge variant="warning" label={$t('dashboard.admin.waitingSubjects', { values: { n: pendingSubjects.length } })} />
 				{/if}
-				<Button variant="primary" size="sm" onclick={() => (createCatalogOpen = true)}>
-					{$t('dashboard.admin.createCatalog')}
+				<Button variant="primary" size="sm" onclick={() => (createSubjectOpen = true)}>
+					{$t('dashboard.admin.createSubject')}
 				</Button>
 			</div>
 		{/snippet}
-		{#if pendingCatalog.length === 0}
-			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.admin.noPendingCatalog')}</p>
+		{#if pendingSubjects.length === 0}
+			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.admin.noPendingSubjects')}</p>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead class="bg-bgGray text-[13px] font-medium text-text2">
 						<tr>
-							<th class="px-5 py-3 text-left">{$t('dashboard.admin.catalogName')}</th>
+							<th class="px-5 py-3 text-left">{$t('dashboard.admin.subjectName')}</th>
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.status')}</th>
 							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
-						{#each pendingCatalog as entry}
+						{#each pendingSubjects as entry}
 							<tr class="hover:bg-bgGray/50 transition-colors">
 								<td class="px-5 py-3 font-medium">{entry.name}</td>
 								<td class="px-5 py-3 hidden sm:table-cell">
@@ -539,14 +539,14 @@
 								<td class="px-5 py-3 text-right">
 									<div class="flex items-center justify-end gap-2">
 										<Button variant="success" size="sm"
-											loading={catalogActionLoading === `${entry.id}-approve`}
-											onclick={() => handleCatalogAction(entry.id, 'approve')}>
-											{$t('dashboard.admin.catalogApprove')}
+											loading={subjectActionLoading === `${entry.id}-approve`}
+											onclick={() => handleSubjectAction(entry.id, 'approve')}>
+											{$t('dashboard.admin.subjectApprove')}
 										</Button>
 										<Button variant="danger" size="sm"
-											loading={catalogActionLoading === `${entry.id}-reject`}
-											onclick={() => handleCatalogAction(entry.id, 'reject')}>
-											{$t('dashboard.admin.catalogReject')}
+											loading={subjectActionLoading === `${entry.id}-reject`}
+											onclick={() => handleSubjectAction(entry.id, 'reject')}>
+											{$t('dashboard.admin.subjectReject')}
 										</Button>
 									</div>
 								</td>
@@ -558,24 +558,24 @@
 		{/if}
 	</Card>
 
-	<!-- Create Catalog Modal -->
+	<!-- Create Subject Modal -->
 	<Modal
-		open={createCatalogOpen}
-		title={$t('dashboard.admin.createCatalogTitle')}
-		onclose={() => (createCatalogOpen = false)}
+		open={createSubjectOpen}
+		title={$t('dashboard.admin.createSubjectTitle')}
+		onclose={() => (createSubjectOpen = false)}
 	>
-		<form bind:this={createCatalogFormEl} onsubmit={handleCreateCatalog} class="flex flex-col gap-4">
+		<form bind:this={createSubjectFormEl} onsubmit={handleCreateSubject} class="flex flex-col gap-4">
 			<div class="flex flex-col gap-1.5">
-				<label for="catalogName" class="text-[13px] font-medium">{$t('dashboard.admin.catalogName')}</label>
-				<input id="catalogName" type="text" bind:value={newCatalogName} required
+				<label for="catalogName" class="text-[13px] font-medium">{$t('dashboard.admin.subjectName')}</label>
+				<input id="subjectNameInput" type="text" bind:value={newSubjectName} required
 					placeholder="e.g. Introduction to Algebra"
 					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
 			</div>
 		</form>
 		{#snippet footer()}
-			<Button variant="secondary" size="sm" onclick={() => (createCatalogOpen = false)}>{$t('common.cancel')}</Button>
-			<Button variant="primary" size="sm" loading={createCatalogLoading} onclick={() => createCatalogFormEl?.requestSubmit()}>
-				{$t('dashboard.admin.createCatalog')}
+			<Button variant="secondary" size="sm" onclick={() => (createSubjectOpen = false)}>{$t('common.cancel')}</Button>
+			<Button variant="primary" size="sm" loading={createSubjectLoading} onclick={() => createSubjectFormEl?.requestSubmit()}>
+				{$t('dashboard.admin.createSubject')}
 			</Button>
 		{/snippet}
 	</Modal>
