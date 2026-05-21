@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -7,6 +8,7 @@
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let allStudents = $state<any[]>([]);
@@ -152,7 +154,7 @@
 							<th class="px-5 py-3 text-left">{$t('common.name')}</th>
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.contact')}</th>
 							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('common.status')}</th>
-							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('dashboard.admin.ageCategory')}</th>
+							<th class="px-5 py-3 text-left hidden md:table-cell">Age</th>
 							<th class="px-5 py-3 text-left hidden lg:table-cell">{$t('common.type')}</th>
 							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
 						</tr>
@@ -170,8 +172,13 @@
 								<td class="px-5 py-3 hidden md:table-cell">
 									<Badge variant={statusVariant(user.status ?? '')} label={user.status ?? ''} />
 								</td>
-								<td class="px-5 py-3 hidden md:table-cell">
-									<Badge variant="violet" label={user.age_category ?? ''} />
+								<td class="px-5 py-3 hidden md:table-cell text-sm text-text2">
+									{(() => {
+										const dob = user.date_of_birth;
+										if (!dob) return '—';
+										const age = Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));
+										return Number.isFinite(age) && age >= 0 ? String(age) : '—';
+									})()}
 								</td>
 								<td class="px-5 py-3 text-text2 text-xs hidden lg:table-cell">
 									{user.auth_type === 'username' || user.account_type === 'admin-created'
@@ -179,16 +186,10 @@
 										: $t('common.selfRegistered')}
 								</td>
 								<td class="px-5 py-3 text-right">
-									<button
-										onclick={() => openDelete(user.user_id ?? user.id, user.full_name ?? user.name ?? '')}
-										class="mr-3 text-sm font-medium px-2 py-1 rounded-sm text-errorText bg-errorBg hover:bg-error/20 transition-colors"
-									>
-										Delete
-									</button>
-									<a href="/students/{user.user_id ?? user.id}"
-										class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
-										{$t('common.viewProfile')}
-									</a>
+									<DropdownMenu items={[
+										{ label: $t('common.viewProfile'), onclick: () => goto(`/students/${user.user_id ?? user.id}`) },
+										{ label: 'Delete', variant: 'danger', onclick: () => openDelete(user.user_id ?? user.id, user.full_name ?? user.name ?? '') },
+									]} />
 								</td>
 							</tr>
 						{/each}

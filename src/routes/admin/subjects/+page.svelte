@@ -6,6 +6,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let allSubjects = $state<any[]>([]);
@@ -20,6 +21,13 @@
 	let deleteSubjectTarget = $state<{ id: string; name: string } | null>(null);
 	let deleteSubjectLoading = $state(false);
 	let deleteSubjectError = $state('');
+
+	let editSubjectOpen = $state(false);
+	let editSubjectTarget = $state<{ id: string; name: string } | null>(null);
+	let editSubjectName = $state('');
+	let editSubjectLoading = $state(false);
+	let editSubjectError = $state('');
+	let editSubjectFormEl = $state<HTMLFormElement | null>(null);
 
 	async function fetchSubjects() {
 		subjectsLoading = true;
@@ -69,6 +77,31 @@
 		}
 	}
 
+	function openEditSubject(id: string, name: string) {
+		editSubjectTarget = { id, name };
+		editSubjectName = name;
+		editSubjectError = '';
+		editSubjectOpen = true;
+	}
+
+	async function handleEditSubject(e: SubmitEvent) {
+		e.preventDefault();
+		if (!editSubjectTarget) return;
+		editSubjectLoading = true;
+		editSubjectError = '';
+		try {
+			await api.put(`/admin/subjects/${editSubjectTarget.id}`, { name: editSubjectName });
+			allSubjects = allSubjects.map((s: any) =>
+				s.id === editSubjectTarget!.id ? { ...s, name: editSubjectName } : s
+			);
+			editSubjectOpen = false;
+		} catch {
+			editSubjectError = 'Failed to save. Please try again.';
+		} finally {
+			editSubjectLoading = false;
+		}
+	}
+
 	onMount(fetchSubjects);
 </script>
 
@@ -110,12 +143,10 @@
 									<Badge variant="success" label={subject.status ?? 'verified'} />
 								</td>
 								<td class="px-5 py-3 text-right">
-									<button
-										onclick={() => openDeleteSubject(subject.id, subject.name)}
-										class="text-sm font-medium px-2 py-1 rounded-sm text-errorText bg-errorBg hover:bg-error/20 transition-colors"
-									>
-										Delete
-									</button>
+									<DropdownMenu items={[
+										{ label: 'Edit', onclick: () => openEditSubject(subject.id, subject.name) },
+										{ label: 'Delete', variant: 'danger', onclick: () => openDeleteSubject(subject.id, subject.name) },
+									]} />
 								</td>
 							</tr>
 						{/each}
@@ -157,5 +188,23 @@
 	{#snippet footer()}
 		<Button variant="secondary" size="sm" onclick={() => (deleteSubjectOpen = false)}>{$t('common.cancel')}</Button>
 		<Button variant="danger" size="sm" loading={deleteSubjectLoading} onclick={handleDeleteSubject}>Delete</Button>
+	{/snippet}
+</Modal>
+
+<!-- Edit Subject Modal -->
+<Modal open={editSubjectOpen} title="Edit Subject" onclose={() => (editSubjectOpen = false)}>
+	{#if editSubjectError}
+		<div class="mb-3 p-3 bg-errorBg rounded-sm text-sm text-errorText">{editSubjectError}</div>
+	{/if}
+	<form bind:this={editSubjectFormEl} onsubmit={handleEditSubject} class="flex flex-col gap-4">
+		<div class="flex flex-col gap-1.5">
+			<label for="editSubjectName" class="text-[13px] font-medium">Subject Name</label>
+			<input id="editSubjectName" type="text" bind:value={editSubjectName} required
+				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+		</div>
+	</form>
+	{#snippet footer()}
+		<Button variant="secondary" size="sm" onclick={() => (editSubjectOpen = false)}>{$t('common.cancel')}</Button>
+		<Button variant="primary" size="sm" loading={editSubjectLoading} onclick={() => editSubjectFormEl?.requestSubmit()}>Save</Button>
 	{/snippet}
 </Modal>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -7,6 +8,7 @@
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let allTeachers = $state<any[]>([]);
@@ -67,6 +69,14 @@
 	let deleteTarget = $state<{ id: string; name: string } | null>(null);
 	let deleteLoading = $state(false);
 	let deleteError = $state('');
+
+	let featuredConfirmOpen = $state(false);
+	let featuredConfirmTarget = $state<{ id: string; name: string; isFeatured: boolean } | null>(null);
+
+	function openFeaturedConfirm(id: string, name: string, isFeatured: boolean) {
+		featuredConfirmTarget = { id, name, isFeatured };
+		featuredConfirmOpen = true;
+	}
 
 	function openCreate() {
 		createOpen = true;
@@ -214,28 +224,14 @@
 										: $t('common.selfRegistered')}
 								</td>
 								<td class="px-5 py-3 text-right">
-									<button
-										onclick={() => openDelete(tid, user.full_name ?? user.name ?? '')}
-										class="mr-3 text-sm font-medium px-2 py-1 rounded-sm text-errorText bg-errorBg hover:bg-error/20 transition-colors"
-									>
-										Delete
-									</button>
-									<button
-										onclick={() => toggleFeatured(tid)}
-										disabled={featuredLoading[tid]}
-										class="mr-3 text-sm font-medium px-2 py-1 rounded-sm transition-colors
-										       {isFeatured
-											? 'text-[#92400E] bg-[#FEF3C7] hover:bg-[#FDE68A]'
-											: 'text-text2 bg-bgGray hover:bg-border/50'}
-										       disabled:opacity-50"
-										title={isFeatured ? 'Remove featured' : 'Mark as featured'}
-									>
-										{isFeatured ? '★' : '☆'} {isFeatured ? 'Featured' : 'Feature'}
-									</button>
-									<a href="/teachers/{user.user_id ?? user.id}"
-										class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
-										{$t('common.viewProfile')}
-									</a>
+									<DropdownMenu items={[
+										{ label: $t('common.viewProfile'), onclick: () => goto(`/teachers/${tid}`) },
+										{
+											label: isFeatured ? 'Unfeature' : 'Feature',
+											onclick: () => openFeaturedConfirm(tid, user.full_name ?? user.name ?? '', isFeatured)
+										},
+										{ label: 'Delete', variant: 'danger', onclick: () => openDelete(tid, user.full_name ?? user.name ?? '') },
+									]} />
 								</td>
 							</tr>
 						{/each}
@@ -329,5 +325,31 @@
 	{#snippet footer()}
 		<Button variant="secondary" size="sm" onclick={() => (deleteOpen = false)}>{$t('common.cancel')}</Button>
 		<Button variant="danger" size="sm" loading={deleteLoading} onclick={handleDelete}>Delete</Button>
+	{/snippet}
+</Modal>
+
+<!-- Featured Confirmation Modal -->
+<Modal
+	open={featuredConfirmOpen}
+	title="{featuredConfirmTarget?.isFeatured ? 'Unfeature' : 'Feature'} {featuredConfirmTarget?.name ?? ''}?"
+	onclose={() => (featuredConfirmOpen = false)}
+>
+	<p class="text-sm text-text2">
+		{#if featuredConfirmTarget?.isFeatured}
+			{featuredConfirmTarget.name} will be removed from the Featured Teachers section.
+		{:else}
+			{featuredConfirmTarget?.name} will appear in the Featured Teachers section on the homepage.
+		{/if}
+	</p>
+	{#snippet footer()}
+		<Button variant="secondary" size="sm" onclick={() => (featuredConfirmOpen = false)}>
+			{$t('common.cancel')}
+		</Button>
+		<Button variant="primary" size="sm" onclick={async () => {
+			if (featuredConfirmTarget) await toggleFeatured(featuredConfirmTarget.id);
+			featuredConfirmOpen = false;
+		}}>
+			Confirm
+		</Button>
 	{/snippet}
 </Modal>
