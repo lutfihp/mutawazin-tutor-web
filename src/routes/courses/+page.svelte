@@ -39,7 +39,7 @@
 
 	// Create modal
 	let createOpen = $state(false);
-	let newCatalogId = $state('');
+	let newSubjectId = $state('');
 	let newDesc = $state('');
 	let newCourseAges = $state<string[]>([]);
 	let createLoading = $state(false);
@@ -90,23 +90,23 @@
 			? newCourseAges.filter((a) => a !== age)
 			: [...newCourseAges, age];
 	}
-	let catalogEntries = $state<{ id: string; name: string; status: string }[]>([]);
+	let subjectEntries = $state<{ id: string; name: string; status: string }[]>([]);
 	let suggestMode = $state(false);
 	let suggestName = $state('');
 	let suggestLoading = $state(false);
 	let suggestSuccess = $state(false);
-	let catalogLoading = $state(false);
+	let subjectLoading = $state(false);
 
-	async function loadCatalog() {
-		if (catalogEntries.length > 0) return;
-		catalogLoading = true;
+	async function loadSubjects() {
+		if (subjectEntries.length > 0) return;
+		subjectLoading = true;
 		try {
 			const entries = await api.get<{ id: string; name: string; status: string }[]>('/subjects?status=verified');
-			catalogEntries = Array.isArray(entries) ? entries : [];
+			subjectEntries = Array.isArray(entries) ? entries : [];
 		} catch {
-			catalogEntries = [];
+			subjectEntries = [];
 		} finally {
-			catalogLoading = false;
+			subjectLoading = false;
 		}
 	}
 
@@ -144,12 +144,12 @@
 		createLoading = true;
 		try {
 			await api.post('/courses', {
-				subject_id: newCatalogId,
+				subject_id: newSubjectId,
 				age_categories: newCourseAges,
 				description: newDesc,
 			});
 			createOpen = false;
-			newCatalogId = '';
+			newSubjectId = '';
 			newCourseAges = [];
 			newDesc = '';
 			await fetchCourses();
@@ -158,7 +158,7 @@
 		}
 	}
 
-	async function suggestCatalogEntry(e: SubmitEvent) {
+	async function suggestSubjectEntry(e: SubmitEvent) {
 		e.preventDefault();
 		suggestLoading = true;
 		try {
@@ -202,7 +202,7 @@
 			{/if}
 		</div>
 		{#if isTeacher}
-			<Button variant="primary" onclick={() => { createOpen = true; loadCatalog(); }}>
+			<Button variant="primary" onclick={() => { createOpen = true; loadSubjects(); }}>
 				{$t('courses.createNew')}
 			</Button>
 		{/if}
@@ -369,14 +369,14 @@
 <Modal open={createOpen} title={$t('courses.modal.createTitle')} onclose={() => { createOpen = false; suggestMode = false; suggestSuccess = false; newCourseAges = []; }} maxWidth="lg">
 	<form onsubmit={createCourse} class="flex flex-col gap-4">
 		<div class="flex flex-col gap-1.5">
-			<label for="catalogEntry" class="text-[13px] font-medium">{$t('courses.modal.catalogLabel')}</label>
-			{#if catalogLoading}
+			<label for="subjectEntry" class="text-[13px] font-medium">{$t('courses.modal.subjectPickerLabel')}</label>
+			{#if subjectLoading}
 				<p class="text-sm text-text2">{$t('common.loading')}</p>
 			{:else}
-				<select id="catalogEntry" bind:value={newCatalogId} required
+				<select id="subjectEntry" bind:value={newSubjectId} required
 					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15">
-					<option value="">{$t('courses.modal.catalogPlaceholder')}</option>
-					{#each catalogEntries as entry}
+					<option value="">{$t('courses.modal.subjectPickerPlaceholder')}</option>
+					{#each subjectEntries as entry}
 						<option value={entry.id}>{entry.name}</option>
 					{/each}
 				</select>
@@ -425,7 +425,7 @@
 								class="w-full bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
 						</div>
 						<Button variant="teal" size="sm" loading={suggestLoading}
-							onclick={(e: MouseEvent) => { e.preventDefault(); suggestCatalogEntry(new SubmitEvent('submit')); }}>
+							onclick={(e: MouseEvent) => { e.preventDefault(); suggestSubjectEntry(new SubmitEvent('submit')); }}>
 							{$t('courses.suggestEntry')}
 						</Button>
 					</div>
@@ -441,7 +441,7 @@
 	</form>
 	{#snippet footer()}
 		<Button variant="secondary" size="sm" onclick={() => (createOpen = false)}>{$t('common.cancel')}</Button>
-		<Button variant="primary" size="sm" loading={createLoading} onclick={() => { document.getElementById('catalogEntry')?.closest('form')?.requestSubmit(); }}>
+		<Button variant="primary" size="sm" loading={createLoading} onclick={() => { document.getElementById('subjectEntry')?.closest('form')?.requestSubmit(); }}>
 			{$t('courses.modal.createTitle')}
 		</Button>
 	{/snippet}
