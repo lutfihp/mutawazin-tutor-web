@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 	const headers = { Cookie: `access_token=${token}` };
 
 	try {
-		const [stats, pendingTeachers, pendingStudents] = await Promise.all([
+		const [stats, pendingTeachers, pendingStudents, pendingSubjects] = await Promise.all([
 			fetch(`${BASE}/admin/stats`, { headers }).then((r) => (r.ok ? r.json() : {})),
 			fetch(`${BASE}/admin/teachers?status=email_verified`, { headers }).then((r) =>
 				r.ok ? r.json() : []
@@ -18,9 +18,12 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 			fetch(`${BASE}/admin/students?status=email_verified`, { headers }).then((r) =>
 				r.ok ? r.json() : []
 			),
+			fetch(`${BASE}/admin/subjects?status=pending`, { headers }).then((r) =>
+				r.ok ? r.json() : []
+			),
 		]);
-		return { stats, pendingTeachers, pendingStudents };
+		return { stats, pendingTeachers, pendingStudents, pendingSubjects };
 	} catch {
-		return { stats: {}, pendingTeachers: [], pendingStudents: [] };
+		return { stats: {}, pendingTeachers: [], pendingStudents: [], pendingSubjects: [] };
 	}
 };
