@@ -84,8 +84,11 @@
 					{/if}
 				</div>
 				<div class="flex items-center gap-2 flex-wrap mb-2">
-					{#if profile.age_category}
-						<Badge variant="violet" label={profile.age_category} />
+					{#if profile.date_of_birth}
+						{@const age = Math.floor((Date.now() - new Date(profile.date_of_birth).getTime()) / (365.25 * 24 * 3600 * 1000))}
+						{#if Number.isFinite(age) && age >= 0}
+							<Badge variant="violet" label={String(age)} />
+						{/if}
 					{/if}
 				</div>
 				{#if profile.assigned_teacher}

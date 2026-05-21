@@ -174,30 +174,6 @@
 			{/if}
 		</Card>
 
-		<!-- Credentials -->
-		<Card padding="lg" class="mb-4">
-			<h2 class="font-semibold text-lg mb-4">{$t('profile.teacher.credentials')}</h2>
-			{#if profile.credentials?.length}
-				<div class="flex flex-col divide-y divide-border">
-					{#each profile.credentials as cred}
-						<div class="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-							<div class="w-8 h-8 bg-primary-light text-primary rounded-sm flex items-center justify-center flex-none">
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-									<path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c3 3 9 3 12 0V9"/>
-								</svg>
-							</div>
-							<div>
-								<div class="font-semibold text-sm">{cred.title}</div>
-								<div class="text-xs text-text2">{cred.institution} · {cred.year}</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<p class="text-sm text-text2">{$t('profile.teacher.noCredentials')}</p>
-			{/if}
-		</Card>
-
 		<!-- Current Courses -->
 		<!-- Details edit card (own edit mode only) -->
 		{#if isOwn && editMode}
