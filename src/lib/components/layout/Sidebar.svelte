@@ -29,7 +29,7 @@
 			{ id: 'overview',  labelKey: 'nav.overview',              href: '/admin',                   icon: Home },
 			{ id: 'approvals', labelKey: 'nav.pendingApprovals',      href: '/admin#pending-approvals', icon: ShieldCheck },
 			{ id: 'users',     labelKey: 'dashboard.admin.allUsers',  href: '/admin#all-users',         icon: Users },
-			{ id: 'catalog',   labelKey: 'nav.catalog',               href: '/admin#catalog',           icon: BookOpen },
+			{ id: 'subjects',  labelKey: 'nav.subjects',              href: '/admin#subjects',          icon: BookOpen },
 		],
 		teacher: [
 			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',                  icon: Home },
