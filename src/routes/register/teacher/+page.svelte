@@ -18,6 +18,8 @@
 	let loading = $state(false);
 	let success = $state(false);
 	let error = $state('');
+	let emailAvailable = $state<boolean | null>(null);
+	let emailDebounce: ReturnType<typeof setTimeout>;
 
 	onMount(async () => {
 		try {
@@ -40,6 +42,7 @@
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
+		if (emailAvailable === false) return;
 		error = '';
 		loading = true;
 		try {
@@ -108,7 +111,21 @@
 				<div class="flex flex-col gap-1.5">
 					<label for="regEmail" class="text-[13px] font-medium">{$t('auth.registerTeacher.email')}</label>
 					<input id="regEmail" type="email" bind:value={email} required placeholder={$t('auth.registerTeacher.emailPlaceholder')} autocomplete="email"
+						oninput={(e) => {
+							clearTimeout(emailDebounce);
+							const val = (e.target as HTMLInputElement).value.trim();
+							if (!val) { emailAvailable = null; return; }
+							emailDebounce = setTimeout(async () => {
+								try {
+									const res = await api.get<{ available: boolean }>(`/auth/check/email?email=${encodeURIComponent(val)}`);
+									emailAvailable = res.available;
+								} catch { emailAvailable = null; }
+							}, 400);
+						}}
 						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+				{#if emailAvailable === false}
+					<p class="text-xs text-errorText mt-1">Email is already registered.</p>
+				{/if}
 				</div>
 
 				<!-- Password -->

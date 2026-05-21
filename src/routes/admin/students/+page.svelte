@@ -24,7 +24,7 @@
 		try {
 			const students = await api.get<any[]>('/admin/students');
 			allStudents = (Array.isArray(students) ? students : [])
-				.filter((s: any) => s.status !== 'email_verified' && s.status !== 'pending');
+				.filter((s: any) => s.status !== 'email_verified' && s.status !== 'pending' && s.status !== 'deleted');
 		} catch {
 			allStudents = [];
 		} finally {
@@ -42,6 +42,13 @@
 	let newPassword = $state('');
 	let showNewPassword = $state(false);
 	let newDob = $state('');
+	let usernameAvailable = $state<boolean | null>(null);
+	let usernameDebounce: ReturnType<typeof setTimeout>;
+
+	let deleteOpen = $state(false);
+	let deleteTarget = $state<{ id: string; name: string } | null>(null);
+	let deleteLoading = $state(false);
+	let deleteError = $state('');
 
 	function openCreate() {
 		createOpen = true;
@@ -51,10 +58,12 @@
 		newPassword = '';
 		showNewPassword = false;
 		newDob = '';
+		usernameAvailable = null;
 	}
 
 	async function handleCreate(e: SubmitEvent) {
 		e.preventDefault();
+		if (usernameAvailable === false) return;
 		createError = '';
 		createLoading = true;
 		try {
@@ -73,11 +82,33 @@
 		}
 	}
 
+	function openDelete(id: string, name: string) {
+		deleteTarget = { id, name };
+		deleteError = '';
+		deleteOpen = true;
+	}
+
+	async function handleDelete() {
+		if (!deleteTarget) return;
+		deleteLoading = true;
+		deleteError = '';
+		try {
+			await api.delete(`/admin/students/${deleteTarget.id}`);
+			allStudents = allStudents.filter((s: any) => (s.user_id ?? s.id) !== deleteTarget!.id);
+			deleteOpen = false;
+		} catch {
+			deleteError = 'Failed to delete student. Please try again.';
+		} finally {
+			deleteLoading = false;
+		}
+	}
+
 	function statusVariant(s: string): 'success' | 'warning' | 'error' | 'active' | 'gray' {
 		const map: Record<string, 'success' | 'warning' | 'error' | 'active' | 'gray'> = {
 			verified: 'success', Verified: 'success',
 			active: 'active',    Active: 'active',
 			rejected: 'error',   Rejected: 'error',
+			deleted: 'gray',     Deleted: 'gray',
 		};
 		return map[s] ?? 'gray';
 	}
@@ -148,6 +179,12 @@
 										: $t('common.selfRegistered')}
 								</td>
 								<td class="px-5 py-3 text-right">
+									<button
+										onclick={() => openDelete(user.user_id ?? user.id, user.full_name ?? user.name ?? '')}
+										class="mr-3 text-sm font-medium px-2 py-1 rounded-sm text-errorText bg-errorBg hover:bg-error/20 transition-colors"
+									>
+										Delete
+									</button>
 									<a href="/students/{user.user_id ?? user.id}"
 										class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
 										{$t('common.viewProfile')}
@@ -178,7 +215,21 @@
 			<label for="newUsername" class="text-[13px] font-medium">{$t('dashboard.admin.usernameLabel')}</label>
 			<input id="newUsername" type="text" bind:value={newUsername} required
 				placeholder={$t('dashboard.admin.usernamePlaceholder')} autocomplete="off"
+				oninput={(e) => {
+					clearTimeout(usernameDebounce);
+					const val = (e.target as HTMLInputElement).value.trim();
+					if (!val) { usernameAvailable = null; return; }
+					usernameDebounce = setTimeout(async () => {
+						try {
+							const res = await api.get<{ available: boolean }>(`/auth/check/username?username=${encodeURIComponent(val)}`);
+							usernameAvailable = res.available;
+						} catch { usernameAvailable = null; }
+					}, 400);
+				}}
 				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			{#if usernameAvailable === false}
+				<p class="text-xs text-errorText mt-1">Username is already taken.</p>
+			{/if}
 		</div>
 		<div class="flex flex-col gap-1.5">
 			<label for="newPassword" class="text-[13px] font-medium">{$t('auth.registerTeacher.password')}</label>
@@ -204,5 +255,17 @@
 		<Button variant="primary" size="sm" loading={createLoading} onclick={() => formEl?.requestSubmit()}>
 			{$t('dashboard.admin.createStudent')}
 		</Button>
+	{/snippet}
+</Modal>
+
+<!-- Delete Student Modal -->
+<Modal open={deleteOpen} title="Delete {deleteTarget?.name ?? ''}?" onclose={() => (deleteOpen = false)}>
+	{#if deleteError}
+		<div class="mb-3 p-3 bg-errorBg rounded-sm text-sm text-errorText">{deleteError}</div>
+	{/if}
+	<p class="text-sm text-text2">This action cannot be undone.</p>
+	{#snippet footer()}
+		<Button variant="secondary" size="sm" onclick={() => (deleteOpen = false)}>{$t('common.cancel')}</Button>
+		<Button variant="danger" size="sm" loading={deleteLoading} onclick={handleDelete}>Delete</Button>
 	{/snippet}
 </Modal>

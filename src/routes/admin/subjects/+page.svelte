@@ -16,11 +16,16 @@
 	let createSubjectLoading = $state(false);
 	let createSubjectFormEl = $state<HTMLFormElement | null>(null);
 
+	let deleteSubjectOpen = $state(false);
+	let deleteSubjectTarget = $state<{ id: string; name: string } | null>(null);
+	let deleteSubjectLoading = $state(false);
+	let deleteSubjectError = $state('');
+
 	async function fetchSubjects() {
 		subjectsLoading = true;
 		try {
 			const result = await api.get<any[]>('/subjects?status=verified');
-			allSubjects = Array.isArray(result) ? result : [];
+			allSubjects = (Array.isArray(result) ? result : []).filter((s: any) => s.status !== 'deleted');
 		} catch {
 			allSubjects = [];
 		} finally {
@@ -40,6 +45,27 @@
 			// stay open on error
 		} finally {
 			createSubjectLoading = false;
+		}
+	}
+
+	function openDeleteSubject(id: string, name: string) {
+		deleteSubjectTarget = { id, name };
+		deleteSubjectError = '';
+		deleteSubjectOpen = true;
+	}
+
+	async function handleDeleteSubject() {
+		if (!deleteSubjectTarget) return;
+		deleteSubjectLoading = true;
+		deleteSubjectError = '';
+		try {
+			await api.delete(`/admin/subjects/${deleteSubjectTarget.id}`);
+			allSubjects = allSubjects.filter((s: any) => s.id !== deleteSubjectTarget!.id);
+			deleteSubjectOpen = false;
+		} catch {
+			deleteSubjectError = 'Failed to delete subject. Please try again.';
+		} finally {
+			deleteSubjectLoading = false;
 		}
 	}
 
@@ -73,6 +99,7 @@
 						<tr>
 							<th class="px-5 py-3 text-left">{$t('dashboard.admin.subjectName')}</th>
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.status')}</th>
+							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
@@ -81,6 +108,14 @@
 								<td class="px-5 py-3 font-medium">{subject.name}</td>
 								<td class="px-5 py-3 hidden sm:table-cell">
 									<Badge variant="success" label={subject.status ?? 'verified'} />
+								</td>
+								<td class="px-5 py-3 text-right">
+									<button
+										onclick={() => openDeleteSubject(subject.id, subject.name)}
+										class="text-sm font-medium px-2 py-1 rounded-sm text-errorText bg-errorBg hover:bg-error/20 transition-colors"
+									>
+										Delete
+									</button>
 								</td>
 							</tr>
 						{/each}
@@ -110,5 +145,17 @@
 		<Button variant="primary" size="sm" loading={createSubjectLoading} onclick={() => createSubjectFormEl?.requestSubmit()}>
 			{$t('dashboard.admin.createSubject')}
 		</Button>
+	{/snippet}
+</Modal>
+
+<!-- Delete Subject Modal -->
+<Modal open={deleteSubjectOpen} title="Delete {deleteSubjectTarget?.name ?? ''}?" onclose={() => (deleteSubjectOpen = false)}>
+	{#if deleteSubjectError}
+		<div class="mb-3 p-3 bg-errorBg rounded-sm text-sm text-errorText">{deleteSubjectError}</div>
+	{/if}
+	<p class="text-sm text-text2">This action cannot be undone.</p>
+	{#snippet footer()}
+		<Button variant="secondary" size="sm" onclick={() => (deleteSubjectOpen = false)}>{$t('common.cancel')}</Button>
+		<Button variant="danger" size="sm" loading={deleteSubjectLoading} onclick={handleDeleteSubject}>Delete</Button>
 	{/snippet}
 </Modal>
