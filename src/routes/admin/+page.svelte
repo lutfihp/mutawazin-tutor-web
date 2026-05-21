@@ -566,7 +566,7 @@
 	>
 		<form bind:this={createSubjectFormEl} onsubmit={handleCreateSubject} class="flex flex-col gap-4">
 			<div class="flex flex-col gap-1.5">
-				<label for="catalogName" class="text-[13px] font-medium">{$t('dashboard.admin.subjectName')}</label>
+				<label for="subjectNameInput" class="text-[13px] font-medium">{$t('dashboard.admin.subjectName')}</label>
 				<input id="subjectNameInput" type="text" bind:value={newSubjectName} required
 					placeholder="e.g. Introduction to Algebra"
 					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />

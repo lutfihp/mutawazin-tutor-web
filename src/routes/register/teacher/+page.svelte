@@ -132,7 +132,7 @@
 						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-vertical min-h-[84px]"></textarea>
 				</div>
 
-				<!-- Catalog entry multi-select -->
+				<!-- Subject multi-select -->
 				<div class="flex flex-col gap-1.5">
 					<label class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
 					{#if subjectEntries.length === 0}
