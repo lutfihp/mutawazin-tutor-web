@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-20 — session 4)
+## Current Status (as of 2026-05-20 — session 5)
 
 ### Build status: ✅ Passes `npm run build` and `npm run check` (0 errors)
 
@@ -38,14 +38,14 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Foundation | SvelteKit scaffold, Tailwind v3, svelte-i18n, ui components, layouts, auth | ✅ |
 | Auth | Login, Register (teacher/student), Email Verify, Account Step-Up, **Forgot Password**, **Reset Password** | ✅ |
 | Landing | Hero (brand mark), Benefits, **Public search** (courses+teachers tabs), Featured Teachers, Footer (clean — no dead links) | ✅ |
-| Admin | Stats, Pending approvals (approve/reject), All Users (wired), **Create Teacher/Student**, **Subjects management** (pending list + approve/reject + create), live badge count, **Featured teacher toggle** | ✅ |
+| Admin | **Restructured into 4 pages**: Overview (stats + pending approvals), `/admin/teachers` (full list + feature toggle + create), `/admin/students` (full list + create), `/admin/subjects` (verified list + create) | ✅ |
 | Dashboards | Teacher dashboard (real names + **My Students roster**), Student dashboard, Admin → `/admin` redirect | ✅ |
 | Profiles | Teacher profile (bio edit, photo, new fields: mode/city/methods/uni/experience/achievements, rating display), Student profile | ✅ |
 | Courses | Filter + grid (subject filter dynamic from `/subjects`), **create via subject picker**, **suggest new subject**, admin+teacher can create, **admin Enroll Student** (`POST /courses/:id/enroll`) | ✅ |
 | Calendar | Month grid, session pills + **recurring ↻ badge**, availability panel, **Recurring templates panel** (add/edit/delete), session detail with mode/price/**student rating**, **Cancel Session + Mark Completed wired**, **Add Session full form** (7 fields, `POST /sessions`), **Availability CRUD** (Add Slot weekly/specific + edit/delete) | ✅ |
 | Reports | Score grid, create/edit modal with **understanding_level A–E**, **Share button + panel**, public `/report/share/:token` page | ✅ |
 | Brand | SVG companion mark in Navbar+footer, brand kit in `static/brand-kit/`, `mark-light.svg` for dark footer | ✅ |
-| Subjects | Renamed from "Catalog"; 5-level age categories (pre-school/elementary/middle-school/high-school/general) | ✅ |
+| Subjects | Renamed from "Catalog" throughout codebase (all vars, functions, i18n keys); 5-level age categories | ✅ |
 | Navigation | **Logout button** in Navbar, **Sidebar profile/reports hrefs** wired via `userId` prop chain, My Students removed | ✅ |
 | `/teachers` public page | Featured teachers grid (`GET /teachers/featured`), footer + landing "Browse all" links now live | ✅ |
 
@@ -84,7 +84,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **hooks.server.ts populates locals.user** | Auth context lives in `src/hooks.server.ts`. All `+page.server.ts` guards check `locals.user` set by the hook — NOT by `+layout.server.ts`. Do not remove the hook or move this logic. |
 | **Subjects = name only** | `Subject` model has only `{ id, name, status }` — no subject field or age_categories. Age categories live on `Course` directly. `/catalog` endpoints renamed to `/subjects`. |
 | **5-level age categories** | Values: `"pre-school"`, `"elementary"`, `"middle-school"`, `"high-school"`, `"general"`. Old `"kids"/"teens"/"adults"` are gone. |
-| **pendingApprovalCount store** | `src/lib/stores/adminBadge.ts` — written by the admin page, read by Sidebar for the live badge count. |
+| **pendingApprovalCount store** | `src/lib/stores/adminBadge.ts` — currently unused after admin restructure (sidebar badge removed). Store still exists but is no longer written to. |
+| **Admin sub-layouts** | `/admin/teachers`, `/admin/students`, `/admin/subjects` each have their own `+layout.svelte` + `+page.server.ts` (admin auth guard) + `+page.svelte`. Same pattern as other route groups. |
 | **Sidebar userId prop chain** | `userId` flows: sub-layout `data.user?.id` → `<AuthLayout userId>` → `<Sidebar userId>`. Required for My Profile and My Reports hrefs. All authenticated sub-layouts pass it. |
 
 ---
@@ -116,7 +117,10 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │       ├── register/teacher/, register/student/
 │       ├── verify-email/, account/step-up/
 │       ├── dashboard/              ← Role-aware (teacher/student; admin → /admin)
-│       ├── admin/
+│       ├── admin/                  ← Overview: stats + pending approvals only
+│       ├── admin/teachers/         ← All non-pending teachers + feature toggle + create
+│       ├── admin/students/         ← All non-pending students + create
+│       ├── admin/subjects/         ← Verified subjects list + create
 │       ├── teachers/             ← Public featured teachers directory (GET /teachers/featured)
 │       ├── teachers/[id]/
 │       ├── students/[id]/
@@ -136,7 +140,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 
 Updated API contract is at `D:\Codading Repo\mutawazin-tutor-api\docs\api-contract\api-types.ts`.
 
-Key endpoints active as of 2026-05-19:
+Key endpoints active as of 2026-05-20:
 - Auth: login, register, verify-email, refresh, logout, forgot-password, reset-password, step-up
 - Subjects: `GET /subjects`, `POST /subjects/suggest`, admin CRUD at `/admin/subjects`
 - Courses: `POST /courses { subject_id, age_categories, description? }`
@@ -186,7 +190,8 @@ The app is **feature-complete** against the design handoffs. Remaining work is Q
 1. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
 2. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
 3. Test Course enrollment (admin: "Enroll Student" → `POST /courses/:id/enroll`, count +1)
+4. Test admin restructure — Overview/Teachers/Students/Subjects pages all load and actions work
 
 **Priority 2 — Design + Mobile QA**
-4. Visual verification — open each `handoffs/design_handoff_mutawazin/Stage*.html` in browser, compare against live app, note and fix gaps
-5. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
+5. Visual verification — open each `handoffs/design_handoff_mutawazin/Stage*.html` in browser, compare against live app, note and fix gaps
+6. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
