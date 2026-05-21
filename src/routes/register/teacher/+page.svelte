@@ -11,8 +11,8 @@
 	let password = $state('');
 	let showPassword = $state(false);
 	let bio = $state('');
-	let catalogEntryIds = $state<string[]>([]);
-	let catalogEntries = $state<{ id: string; name: string }[]>([]);
+	let subjectIds = $state<string[]>([]);
+	let subjectEntries = $state<{ id: string; name: string }[]>([]);
 	let credentialsOpen = $state(false);
 	let credentials = $state([{ title: '', institution: '', year: '' }]);
 	let loading = $state(false);
@@ -22,9 +22,9 @@
 	onMount(async () => {
 		try {
 			const entries = await api.get<{ id: string; name: string }[]>('/subjects?status=verified');
-			catalogEntries = Array.isArray(entries) ? entries : [];
+			subjectEntries = Array.isArray(entries) ? entries : [];
 		} catch {
-			catalogEntries = [];
+			subjectEntries = [];
 		}
 	});
 
@@ -48,7 +48,7 @@
 				email,
 				password,
 				bio,
-				subject_ids: catalogEntryIds,
+				subject_ids: subjectIds,
 				credentials: credentials.filter((c) => c.title || c.institution || c.year).map((c) => ({
 					title: c.title,
 					institution: c.institution,
@@ -135,21 +135,21 @@
 				<!-- Catalog entry multi-select -->
 				<div class="flex flex-col gap-1.5">
 					<label class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
-					{#if catalogEntries.length === 0}
+					{#if subjectEntries.length === 0}
 						<p class="text-sm text-text2">{$t('common.loading')}</p>
 					{:else}
 						<div class="border border-border rounded-sm bg-white max-h-48 overflow-y-auto divide-y divide-border">
-							{#each catalogEntries as entry}
+							{#each subjectEntries as entry}
 								<label class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-bgGray">
 									<input
 										type="checkbox"
 										value={entry.id}
-										checked={catalogEntryIds.includes(entry.id)}
+										checked={subjectIds.includes(entry.id)}
 										onchange={(e) => {
 											if ((e.target as HTMLInputElement).checked) {
-												catalogEntryIds = [...catalogEntryIds, entry.id];
+												subjectIds = [...subjectIds, entry.id];
 											} else {
-												catalogEntryIds = catalogEntryIds.filter(id => id !== entry.id);
+												subjectIds = subjectIds.filter(id => id !== entry.id);
 											}
 										}}
 										class="w-4 h-4 rounded text-primary focus:ring-primary/15"
@@ -158,7 +158,7 @@
 								</label>
 							{/each}
 						</div>
-						<p class="text-xs text-text2">{$t('auth.registerTeacher.catalogHelper')}</p>
+						<p class="text-xs text-text2">{$t('auth.registerTeacher.subjectHelper')}</p>
 					{/if}
 				</div>
 
