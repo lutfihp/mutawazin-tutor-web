@@ -302,12 +302,13 @@
 			{#if profile.courses?.length}
 				<div class="grid sm:grid-cols-2 gap-3">
 					{#each profile.courses as course}
-						<div class="border border-border rounded-sm p-3 relative">
-							<Badge variant="active" label={course.subject} class="mb-2" />
-							<div class="font-medium text-sm">{course.title}</div>
-							{#if course.age_category}
-								<Badge variant="violet" label={course.age_category} class="mt-1" />
-							{/if}
+						<div class="border border-border rounded-sm p-3">
+							<Badge variant="active" label={course.name} class="mb-2" />
+							<div class="flex flex-wrap gap-1 mt-1">
+								{#each (course.age_categories ?? []) as cat}
+									<Badge variant="violet" label={cat} />
+								{/each}
+							</div>
 						</div>
 					{/each}
 				</div>
