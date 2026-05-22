@@ -104,7 +104,7 @@
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.email')}</th>
 							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('dashboard.admin.subjects')}</th>
 							<th class="px-5 py-3 text-left hidden lg:table-cell">{$t('common.registered')}</th>
-							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
+							<th class="px-5 py-3 text-left">{$t('common.actions')}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
@@ -166,7 +166,7 @@
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.email')}</th>
 							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('dashboard.admin.ageCategory')}</th>
 							<th class="px-5 py-3 text-left hidden lg:table-cell">{$t('common.registered')}</th>
-							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
+							<th class="px-5 py-3 text-left">{$t('common.actions')}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
@@ -224,7 +224,7 @@
 						<tr>
 							<th class="px-5 py-3 text-left">{$t('dashboard.admin.subjectName')}</th>
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.status')}</th>
-							<th class="px-5 py-3 text-right">{$t('common.actions')}</th>
+							<th class="px-5 py-3 text-left">{$t('common.actions')}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
