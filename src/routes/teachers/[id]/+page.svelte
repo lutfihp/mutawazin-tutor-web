@@ -144,7 +144,10 @@
 					<h1 class="text-[26px] font-bold tracking-tight mb-2">{profile.full_name}</h1>
 					<div class="flex flex-wrap gap-1.5 mb-2">
 						{#if profile.is_featured}
-							<Badge variant="gold">★ {$t('status.featured')}</Badge>
+							<Badge variant="gold">
+							<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" /></svg>
+							{$t('status.featured')}
+						</Badge>
 						{/if}
 						{#each (profile.subjects ?? []) as subject}
 							<Badge variant="teal" label={subject} />
@@ -155,7 +158,8 @@
 						·
 						{$t('profile.teacher.sessionsCompleted', { values: { n: profile.sessions_completed ?? 0 } })}
 						{#if (profile.total_ratings ?? 0) > 0}
-							· ★ {$t('profile.teacher.rating', { values: { rating: (profile.average_rating ?? 0).toFixed(1), count: profile.total_ratings } })}
+							· <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="inline-block align-middle" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" /></svg>
+							{$t('profile.teacher.rating', { values: { rating: (profile.average_rating ?? 0).toFixed(1), count: profile.total_ratings } })}
 						{/if}
 					</p>
 					{#if profile.teaching_mode || profile.city || (profile.teaching_methods ?? []).length > 0}
@@ -214,7 +218,12 @@
 		{#if profile.university || isOwn}
 			<Card padding="lg" class="mb-4">
 				<div class="flex items-center gap-2.5 mb-3">
-					<span class="w-9 h-9 rounded-lg bg-primary-light text-primary flex items-center justify-center text-lg flex-none" aria-hidden="true">🎓</span>
+					<span class="w-9 h-9 rounded-lg bg-primary-light text-primary flex items-center justify-center flex-none" aria-hidden="true">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+					<path d="M6 12v5c3 3 9 3 12 0v-5" />
+				</svg>
+			</span>
 					<h2 class="font-semibold text-lg flex-1">{$t('profile.teacher.university')}</h2>
 					{#if isOwn && !editingUniversity}
 						<button
@@ -249,7 +258,12 @@
 		{#if profile.teaching_experience?.length || isOwn}
 			<Card padding="lg" class="mb-4">
 				<div class="flex items-center gap-2.5 mb-3">
-					<span class="w-9 h-9 rounded-lg bg-teal-light text-teal flex items-center justify-center text-lg flex-none" aria-hidden="true">💼</span>
+					<span class="w-9 h-9 rounded-lg bg-teal-light text-teal flex items-center justify-center flex-none" aria-hidden="true">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="2" y="7" width="20" height="14" rx="2" />
+					<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+				</svg>
+			</span>
 					<h2 class="font-semibold text-lg flex-1">{$t('profile.teacher.experience')}</h2>
 					{#if isOwn && !editingExperience}
 						<button
@@ -300,7 +314,11 @@
 		{#if profile.achievements?.length || isOwn}
 			<Card padding="lg" class="mb-4">
 				<div class="flex items-center gap-2.5 mb-3">
-					<span class="w-9 h-9 rounded-lg bg-gold-bg text-gold-text flex items-center justify-center text-lg flex-none" aria-hidden="true">⭐</span>
+					<span class="w-9 h-9 rounded-lg bg-gold-bg text-gold-text flex items-center justify-center flex-none" aria-hidden="true">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+					<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
+				</svg>
+			</span>
 					<h2 class="font-semibold text-lg flex-1">{$t('profile.teacher.achievements')}</h2>
 					{#if isOwn && !editingAchievements}
 						<button
