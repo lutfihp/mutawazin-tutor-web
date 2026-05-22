@@ -23,11 +23,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-22 — session 6 continued)
+## Current Status (as of 2026-05-22 — session 7)
 
-### Build status: ✅ Passes `npm run build` and `npm run check` (0 errors)
+### Build status: ✅ Passes `npm run check` (0 errors, 10 pre-existing warnings)
 
-### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` (local only, not yet pushed)
+### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -42,27 +42,27 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Admin Courses | `/admin/courses` — list all courses, **create** (teacher + subject pickers, age categories + price per category, description), **edit** (subject locked if enrolled, teacher change warning, status toggle), **delete** (409 handling). Sidebar link added. | ✅ |
 | Delta v5 backend | Admin course CRUD via `POST/PUT/DELETE /admin/courses/:id` | ✅ |
 | Dashboards | Teacher dashboard (real names + My Students roster), Student dashboard, Admin → `/admin` redirect | ✅ |
-| Profiles | Teacher profile (bio edit, photo, mode/city/methods/uni/experience/achievements, rating — **credentials removed**), Student profile (**age badge from DOB**) | ✅ |
+| Profiles | Teacher profile (**redesigned** — per-section pencil editing, Card header + chips row, University/Experience/Achievements/Courses sections, no action buttons), Student profile (**age badge from DOB**) | ✅ |
 | Courses | Filter + grid, create via subject picker, suggest new subject, admin+teacher can create, admin Enroll Student | ✅ |
 | Calendar | Month grid, session pills + recurring badge, availability panel, Recurring templates, Add Session, Availability CRUD | ✅ |
 | Reports | Score grid, create/edit modal, Share button + panel, public `/report/share/:token` page | ✅ |
-| Brand | SVG companion mark in Navbar+footer, brand kit in `static/brand-kit/` | ✅ |
+| Brand | **Updated brand mark** — `Logo.svelte` now uses the real Mutawazin SVG mark; `static/brand-kit/png/logo-mark-*.png` updated from handoff (optimized, ~50% smaller) | ✅ |
 | Subjects | Renamed from "Catalog"; 5-level age categories | ✅ |
 | Navigation | Logout button, Sidebar profile/reports hrefs wired via `userId` prop chain | ✅ |
 | `/teachers` public page | Featured teachers grid, footer + landing "Browse all" links | ✅ |
 | Delta v4 backend | Email/username availability checks, Delete teacher/student/subject with confirmation modals, `"deleted"` status filtering | ✅ |
 
-### What is NOT done yet (known gaps — needs backend first)
+### What is NOT done yet (known gaps)
 
-1. **Teacher profile — Current Courses section** — handoff includes a course card grid on the teacher profile page. Blocked on backend confirmation: does `GET /teachers/:user_id` already return `courses[]` in the response, or does a separate endpoint exist (e.g. `GET /teachers/:id/courses`)? Once confirmed, implement the section with subject badge, title, age category badge.
+1. **Admin Courses — student enrollment management** — enroll/unenroll students per course (`POST /courses/:id/enroll`, `DELETE /courses/:id/enroll/:student_id`). Deferred to follow-up; the page exists but has no student management UI yet.
 
-2. **Admin Courses — student enrollment management** — enroll/unenroll students per course (`POST /courses/:id/enroll`, `DELETE /courses/:id/enroll/:student_id`). Deferred to follow-up; the page exists but has no student management UI yet.
+2. **Runtime verification** — calendar, enrollment, and new admin features (delta v4 deletes, delta v5 course CRUD, availability CRUD) not yet tested against live backend. See `docs/qa-checklist.md`.
 
-3. **Runtime verification** — calendar, enrollment, and new admin features (delta v4 deletes, delta v5 course CRUD, availability CRUD) not yet tested against live backend. See `docs/qa-checklist.md`.
+3. **Availability slot `id` field** — not yet tested live. If edit/delete fail, fix `{@const slotId = slot.id ?? slot.slot_id ?? ''}` in `src/routes/calendar/+page.svelte`.
 
-4. **Availability slot `id` field** — not yet tested live. If edit/delete fail, fix `{@const slotId = slot.id ?? slot.slot_id ?? ''}` in `src/routes/calendar/+page.svelte`.
+4. **Mobile testing** — hamburger sidebar untested at 375px viewport.
 
-5. **Mobile testing** — hamburger sidebar untested at 375px viewport.
+5. **Teacher profile — live verify** — redesign not yet tested against live backend. Confirm that `GET /teachers/:user_id` returns `courses[]` with `name`, `age_categories`, `description` fields, and that `PUT /teachers/me` accepts per-section saves correctly.
 
 ---
 
@@ -90,6 +90,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **DropdownMenu fixed positioning** | `DropdownMenu.svelte` panel uses `position: fixed` with `getBoundingClientRect()` on the trigger button to compute `top` and `right`. This escapes `overflow-x-auto` table containers — do NOT revert to `absolute`. |
 | **Admin table header alignment** | All `<th>` in admin tables use `text-left`, including the Actions column. The `<td>` for the actions column keeps `text-right` so the `⋮` button stays right-aligned, but the header label is left-aligned. |
 | **Admin courses page pattern** | `/admin/courses` loads courses + teachers + subjects in parallel on mount. `teacherMap` (teacher_id → full_name) is built from the teacher list for display. Price per age category is stored as `Record<string, string>` in state (for input binding) and converted to `Record<string, number>` on submit. |
+| **Teacher profile per-section edit pattern** | `src/routes/teachers/[id]/+page.svelte` has one `editing*` / `saving*` / save-function triple per editable section (bio, university, experience, achievements). `openSection(name)` sets the named section to `true` and all others to `false` — enforces mutual exclusion so only one section is editable at a time. Camera overlay on avatar is always shown to `isOwn` (no editMode toggle). |
+| **Teacher profile data display** | API data is adapted to the design: `university: string` shown as a single name row; `teaching_experience: [{subject, year_from, year_to}]` shown as subject + year range; `achievements: string[]` shown as plain string rows. Sections are hidden on public view when empty; on own view they show "Not set" with a pencil button. `teaching_mode`, `city`, `teaching_methods[]` shown as Badge chips below a `<hr>` in the profile header card. |
 
 ---
 
@@ -193,18 +195,26 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Backend confirmation needed**
-1. **Teacher profile courses:** Does `GET /teachers/:user_id` already return `courses[]`? Or is there a `GET /teachers/:id/courses` endpoint? Once confirmed, implement the Current Courses section on `teachers/[id]/+page.svelte` (card grid: subject badge, title, age category badge).
+**Priority 1 — Live verify teacher profile redesign**
+1. Start the dev server + backend, log in as a teacher, visit own profile — confirm:
+   - Per-section pencil editing works (About, University, Experience, Achievements each save independently)
+   - `PUT /teachers/me` accepts each per-section payload correctly
+   - Chips row (mode/city/methods) renders correctly in the header
+   - Current Courses section shows `courses[].name` + `age_categories` + `description` from the API
+   - Sections with no data hide on public view; show "Not set" on own view
+   - Camera overlay → photo upload still works
 
 **Priority 2 — Follow-up feature (frontend only, endpoints already exist)**
 2. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course (e.g. expandable row or modal showing enrolled students with unenroll buttons + enroll new student picker).
 
-**Priority 3 — Runtime QA (use `docs/qa-checklist.md`)**
-3. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
-4. Test delta v5: create/edit/delete courses on `/admin/courses` against live backend
-5. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
-6. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
+**Priority 3 — Check design handoff for other updated pages**
+3. The design handoff in `handoffs/design_handoff_mutawazin/` was updated this session. Teacher profile was done. Check the handoff README/stage files to see if any other pages have visual updates that need implementing (student profile, course cards, landing, etc.).
 
-**Priority 4 — Mobile + Visual QA**
-7. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
-8. Visual verification — open each `handoffs/design_handoff_mutawazin/Stage*.html` in browser, compare against live app, note and fix gaps
+**Priority 4 — Runtime QA (use `docs/qa-checklist.md`)**
+4. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
+5. Test delta v5: create/edit/delete courses on `/admin/courses` against live backend
+6. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
+7. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
+
+**Priority 5 — Mobile + Visual QA**
+8. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
