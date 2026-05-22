@@ -29,13 +29,6 @@
 		Object.fromEntries(teachers.map((t: any) => [(t.user_id ?? t.id) as string, (t.full_name ?? '') as string]))
 	);
 
-	// Courses filtered by selected teacher for create modal
-	const filteredCourses = $derived(
-		sTeacherId
-			? adminCourses.filter((c: any) => c.teacher_id === sTeacherId)
-			: adminCourses
-	);
-
 	function sessionsByDate(date: Date): any[] {
 		const key = toISODate(date);
 		return sessions.filter((s) => s.starts_at?.startsWith(key));
@@ -201,6 +194,13 @@
 	let sPrice = $state('');
 	let sTeacherId = $state('');
 	let sLoading = $state(false);
+
+	// Courses filtered by selected teacher for create modal
+	const filteredCourses = $derived(
+		sTeacherId
+			? adminCourses.filter((c: any) => c.teacher_id === sTeacherId)
+			: adminCourses
+	);
 	let sFormEl = $state<HTMLFormElement | null>(null);
 
 	function openAddSession() {
