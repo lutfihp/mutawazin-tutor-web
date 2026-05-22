@@ -1,24 +1,31 @@
 page,type,element,current_value,api_available,notes,decision
-/,dead_link,Navbar 'Courses' anchor,href='/#courses' — no id='courses' section on page,n/a — frontend only,Need to add a courses section to landing page or change href to /courses,
-/,dead_link,Footer 'Teachers' link,href='/teachers' — route does not exist,no — no GET /teachers public list endpoint,Need a public teacher directory page + API,
-/,dead_link,"'Browse all teachers' button",href='/teachers' — route does not exist,no — no GET /teachers public list endpoint,Same as above,
-/,dead_link,Footer 'Blog' link,href='#',n/a — purely content,No blog feature planned,
-/,dead_link,Footer 'Contact' link,href='#',n/a — purely content,No contact page planned,
-/,dead_link,Footer 'Privacy Policy' link,href='#',n/a — purely content,No privacy policy page planned,
-/login,dead_link,'Forgot password?' link,href='/forgot-password' — route does not exist,no — no POST /auth/forgot-password endpoint,Password reset flow not in API contract,
-/dashboard (teacher),dead_link,'Write Report' quick action,href='/reports/' — incomplete URL missing student ID,yes — POST /sessions/{id}/reports exists,Button needs a student/session context to build the correct URL,
-/,fake_data,Hero trust row — student count,"'2,400+' hardcoded in en.json + id.json",no — no public stats endpoint,Admin stats exist but are auth-gated,
-/,fake_data,Hero trust row — teacher count,'180' hardcoded in en.json + id.json,no — no public stats endpoint,Admin stats exist but are auth-gated,
-/,fake_data,Hero vignette — teacher name,'Layla Haddad' hardcoded in en.json + id.json,n/a — decorative illustration,Static UI mockup card — not real data,
-/,fake_data,Hero vignette — teacher role,'Mathematics Tutor' hardcoded,n/a — decorative illustration,Static UI mockup card,
-/,fake_data,Hero vignette — teacher rating,'4.9 · 128 sessions' hardcoded,n/a — decorative illustration,Static UI mockup card,
-/,fake_data,Hero vignette — teacher subjects,'"Algebra" and "Calculus" hardcoded in +page.svelte',n/a — decorative illustration,Static UI mockup card,
-/,fake_data,Hero vignette — progress hours,'5 of 7 hours' hardcoded,n/a — decorative illustration,Static UI mockup card,
-/,fake_data,Hero vignette — progress percent,'This week · 72%' hardcoded,n/a — decorative illustration,Static UI mockup card,
-/,fake_data,Hero vignette — session time,'Tomorrow · 4:00 PM' hardcoded,n/a — decorative illustration,Static UI mockup card,
-/,fake_data,Hero vignette — session course name,'Intro to Calculus — Limits' hardcoded,n/a — decorative illustration,Static UI mockup card,
-/,fake_data,Hero vignette — session participants,'with Layla Haddad · 8 students' hardcoded,n/a — decorative illustration,Static UI mockup card,
-/dashboard (teacher),fake_data,Welcome greeting name,'Layla' hardcoded — not from API response,yes — GET /dashboard/teacher returns user data,Should use actual user's name from dashboard response,
-/dashboard (student),fake_data,Welcome greeting name,'Nour' hardcoded — not from API response,yes — GET /dashboard/student returns user data,Should use actual user's name from dashboard response,
-/dashboard (student),fake_data,Learning streak count,'5' weeks hardcoded,yes — GET /dashboard/student (streak field TBC),Check if streak is included in dashboard/student response,
-/teachers/[id],fake_data,Teacher role label,'"Tutor" hardcoded string in +page.svelte line 187',yes — GET /teachers/{user_id} returns teacher object,Should use a field from the teacher profile (e.g. title or role),
+/,dead_link,Navbar 'Home' anchor,href='/#' — not a proper route link,n/a — frontend only,Logo already links home; this is redundant and malformed,advise
+/,dead_link,Footer 'Teachers' link,href='/teachers' — route does not exist,no — no GET /teachers public list endpoint,Needs a public teacher directory page + API,"there is 2 public endpoint. GET /teachers/featured — list featured teachers
+GET /teachers/{user_id} — get a specific teacher's public profile"
+/,dead_link,Browse all teachers' button,href='/teachers' — route does not exist,no — no GET /teachers public list endpoint,Same as above — route and API both missing,"there is 2 public endpoint. GET /teachers/featured — list featured teachers
+GET /teachers/{user_id} — get a specific teacher's public profile"
+/,dead_link,Footer 'Blog' link,href='#',n/a — purely content,No blog feature planned,remove
+/,dead_link,Footer 'Contact' link,href='#',n/a — purely content,No contact page planned,remove
+/,dead_link,Footer 'Privacy Policy' link,href='#',n/a — purely content,No privacy policy page planned,remove
+/dashboard (teacher),dead_link,Write Report' quick action,href='/reports/' — incomplete URL missing student ID,yes — reports page at /reports/{studentId},Button needs a student/session context to build the correct URL,advise
+/sidebar (teacher),dead_link,My Profile' sidebar link,href='/dashboard' — should be /teachers/{id},yes — GET /teachers/{user_id} exists,Needs data.user.id passed from layout into sidebar,advise
+/sidebar (teacher),dead_link,My Students' sidebar link,href='/dashboard' — no students list page exists,unclear — no confirmed GET /teacher/students list endpoint,Destination unclear; needs API check before building,remove
+/sidebar (teacher),dead_link,Reports' sidebar link,href='/dashboard' — reports page requires a studentId param,yes — /reports/{studentId} exists,Cannot navigate to reports without a specific student ID,advise
+/sidebar (student),dead_link,My Profile' sidebar link,href='/dashboard' — should be /students/{id},yes — GET /students/{user_id} exists,Needs data.user.id from layout,advise
+/sidebar (student),dead_link,My Reports' sidebar link,href='/dashboard' — should be /reports/{id},yes — GET /reports/{studentId} exists,Needs own user ID as param,advise
+/calendar,no_op_button,Cancel Session' button in session detail modal,onclick={() => {}} — empty handler at calendar.svelte:498,yes — PATCH /sessions/{id} with cancelled status,Handler not implemented,advise
+/calendar,no_op_button,Mark Completed' button in session detail modal,onclick={() => {}} — empty handler at calendar.svelte:499,yes — PATCH /sessions/{id} with completed status,Handler not implemented,advise
+/dashboard (student),no_op_button,Message' teacher button in assigned-teacher card,No onclick or href — dashboard.svelte:275,no — no messaging API endpoint,Messaging feature not in API contract; hide or disable until built,remove
+/teachers/[id],no_op_button,Message' teacher button,No onclick or href,no — no messaging API endpoint,Same as above,remove
+/navbar (authenticated),no_op_button,Bell notification icon button,No onclick handler — button renders but does nothing,no — no notifications API endpoint,Notifications not in API contract; remove or disable until built,remove
+/navbar (authenticated),missing_feature,Logout button,No logout button exists anywhere in the UI,yes — POST /auth/logout exists,No way for a logged-in user to log out; critical gap,fix
+/,fake_data,Hero trust row — student count,2400+' hardcoded in en.json + id.json,no — no public stats endpoint,Admin stats are auth-gated; either remove or accept as static marketing copy,remove
+/,fake_data,Hero trust row — teacher count,180' hardcoded in en.json + id.json,no — no public stats endpoint,Same as above,remove
+/,fake_data,Hero vignette card — all fields,Teacher name / role / rating / subjects / progress / session details all hardcoded in en.json + +page.svelte,n/a — decorative illustration,Static mockup card; not real user data,remove
+/dashboard (teacher),fake_data,Welcome greeting name,Layla' hardcoded at dashboard.svelte:32,yes — dashboard API returns user data,Should use full_name from API response,fix
+/dashboard (teacher),fake_data,Private students — last session timing,recently' hardcoded at dashboard.svelte:88,yes — private_students data from API,Should show actual last-session date if the field is available,fix
+/dashboard (student),fake_data,Welcome greeting name,Nour' hardcoded at dashboard.svelte:158,yes — dashboard API returns user data,Should use full_name from API response,fix
+/dashboard (student),fake_data,Learning streak count,5' weeks hardcoded at dashboard.svelte:159,unclear — GET /dashboard/student may include streak field,Check if streak field exists in response before implementing,remove
+/dashboard (student),fake_data,Assigned teacher role label,Tutor' hardcoded string at dashboard.svelte:265,yes — assigned_teacher object from API,Should use a field from the teacher object (e.g. title),advise
+/teachers/[id],fake_data,Teacher role label,Tutor' hardcoded string,yes — GET /teachers/{user_id} returns teacher object,Should use a field from the teacher object (e.g. title or specialization),advise
+/courses,fake_data,Subject filter dropdown options,Math / English / Science / Arabic hardcoded in template,yes — GET /subjects returns subject list,Should be loaded dynamically from /subjects endpoint,fix
