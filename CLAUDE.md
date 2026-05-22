@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-22 — session 6)
+## Current Status (as of 2026-05-22 — session 6 continued)
 
 ### Build status: ✅ Passes `npm run build` and `npm run check` (0 errors)
 
@@ -39,6 +39,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Auth | Login, Register (teacher/student) + **debounced email availability check**, Email Verify, Account Step-Up, Forgot Password, Reset Password | ✅ |
 | Landing | Hero (brand mark), Benefits, Public search (courses+teachers tabs), Featured Teachers, Footer | ✅ |
 | Admin | Overview (stats + pending approvals), `/admin/teachers` (**three-dot menu**, **featured confirm modal**, delete, create + username check), `/admin/students` (**three-dot menu**, **age from DOB**, delete, create + username check), `/admin/subjects` (**three-dot menu**, **edit modal**, delete, create) | ✅ |
+| Admin Courses | `/admin/courses` — list all courses, **create** (teacher + subject pickers, age categories + price per category, description), **edit** (subject locked if enrolled, teacher change warning, status toggle), **delete** (409 handling). Sidebar link added. | ✅ |
+| Delta v5 backend | Admin course CRUD via `POST/PUT/DELETE /admin/courses/:id` | ✅ |
 | Dashboards | Teacher dashboard (real names + My Students roster), Student dashboard, Admin → `/admin` redirect | ✅ |
 | Profiles | Teacher profile (bio edit, photo, mode/city/methods/uni/experience/achievements, rating — **credentials removed**), Student profile (**age badge from DOB**) | ✅ |
 | Courses | Filter + grid, create via subject picker, suggest new subject, admin+teacher can create, admin Enroll Student | ✅ |
@@ -54,9 +56,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 1. **Teacher profile — Current Courses section** — handoff includes a course card grid on the teacher profile page. Blocked on backend confirmation: does `GET /teachers/:user_id` already return `courses[]` in the response, or does a separate endpoint exist (e.g. `GET /teachers/:id/courses`)? Once confirmed, implement the section with subject badge, title, age category badge.
 
-2. **Admin Courses page (`/admin/courses`)** — admin-specific course management where admin can create courses for teachers and assign teachers to existing courses. Needs new backend endpoints — not yet implemented on the backend side.
+2. **Admin Courses — student enrollment management** — enroll/unenroll students per course (`POST /courses/:id/enroll`, `DELETE /courses/:id/enroll/:student_id`). Deferred to follow-up; the page exists but has no student management UI yet.
 
-3. **Runtime verification** — calendar, enrollment, and new admin features (delta v4 deletes, availability CRUD) not yet tested against live backend. See `docs/qa-checklist.md`.
+3. **Runtime verification** — calendar, enrollment, and new admin features (delta v4 deletes, delta v5 course CRUD, availability CRUD) not yet tested against live backend. See `docs/qa-checklist.md`.
 
 4. **Availability slot `id` field** — not yet tested live. If edit/delete fail, fix `{@const slotId = slot.id ?? slot.slot_id ?? ''}` in `src/routes/calendar/+page.svelte`.
 
@@ -85,6 +87,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **DropdownMenu component** | `src/lib/components/ui/DropdownMenu.svelte` — shared three-dot action dropdown. Props: `items: { label, onclick, variant? }[]`. Handles open/close via `onfocusout` on a `tabindex="-1"` wrapper and Escape key. Used on all three admin table pages. |
 | **Admin action pattern** | All admin table rows use `<DropdownMenu>` for actions (View Profile, Delete, Feature/Edit). Delete and Featured actions open confirmation modals before executing. All modals use the existing `<Modal>` component with inline state per page. |
 | **Age from DOB pattern** | `Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000))` — used in both admin/students table and students/:id profile. Check `Number.isFinite(age) && age >= 0` before rendering. |
+| **DropdownMenu fixed positioning** | `DropdownMenu.svelte` panel uses `position: fixed` with `getBoundingClientRect()` on the trigger button to compute `top` and `right`. This escapes `overflow-x-auto` table containers — do NOT revert to `absolute`. |
+| **Admin table header alignment** | All `<th>` in admin tables use `text-left`, including the Actions column. The `<td>` for the actions column keeps `text-right` so the `⋮` button stays right-aligned, but the header label is left-aligned. |
+| **Admin courses page pattern** | `/admin/courses` loads courses + teachers + subjects in parallel on mount. `teacherMap` (teacher_id → full_name) is built from the teacher list for display. Price per age category is stored as `Record<string, string>` in state (for input binding) and converted to `Record<string, number>` on submit. |
 
 ---
 
@@ -116,9 +121,10 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │       ├── verify-email/, account/step-up/
 │       ├── dashboard/              ← Role-aware (teacher/student; admin → /admin)
 │       ├── admin/                  ← Overview: stats + pending approvals only
-│       ├── admin/teachers/         ← All non-pending teachers + feature toggle + create
-│       ├── admin/students/         ← All non-pending students + create
-│       ├── admin/subjects/         ← Verified subjects list + create
+│       ├── admin/teachers/         ← All non-pending teachers + three-dot menu + featured confirm + create
+│       ├── admin/students/         ← All non-pending students + three-dot menu + age from DOB + create
+│       ├── admin/subjects/         ← Verified subjects + three-dot menu + edit + create
+│       ├── admin/courses/          ← Full course CRUD (list, create, edit, delete) — delta v5
 │       ├── teachers/             ← Public featured teachers directory (GET /teachers/featured)
 │       ├── teachers/[id]/
 │       ├── students/[id]/
@@ -153,6 +159,8 @@ Key endpoints active as of 2026-05-22:
 - Students: `GET /students` (teacher auth — returns assigned students list)
 - Admin teachers: `PATCH /admin/teachers/:id/featured`, `DELETE /admin/teachers/:id`
 - Admin students: `DELETE /admin/students/:id`
+- **Admin courses (delta v5):** `POST /admin/courses`, `PUT /admin/courses/:id`, `DELETE /admin/courses/:id`
+- **Course enrollment:** `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id` (admin only)
 - Availability: `POST /availability`, `PUT /availability/:slot_id`, `DELETE /availability/:slot_id`
 
 ---
@@ -185,16 +193,18 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Backend confirmations needed (ask backend session first)**
+**Priority 1 — Backend confirmation needed**
 1. **Teacher profile courses:** Does `GET /teachers/:user_id` already return `courses[]`? Or is there a `GET /teachers/:id/courses` endpoint? Once confirmed, implement the Current Courses section on `teachers/[id]/+page.svelte` (card grid: subject badge, title, age category badge).
-2. **Admin Courses page:** Request new backend endpoints for admin course management — admin should be able to list all courses, create a course for a specific teacher, and assign a teacher to an existing course. Once endpoints are ready, build `/admin/courses` route (new sub-layout + page + server).
 
-**Priority 2 — Runtime QA (use `docs/qa-checklist.md`)**
-3. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on `/admin/teachers` + `/admin/students` + `/admin/subjects`
-4. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
-5. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
-6. Test Course enrollment (admin: "Enroll Student" → `POST /courses/:id/enroll`, count +1)
+**Priority 2 — Follow-up feature (frontend only, endpoints already exist)**
+2. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course (e.g. expandable row or modal showing enrolled students with unenroll buttons + enroll new student picker).
 
-**Priority 3 — Mobile + Visual QA**
+**Priority 3 — Runtime QA (use `docs/qa-checklist.md`)**
+3. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
+4. Test delta v5: create/edit/delete courses on `/admin/courses` against live backend
+5. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
+6. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
+
+**Priority 4 — Mobile + Visual QA**
 7. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
 8. Visual verification — open each `handoffs/design_handoff_mutawazin/Stage*.html` in browser, compare against live app, note and fix gaps
