@@ -447,6 +447,7 @@
       "experience": "Pengalaman mengajar",
       "addExperience": "+ Tambah",
       "experiencePresent": "Sekarang",
+      "notSet": "Belum diisi",
       "rating": "{rating} ({count} penilaian)",
       "noRating": "Belum ada penilaian"
     },
