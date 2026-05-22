@@ -24,3 +24,9 @@ vite.config.ts.timestamp-*
 
 # Handoff documents — local reference only, never committed
 handoffs/
+
+# Brainstorming session artifacts
+.superpowers/
+
+# IDE
+.vscode/
