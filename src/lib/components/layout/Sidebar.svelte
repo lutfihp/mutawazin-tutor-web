@@ -30,6 +30,7 @@
 			{ id: 'students',  labelKey: 'nav.students',   href: '/admin/students',  icon: User },
 			{ id: 'subjects',  labelKey: 'nav.subjects',   href: '/admin/subjects',  icon: BookOpen },
 			{ id: 'courses',   labelKey: 'nav.courses',    href: '/admin/courses',   icon: BookOpen },
+		{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/admin/calendar',  icon: Calendar },
 		],
 		teacher: [
 			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',                  icon: Home },

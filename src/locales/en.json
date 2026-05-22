@@ -273,7 +273,8 @@
       "thisMonth": "+{n} this month",
       "thisWeek": "+{n} this week",
       "subjects": "Subjects",
-      "ageCategory": "Age Category"
+      "ageCategory": "Age Category",
+      "filterByTeacher": "Filter by teacher…"
     }
   },
   "courses": {

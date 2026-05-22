@@ -273,7 +273,8 @@
       "thisMonth": "+{n} bulan ini",
       "thisWeek": "+{n} minggu ini",
       "subjects": "Mata Pelajaran",
-      "ageCategory": "Kategori Usia"
+      "ageCategory": "Kategori Usia",
+      "filterByTeacher": "Filter berdasarkan guru…"
     }
   },
   "courses": {
