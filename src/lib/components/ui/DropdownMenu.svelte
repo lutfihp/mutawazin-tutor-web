@@ -5,6 +5,19 @@
 	let { items }: { items: Item[] } = $props();
 
 	let open = $state(false);
+	let buttonEl = $state<HTMLButtonElement | null>(null);
+	let panelTop = $state(0);
+	let panelRight = $state(0);
+
+	function openMenu(e: MouseEvent) {
+		e.stopPropagation();
+		if (!open && buttonEl) {
+			const rect = buttonEl.getBoundingClientRect();
+			panelTop = rect.bottom + 4;
+			panelRight = window.innerWidth - rect.right;
+		}
+		open = !open;
+	}
 
 	function select(item: Item) {
 		open = false;
@@ -22,7 +35,8 @@
 	role="none"
 >
 	<button
-		onclick={(e) => { e.stopPropagation(); open = !open; }}
+		bind:this={buttonEl}
+		onclick={openMenu}
 		class="w-8 h-8 rounded-sm text-text2 hover:text-text hover:bg-bgGray flex items-center justify-center transition-colors"
 		aria-label="Actions"
 		aria-haspopup="true"
@@ -32,7 +46,10 @@
 	</button>
 
 	{#if open}
-		<div class="absolute right-0 top-full mt-1 bg-white border border-border rounded-sm shadow-md min-w-[140px] py-1 z-50">
+		<div
+			style="position:fixed; top:{panelTop}px; right:{panelRight}px;"
+			class="bg-white border border-border rounded-sm shadow-md min-w-[140px] py-1 z-50"
+		>
 			{#each items as item}
 				<button
 					onclick={() => select(item)}
