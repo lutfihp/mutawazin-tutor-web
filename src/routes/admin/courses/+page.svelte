@@ -205,6 +205,79 @@
 		}
 	}
 
+	// ── Enrollment modal ──────────────────────────────────────
+	let enrollOpen = $state(false);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let enrollTarget = $state<any | null>(null);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let allStudents = $state<any[]>([]);
+	let studentsLoading = $state(false);
+	let studentMap = $state<Record<string, string>>({});
+	let enrollStudentId = $state('');
+	let enrollLoading = $state(false);
+	let unenrollLoadingId = $state<string | null>(null);
+	let enrollError = $state('');
+
+	async function openManageStudents(course: any) {
+		enrollTarget = course;
+		enrollStudentId = '';
+		enrollError = '';
+		enrollOpen = true;
+		if (allStudents.length > 0) return;
+		studentsLoading = true;
+		try {
+			const res = await api.get<any[]>('/admin/students');
+			allStudents = (Array.isArray(res) ? res : [])
+				.filter((s: any) => s.status !== 'deleted');
+			studentMap = Object.fromEntries(
+				allStudents.map((s: any) => [s.user_id ?? s.id, s.full_name ?? s.name ?? '—'])
+			);
+		} catch {
+			allStudents = [];
+		} finally {
+			studentsLoading = false;
+		}
+	}
+
+	async function handleEnroll() {
+		if (!enrollTarget || !enrollStudentId) return;
+		enrollLoading = true;
+		enrollError = '';
+		try {
+			await api.post(`/courses/${enrollTarget.id}/enroll`, { student_id: enrollStudentId });
+			const updated = {
+				...enrollTarget,
+				enrolled_student_ids: [...(enrollTarget.enrolled_student_ids ?? []), enrollStudentId],
+			};
+			enrollTarget = updated;
+			allCourses = allCourses.map((c: any) => c.id === updated.id ? updated : c);
+			enrollStudentId = '';
+		} catch (err: unknown) {
+			enrollError = err instanceof Error ? err.message : 'Failed to enroll student.';
+		} finally {
+			enrollLoading = false;
+		}
+	}
+
+	async function handleUnenroll(studentId: string) {
+		if (!enrollTarget) return;
+		unenrollLoadingId = studentId;
+		enrollError = '';
+		try {
+			await api.delete(`/courses/${enrollTarget.id}/enroll/${studentId}`);
+			const updated = {
+				...enrollTarget,
+				enrolled_student_ids: (enrollTarget.enrolled_student_ids ?? []).filter((id: string) => id !== studentId),
+			};
+			enrollTarget = updated;
+			allCourses = allCourses.map((c: any) => c.id === updated.id ? updated : c);
+		} catch (err: unknown) {
+			enrollError = err instanceof Error ? err.message : 'Failed to unenroll student.';
+		} finally {
+			unenrollLoadingId = null;
+		}
+	}
+
 	onMount(fetchAll);
 </script>
 
@@ -261,6 +334,7 @@
 								</td>
 								<td class="px-5 py-3">
 									<DropdownMenu items={[
+										{ label: 'Manage Students', onclick: () => openManageStudents(course) },
 										{ label: 'Edit', onclick: () => openEdit(course) },
 										{ label: 'Delete', variant: 'danger', onclick: () => openDelete(course.id, course.name) },
 									]} />
@@ -426,5 +500,70 @@
 	{#snippet footer()}
 		<Button variant="secondary" size="sm" onclick={() => (deleteOpen = false)}>{$t('common.cancel')}</Button>
 		<Button variant="danger" size="sm" loading={deleteLoading} onclick={handleDelete}>Delete</Button>
+	{/snippet}
+</Modal>
+
+<!-- Manage Students Modal -->
+<Modal open={enrollOpen} title="Manage Students — {enrollTarget?.name ?? ''}" onclose={() => (enrollOpen = false)}>
+	{#if enrollError}
+		<div class="mb-3 p-3 bg-errorBg rounded-sm text-sm text-errorText">{enrollError}</div>
+	{/if}
+
+	<!-- Enrolled Students -->
+	<div class="mb-5">
+		<h3 class="text-[13px] font-semibold text-text2 uppercase tracking-wide mb-2">Enrolled Students</h3>
+		{#if studentsLoading}
+			<p class="text-sm text-text2">{$t('common.loading')}</p>
+		{:else if (enrollTarget?.enrolled_student_ids ?? []).length === 0}
+			<p class="text-sm text-text2">No students enrolled yet.</p>
+		{:else}
+			<div class="flex flex-col divide-y divide-border">
+				{#each (enrollTarget?.enrolled_student_ids ?? []) as sid}
+					<div class="flex items-center justify-between py-2.5">
+						<span class="text-sm">{studentMap[sid] ?? sid}</span>
+						<button
+							onclick={() => handleUnenroll(sid)}
+							disabled={unenrollLoadingId === sid}
+							class="text-xs font-medium px-2 py-1 rounded-sm text-errorText bg-errorBg hover:bg-error/20 transition-colors disabled:opacity-50"
+						>
+							{unenrollLoadingId === sid ? 'Removing…' : 'Unenroll'}
+						</button>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+
+	<!-- Enroll a Student -->
+	<div>
+		<h3 class="text-[13px] font-semibold text-text2 uppercase tracking-wide mb-2">Enroll a Student</h3>
+		{#if studentsLoading}
+			<p class="text-sm text-text2">Loading students…</p>
+		{:else}
+			{@const available = allStudents.filter((s: any) =>
+				!(enrollTarget?.enrolled_student_ids ?? []).includes(s.user_id ?? s.id)
+			)}
+			{#if available.length === 0}
+				<p class="text-sm text-text2">All students are already enrolled.</p>
+			{:else}
+				<div class="flex gap-2">
+					<select bind:value={enrollStudentId}
+						class="flex-1 bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15">
+						<option value="">Select a student</option>
+						{#each available as student}
+							<option value={student.user_id ?? student.id}>{student.full_name ?? student.name}</option>
+						{/each}
+					</select>
+					<Button variant="primary" size="sm" loading={enrollLoading}
+						onclick={handleEnroll} disabled={!enrollStudentId}>
+						Enroll
+					</Button>
+				</div>
+			{/if}
+		{/if}
+	</div>
+
+	{#snippet footer()}
+		<Button variant="secondary" size="sm" onclick={() => (enrollOpen = false)}>{$t('common.cancel')}</Button>
 	{/snippet}
 </Modal>
