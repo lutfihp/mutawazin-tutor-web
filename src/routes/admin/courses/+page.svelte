@@ -229,9 +229,12 @@
 			const res = await api.get<any[]>('/admin/students');
 			allStudents = (Array.isArray(res) ? res : [])
 				.filter((s: any) => s.status !== 'deleted');
-			studentMap = Object.fromEntries(
-				allStudents.map((s: any) => [s.user_id ?? s.id, s.full_name ?? s.name ?? '—'])
-			);
+			studentMap = {};
+			for (const s of allStudents) {
+				const name = s.full_name ?? s.name ?? '—';
+				if (s.user_id) studentMap[s.user_id] = name;
+				if (s.id && s.id !== s.user_id) studentMap[s.id] = name;
+			}
 		} catch {
 			allStudents = [];
 		} finally {
