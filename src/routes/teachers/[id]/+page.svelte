@@ -10,57 +10,99 @@
 	const profile = $derived(data.profile);
 	const isOwn = $derived(data.user?.id === profile?.user_id);
 
-	let editMode = $state(false);
+	// ── Bio
 	let editingBio = $state(false);
 	let bioValue = $state(profile?.bio ?? '');
 	let savingBio = $state(false);
 
-	// New profile fields
-	let teachingMode = $state<'online' | 'offline' | 'both'>(profile?.teaching_mode ?? 'online');
-	let city = $state(profile?.city ?? '');
-	let methodInput = $state('');
-	let teachingMethods = $state<string[]>(profile?.teaching_methods ?? []);
-	let university = $state(profile?.university ?? '');
-	let achievements = $state<string[]>(profile?.achievements ?? []);
-	let experience = $state<Array<{ year_from: number; year_to: number | null; subject: string }>>(profile?.teaching_experience ?? []);
-	let savingDetails = $state(false);
+	// ── University
+	let editingUniversity = $state(false);
+	let universityValue = $state(profile?.university ?? '');
+	let savingUniversity = $state(false);
 
-	function addMethod() {
-		const val = methodInput.trim();
-		if (val && !teachingMethods.includes(val)) teachingMethods = [...teachingMethods, val];
-		methodInput = '';
+	// ── Teaching Experience
+	let editingExperience = $state(false);
+	let experienceValue = $state<Array<{ year_from: number; year_to: number | null; subject: string }>>(
+		profile?.teaching_experience ?? []
+	);
+	let savingExperience = $state(false);
+
+	// ── Achievements
+	let editingAchievements = $state(false);
+	let achievementsValue = $state<string[]>(profile?.achievements ?? []);
+	let savingAchievements = $state(false);
+
+	// ── Mutual exclusion: only one section editable at a time
+	function openSection(name: 'bio' | 'university' | 'experience' | 'achievements') {
+		editingBio = name === 'bio';
+		editingUniversity = name === 'university';
+		editingExperience = name === 'experience';
+		editingAchievements = name === 'achievements';
 	}
 
-	function removeMethod(i: number) { teachingMethods = teachingMethods.filter((_, idx) => idx !== i); }
-	function addExperience() { experience = [...experience, { year_from: new Date().getFullYear(), year_to: null, subject: '' }]; }
-	function removeExperience(i: number) { experience = experience.filter((_, idx) => idx !== i); }
+	// ── Mode display
+	const modeIcon = $derived(
+		profile?.teaching_mode === 'offline' ? '🔴' :
+		profile?.teaching_mode === 'both' ? '🔄' : '🌐'
+	);
+	const modeLabel = $derived(
+		profile?.teaching_mode === 'offline' ? $t('profile.teacher.modeOffline') :
+		profile?.teaching_mode === 'both' ? $t('profile.teacher.modeBoth') :
+		$t('profile.teacher.modeOnline')
+	);
 
-	async function saveDetails() {
-		savingDetails = true;
-		try {
-			await api.put('/teachers/me', {
-				teaching_mode: teachingMode,
-				city: city || undefined,
-				teaching_methods: teachingMethods,
-				university: university || undefined,
-				achievements: achievements.filter(Boolean),
-				teaching_experience: experience.filter((e) => e.subject),
-			});
-		} finally {
-			savingDetails = false;
-		}
-	}
-
+	// ── Save functions
 	async function saveBio() {
 		savingBio = true;
 		try {
 			await api.put('/teachers/me', { bio: bioValue });
+			editingBio = false;
 		} finally {
 			savingBio = false;
-			editingBio = false;
 		}
 	}
 
+	async function saveUniversity() {
+		savingUniversity = true;
+		try {
+			await api.put('/teachers/me', { university: universityValue || undefined });
+			editingUniversity = false;
+		} finally {
+			savingUniversity = false;
+		}
+	}
+
+	async function saveExperience() {
+		savingExperience = true;
+		try {
+			await api.put('/teachers/me', {
+				teaching_experience: experienceValue.filter((e) => e.subject)
+			});
+			editingExperience = false;
+		} finally {
+			savingExperience = false;
+		}
+	}
+
+	async function saveAchievements() {
+		savingAchievements = true;
+		try {
+			await api.put('/teachers/me', { achievements: achievementsValue.filter(Boolean) });
+			editingAchievements = false;
+		} finally {
+			savingAchievements = false;
+		}
+	}
+
+	// ── Experience helpers
+	function addExperience() {
+		experienceValue = [...experienceValue, { year_from: new Date().getFullYear(), year_to: null, subject: '' }];
+	}
+	function removeExperience(i: number) {
+		experienceValue = experienceValue.filter((_, idx) => idx !== i);
+	}
+
+	// ── Photo upload
 	function handlePhotoChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (!file) return;
@@ -78,243 +120,255 @@
 	{#if !profile}
 		<p class="text-text2 text-center py-20">Teacher not found.</p>
 	{:else}
-		<!-- Own-edit toggle -->
-		{#if isOwn}
-			<div class="flex justify-end mb-4">
-				<div class="inline-flex bg-bgGray border border-border rounded-pill p-0.5 gap-0.5" role="tablist">
-					{#each [{ key: false, label: $t('profile.teacher.publicPreview') }, { key: true, label: $t('profile.teacher.editView') }] as tab}
-						<button
-							role="tab"
-							aria-selected={editMode === tab.key}
-							onclick={() => (editMode = tab.key)}
-							class="px-3 py-1.5 text-sm font-medium rounded-pill transition-colors {editMode === tab.key ? 'bg-white text-text shadow-sm' : 'text-text2 hover:text-text'}"
-						>
-							{tab.label}
-						</button>
-					{/each}
-				</div>
-			</div>
-		{/if}
 
-		<!-- Profile header -->
-		<div class="flex flex-wrap gap-5 items-start mb-8">
-			<div class="relative flex-none">
-				<Avatar name={profile.full_name} id={profile.user_id} size="xxl" src={profile.photo_url} />
-				{#if isOwn && editMode}
-					<label
-						class="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-pill flex items-center justify-center cursor-pointer border-2 border-white hover:bg-primary-dark transition-colors"
-						aria-label="Upload photo"
-					>
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-							<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-							<circle cx="12" cy="13" r="4"/>
-						</svg>
-						<input type="file" accept="image/*" class="sr-only" onchange={handlePhotoChange} />
-					</label>
-				{/if}
-			</div>
-
-			<div class="flex-1 min-w-0">
-				<div class="flex flex-wrap items-center gap-3 mb-2">
-					<h1 class="text-[32px] font-bold tracking-tight">{profile.full_name}</h1>
-					{#if profile.is_featured}
-						<Badge variant="gold">★ {$t('status.featured')}</Badge>
-					{/if}
-				</div>
-				<div class="flex flex-wrap gap-1.5 mb-3">
-					{#each (profile.subjects ?? []) as subject}
-						<Badge variant="teal" label={subject} />
-					{/each}
-				</div>
-				<p class="text-sm text-text2">
-					{$t('profile.teacher.yearsExperience', { values: { n: profile.years_experience ?? 0 } })}
-					·
-					{$t('profile.teacher.sessionsCompleted', { values: { n: profile.sessions_completed ?? 0 } })}
-				</p>
-				{#if (profile.total_ratings ?? 0) > 0}
-					<p class="text-sm text-text2 mt-1">
-						{'★'.repeat(Math.round(profile.average_rating ?? 0))}{'☆'.repeat(5 - Math.round(profile.average_rating ?? 0))}
-						{$t('profile.teacher.rating', { values: { rating: (profile.average_rating ?? 0).toFixed(1), count: profile.total_ratings } })}
-					</p>
-				{/if}
-			</div>
-
-			{#if !isOwn}
-				<div class="flex gap-2">
-					<Button variant="primary">{$t('profile.teacher.bookSession')}</Button>
-				</div>
-			{/if}
-		</div>
-
-		<!-- About -->
+		<!-- ── Profile Header ── -->
 		<Card padding="lg" class="mb-4">
-			<div class="flex items-start justify-between gap-4">
-				<h2 class="font-semibold text-lg">{$t('profile.teacher.about')}</h2>
-				{#if isOwn && editMode && !editingBio}
-					<button onclick={() => (editingBio = true)} class="text-text2 hover:text-text transition-colors" aria-label="Edit bio">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-							<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
-						</svg>
-					</button>
-				{/if}
-			</div>
-			{#if editingBio}
-				<textarea
-					bind:value={bioValue}
-					rows={4}
-					class="w-full mt-3 bg-white border border-primary rounded-sm px-3 py-2.5 text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-primary/15"
-					aria-label="Bio"
-				></textarea>
-				<div class="flex gap-2 mt-2">
-					<Button variant="primary" size="sm" loading={savingBio} onclick={saveBio}>{$t('common.save')}</Button>
-					<Button variant="ghost" size="sm" onclick={() => (editingBio = false)}>{$t('common.cancel')}</Button>
+			<div class="flex gap-5 items-start">
+				<div class="relative flex-none">
+					<Avatar name={profile.full_name} id={profile.user_id} size="xxl" src={profile.photo_url} />
+					{#if isOwn}
+						<label
+							class="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-pill flex items-center justify-center cursor-pointer border-2 border-white hover:bg-primary-dark transition-colors"
+							aria-label="Upload photo"
+						>
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+								<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+								<circle cx="12" cy="13" r="4"/>
+							</svg>
+							<input type="file" accept="image/*" class="sr-only" onchange={handlePhotoChange} />
+						</label>
+					{/if}
 				</div>
-			{:else}
-				<p class="mt-3 text-[15px] leading-relaxed text-text2">{bioValue || profile.bio}</p>
-			{/if}
+
+				<div class="flex-1 min-w-0">
+					<h1 class="text-[26px] font-bold tracking-tight mb-2">{profile.full_name}</h1>
+					<div class="flex flex-wrap gap-1.5 mb-2">
+						{#if profile.is_featured}
+							<Badge variant="gold">★ {$t('status.featured')}</Badge>
+						{/if}
+						{#each (profile.subjects ?? []) as subject}
+							<Badge variant="teal" label={subject} />
+						{/each}
+					</div>
+					<p class="text-sm text-text2">
+						{$t('profile.teacher.yearsExperience', { values: { n: profile.years_experience ?? 0 } })}
+						·
+						{$t('profile.teacher.sessionsCompleted', { values: { n: profile.sessions_completed ?? 0 } })}
+						{#if (profile.total_ratings ?? 0) > 0}
+							· ★ {$t('profile.teacher.rating', { values: { rating: (profile.average_rating ?? 0).toFixed(1), count: profile.total_ratings } })}
+						{/if}
+					</p>
+					{#if profile.teaching_mode || profile.city || (profile.teaching_methods ?? []).length > 0}
+						<hr class="border-border mt-3 mb-3" />
+						<div class="flex flex-wrap gap-2">
+							{#if profile.teaching_mode}
+								<Badge variant="active">{modeIcon} {modeLabel}</Badge>
+							{/if}
+							{#if profile.city}
+								<Badge variant="teal">📍 {profile.city}</Badge>
+							{/if}
+							{#each (profile.teaching_methods ?? []) as method}
+								<Badge variant="violet" label={method} />
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
 		</Card>
 
-		<!-- Current Courses -->
-		<!-- Details edit card (own edit mode only) -->
-		{#if isOwn && editMode}
+		<!-- ── About ── -->
+		{#if profile.bio || isOwn}
 			<Card padding="lg" class="mb-4">
-				<h2 class="font-semibold text-lg mb-4">{$t('profile.teacher.teachingMode')}</h2>
-				<div class="flex flex-col gap-4">
-					<div class="flex gap-2">
-						{#each [['online', $t('profile.teacher.modeOnline')], ['offline', $t('profile.teacher.modeOffline')], ['both', $t('profile.teacher.modeBoth')]] as [val, label]}
-							<button type="button" onclick={() => (teachingMode = val as typeof teachingMode)}
-								class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
-								       {teachingMode === val ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
-								{label}
-							</button>
-						{/each}
-					</div>
-					<div class="flex flex-col gap-1.5">
-						<label for="teacherCity" class="text-[13px] font-medium">{$t('profile.teacher.city')}</label>
-						<input id="teacherCity" type="text" bind:value={city} placeholder={$t('profile.teacher.cityPlaceholder')}
-							class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-					</div>
-					<div class="flex flex-col gap-1.5">
-						<label for="teacherUni" class="text-[13px] font-medium">{$t('profile.teacher.university')}</label>
-						<input id="teacherUni" type="text" bind:value={university} placeholder={$t('profile.teacher.universityPlaceholder')}
-							class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-					</div>
-					<div class="flex flex-col gap-1.5">
-						<label for="methodInput" class="text-[13px] font-medium">{$t('profile.teacher.teachingMethods')}</label>
-						<div class="flex flex-wrap gap-1.5 items-center p-2 border border-border rounded-sm bg-white min-h-[44px] focus-within:border-primary">
-							{#each teachingMethods as method, i}
-								<span class="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 bg-primary-light text-primary-dark text-xs font-medium rounded-pill">
-									{method}
-									<button type="button" onclick={() => removeMethod(i)} class="w-4 h-4 grid place-items-center" aria-label="Remove">×</button>
-								</span>
-							{/each}
-							<input id="methodInput" type="text" bind:value={methodInput}
-								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addMethod(); } }}
-								onblur={addMethod}
-								placeholder={$t('profile.teacher.teachingMethodsPlaceholder')}
-								class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder:text-text3" />
-						</div>
-					</div>
-					<div class="flex flex-col gap-2">
-						<p class="text-[13px] font-medium">{$t('profile.teacher.achievements')}</p>
-						{#each achievements as ach, i}
-							<div class="flex gap-2">
-								<input type="text" bind:value={achievements[i]}
-									class="flex-1 bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15" />
-								<button type="button" onclick={() => (achievements = achievements.filter((_, idx) => idx !== i))}
-									class="px-2 text-text2 hover:text-error" aria-label="Remove">×</button>
-							</div>
-						{/each}
-						<button type="button" onclick={() => (achievements = [...achievements, ''])}
-							class="text-sm font-semibold text-primary hover:text-primary-dark text-left">{$t('profile.teacher.addAchievement')}</button>
-					</div>
-					<div class="flex flex-col gap-2">
-						<p class="text-[13px] font-medium">{$t('profile.teacher.experience')}</p>
-						{#each experience as exp, i}
-							<div class="grid grid-cols-[80px_80px_1fr_auto] gap-2 items-center">
-								<input type="number" bind:value={exp.year_from} placeholder="2020" aria-label="Year from"
-									class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary tabular" />
-								<input type="number" bind:value={exp.year_to} placeholder={$t('profile.teacher.experiencePresent')} aria-label="Year to"
-									class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary tabular" />
-								<input type="text" bind:value={exp.subject} placeholder="e.g. Mathematics" aria-label="Subject"
-									class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary" />
-								<button type="button" onclick={() => removeExperience(i)} class="px-2 text-text2 hover:text-error" aria-label="Remove">×</button>
-							</div>
-						{/each}
-						<button type="button" onclick={addExperience}
-							class="text-sm font-semibold text-primary hover:text-primary-dark text-left">{$t('profile.teacher.addExperience')}</button>
-					</div>
-					<div class="flex gap-2 pt-2">
-						<Button variant="primary" size="sm" loading={savingDetails} onclick={saveDetails}>{$t('common.save')}</Button>
-					</div>
-				</div>
-			</Card>
-		{/if}
-
-		<!-- Public details (mode/city/achievements/experience) -->
-		{#if profile.teaching_mode || profile.city || profile.achievements?.length || profile.teaching_experience?.length}
-			<Card padding="lg" class="mb-4">
-				<div class="flex flex-col gap-3 text-sm">
-					{#if profile.teaching_mode}
-						<div class="flex gap-2 items-center">
-							<span class="text-text2 min-w-[110px]">{$t('profile.teacher.teachingMode')}</span>
-							<Badge variant="active" label={$t(`profile.teacher.mode${profile.teaching_mode.charAt(0).toUpperCase() + profile.teaching_mode.slice(1)}`)} />
-						</div>
-					{/if}
-					{#if profile.city}
-						<div class="flex gap-2">
-							<span class="text-text2 min-w-[110px]">{$t('profile.teacher.city')}</span>
-							<span>{profile.city}</span>
-						</div>
-					{/if}
-					{#if profile.achievements?.length}
-						<div>
-							<p class="text-text2 mb-1">{$t('profile.teacher.achievements')}</p>
-							<ul class="list-disc list-inside flex flex-col gap-0.5 text-text2">
-								{#each profile.achievements as ach}<li>{ach}</li>{/each}
-							</ul>
-						</div>
-					{/if}
-					{#if profile.teaching_experience?.length}
-						<div>
-							<p class="text-text2 mb-1">{$t('profile.teacher.experience')}</p>
-							<div class="flex flex-col gap-1">
-								{#each profile.teaching_experience as exp}
-									<div class="text-text2">
-										<span class="font-medium text-text">{exp.subject}</span>
-										· {exp.year_from}–{exp.year_to ?? $t('profile.teacher.experiencePresent')}
-									</div>
-								{/each}
-							</div>
-						</div>
+				<div class="flex items-center justify-between gap-4 mb-3">
+					<h2 class="font-semibold text-lg">{$t('profile.teacher.about')}</h2>
+					{#if isOwn && !editingBio}
+						<button
+							onclick={() => openSection('bio')}
+							class="text-text2 hover:text-text transition-colors p-1"
+							aria-label={$t('common.edit')}
+						>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+								<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+							</svg>
+						</button>
 					{/if}
 				</div>
-			</Card>
-		{/if}
-
-		<Card padding="lg">
-			<div class="flex items-center justify-between mb-4">
-				<h2 class="font-semibold text-lg">{$t('profile.teacher.currentCourses')}</h2>
-				{#if isOwn && editMode}
-					<Button variant="secondary" size="sm" href="/courses">{$t('profile.teacher.newCourse')}</Button>
+				{#if editingBio}
+					<textarea
+						bind:value={bioValue}
+						rows={4}
+						class="w-full bg-white border border-primary rounded-sm px-3 py-2.5 text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-primary/15"
+						aria-label={$t('profile.teacher.about')}
+					></textarea>
+					<div class="flex gap-2 mt-2">
+						<Button variant="primary" size="sm" loading={savingBio} onclick={saveBio}>{$t('common.save')}</Button>
+						<Button variant="ghost" size="sm" onclick={() => { editingBio = false; bioValue = profile?.bio ?? ''; }}>{$t('common.cancel')}</Button>
+					</div>
+				{:else}
+					<p class="text-[15px] leading-relaxed text-text2">{bioValue || $t('profile.teacher.notSet')}</p>
 				{/if}
-			</div>
-			{#if profile.courses?.length}
-				<div class="grid sm:grid-cols-2 gap-3">
-					{#each profile.courses as course}
-						<div class="border border-border rounded-sm p-3">
-							<Badge variant="active" label={course.name} class="mb-2" />
-							<div class="flex flex-wrap gap-1 mt-1">
-								{#each (course.age_categories ?? []) as cat}
-									<Badge variant="violet" label={cat} />
-								{/each}
-							</div>
+			</Card>
+		{/if}
+
+		<!-- ── University ── -->
+		{#if profile.university || isOwn}
+			<Card padding="lg" class="mb-4">
+				<div class="flex items-center gap-2.5 mb-3">
+					<span class="w-9 h-9 rounded-lg bg-primary-light text-primary flex items-center justify-center text-lg flex-none" aria-hidden="true">🎓</span>
+					<h2 class="font-semibold text-lg flex-1">{$t('profile.teacher.university')}</h2>
+					{#if isOwn && !editingUniversity}
+						<button
+							onclick={() => openSection('university')}
+							class="text-text2 hover:text-text transition-colors p-1"
+							aria-label={$t('common.edit')}
+						>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+								<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+							</svg>
+						</button>
+					{/if}
+				</div>
+				{#if editingUniversity}
+					<input
+						type="text"
+						bind:value={universityValue}
+						placeholder={$t('profile.teacher.universityPlaceholder')}
+						class="w-full bg-white border border-primary rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/15"
+					/>
+					<div class="flex gap-2 mt-2">
+						<Button variant="primary" size="sm" loading={savingUniversity} onclick={saveUniversity}>{$t('common.save')}</Button>
+						<Button variant="ghost" size="sm" onclick={() => { editingUniversity = false; universityValue = profile?.university ?? ''; }}>{$t('common.cancel')}</Button>
+					</div>
+				{:else}
+					<p class="text-sm font-medium text-text">{universityValue || $t('profile.teacher.notSet')}</p>
+				{/if}
+			</Card>
+		{/if}
+
+		<!-- ── Teaching Experience ── -->
+		{#if profile.teaching_experience?.length || isOwn}
+			<Card padding="lg" class="mb-4">
+				<div class="flex items-center gap-2.5 mb-3">
+					<span class="w-9 h-9 rounded-lg bg-teal-light text-teal flex items-center justify-center text-lg flex-none" aria-hidden="true">💼</span>
+					<h2 class="font-semibold text-lg flex-1">{$t('profile.teacher.experience')}</h2>
+					{#if isOwn && !editingExperience}
+						<button
+							onclick={() => openSection('experience')}
+							class="text-text2 hover:text-text transition-colors p-1"
+							aria-label={$t('common.edit')}
+						>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+								<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+							</svg>
+						</button>
+					{/if}
+				</div>
+				{#if editingExperience}
+					{#each experienceValue as exp, i}
+						<div class="grid grid-cols-[80px_80px_1fr_auto] gap-2 items-center mb-2">
+							<input type="number" bind:value={exp.year_from} placeholder="2020" aria-label="Year from"
+								class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary tabular" />
+							<input type="number" bind:value={exp.year_to} placeholder={$t('profile.teacher.experiencePresent')} aria-label="Year to"
+								class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary tabular" />
+							<input type="text" bind:value={exp.subject} placeholder="e.g. Mathematics" aria-label="Subject"
+								class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary" />
+							<button type="button" onclick={() => removeExperience(i)} class="px-2 text-text2 hover:text-error" aria-label={$t('common.removeRow')}>×</button>
 						</div>
 					{/each}
+					<button type="button" onclick={addExperience}
+						class="text-sm font-semibold text-primary hover:text-primary-dark text-left mb-3">{$t('profile.teacher.addExperience')}</button>
+					<div class="flex gap-2">
+						<Button variant="primary" size="sm" loading={savingExperience} onclick={saveExperience}>{$t('common.save')}</Button>
+						<Button variant="ghost" size="sm" onclick={() => { editingExperience = false; experienceValue = profile?.teaching_experience ?? []; }}>{$t('common.cancel')}</Button>
+					</div>
+				{:else if experienceValue.length > 0}
+					<div class="flex flex-col divide-y divide-border">
+						{#each experienceValue as exp}
+							<div class="py-2.5">
+								<p class="text-sm font-semibold text-text">{exp.subject}</p>
+								<p class="text-xs text-text2 mt-0.5">{exp.year_from} – {exp.year_to ?? $t('profile.teacher.experiencePresent')}</p>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p class="text-sm text-text2">{$t('profile.teacher.notSet')}</p>
+				{/if}
+			</Card>
+		{/if}
+
+		<!-- ── Achievements ── -->
+		{#if profile.achievements?.length || isOwn}
+			<Card padding="lg" class="mb-4">
+				<div class="flex items-center gap-2.5 mb-3">
+					<span class="w-9 h-9 rounded-lg bg-gold-bg text-gold-text flex items-center justify-center text-lg flex-none" aria-hidden="true">⭐</span>
+					<h2 class="font-semibold text-lg flex-1">{$t('profile.teacher.achievements')}</h2>
+					{#if isOwn && !editingAchievements}
+						<button
+							onclick={() => openSection('achievements')}
+							class="text-text2 hover:text-text transition-colors p-1"
+							aria-label={$t('common.edit')}
+						>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+								<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+							</svg>
+						</button>
+					{/if}
 				</div>
-			{:else}
-				<p class="text-sm text-text2">{$t('profile.teacher.noCourses')}</p>
-			{/if}
-		</Card>
+				{#if editingAchievements}
+					{#each achievementsValue as ach, i}
+						<div class="flex gap-2 mb-2">
+							<input type="text" bind:value={achievementsValue[i]}
+								class="flex-1 bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15" />
+							<button type="button" onclick={() => (achievementsValue = achievementsValue.filter((_, idx) => idx !== i))}
+								class="px-2 text-text2 hover:text-error" aria-label={$t('common.removeRow')}>×</button>
+						</div>
+					{/each}
+					<button type="button" onclick={() => (achievementsValue = [...achievementsValue, ''])}
+						class="text-sm font-semibold text-primary hover:text-primary-dark text-left mb-3">{$t('profile.teacher.addAchievement')}</button>
+					<div class="flex gap-2">
+						<Button variant="primary" size="sm" loading={savingAchievements} onclick={saveAchievements}>{$t('common.save')}</Button>
+						<Button variant="ghost" size="sm" onclick={() => { editingAchievements = false; achievementsValue = profile?.achievements ?? []; }}>{$t('common.cancel')}</Button>
+					</div>
+				{:else if achievementsValue.length > 0}
+					<div class="flex flex-col divide-y divide-border">
+						{#each achievementsValue as ach}
+							<div class="py-2.5">
+								<p class="text-sm font-medium text-text">{ach}</p>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p class="text-sm text-text2">{$t('profile.teacher.notSet')}</p>
+				{/if}
+			</Card>
+		{/if}
+
+		<!-- ── Current Courses ── -->
+		{#if profile.courses?.length || isOwn}
+			<Card padding="lg">
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="font-semibold text-lg">{$t('profile.teacher.currentCourses')}</h2>
+					{#if isOwn}
+						<Button variant="secondary" size="sm" href="/courses">{$t('profile.teacher.newCourse')}</Button>
+					{/if}
+				</div>
+				{#if profile.courses?.length}
+					<div class="grid sm:grid-cols-2 gap-3">
+						{#each profile.courses as course}
+							<div class="border border-border rounded-sm p-3">
+								<p class="text-[15px] font-bold text-teal">{course.name}</p>
+								<p class="text-xs text-text3 mt-0.5">{(course.age_categories ?? []).join(' · ')}</p>
+								{#if course.description}
+									<p class="text-xs text-text2 mt-1.5 leading-relaxed">{course.description}</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p class="text-sm text-text2">{$t('profile.teacher.noCourses')}</p>
+				{/if}
+			</Card>
+		{/if}
+
 	{/if}
 </div>
