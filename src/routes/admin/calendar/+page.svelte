@@ -74,7 +74,7 @@
 	async function fetchRecurringTemplates() {
 		if (!filteredTeacherId) { recurringTemplates = []; return; }
 		try {
-			const d = await api.get<any[]>('/sessions/recurring');
+			const d = await api.get<any[]>(`/sessions/recurring?teacher_id=${filteredTeacherId}`);
 			recurringTemplates = Array.isArray(d) ? d : [];
 		} catch {
 			recurringTemplates = [];
@@ -289,6 +289,7 @@
 				duration_minutes: rDuration,
 				mode: rMode,
 				price: rPrice || undefined,
+				teacher_id: filteredTeacherId || undefined,
 			};
 			if (editingTemplate) {
 				await api.put(`/sessions/recurring/${editingTemplate.id}`, body);
@@ -453,9 +454,6 @@
 				{#if !filteredTeacherId}
 					<p class="text-sm text-text2">Select a teacher to view their recurring sessions.</p>
 				{:else}
-					<div class="mb-3 p-2.5 bg-warningBg border border-warning/40 rounded-sm text-xs text-warningText leading-relaxed">
-						Recurring management for other teachers requires a backend update. Create/edit will not work until then.
-					</div>
 					{#if recurringTemplates.length === 0}
 						<p class="text-sm text-text2">{$t('calendar.noRecurring')}</p>
 					{:else}
