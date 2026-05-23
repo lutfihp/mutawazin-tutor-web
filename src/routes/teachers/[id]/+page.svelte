@@ -32,19 +32,22 @@
 	let achievementsValue = $state<string[]>(profile?.achievements ?? []);
 	let savingAchievements = $state(false);
 
+	// ── Teaching Info (mode + city)
+	let editingTeachingInfo = $state(false);
+	let teachingModeValue = $state<string>(profile?.teaching_mode ?? 'online');
+	let cityValue = $state(profile?.city ?? '');
+	let savingTeachingInfo = $state(false);
+
 	// ── Mutual exclusion: only one section editable at a time
-	function openSection(name: 'bio' | 'university' | 'experience' | 'achievements') {
+	function openSection(name: 'bio' | 'university' | 'experience' | 'achievements' | 'teachingInfo') {
 		editingBio = name === 'bio';
 		editingUniversity = name === 'university';
 		editingExperience = name === 'experience';
 		editingAchievements = name === 'achievements';
+		editingTeachingInfo = name === 'teachingInfo';
 	}
 
 	// ── Mode display
-	const modeIcon = $derived(
-		profile?.teaching_mode === 'offline' ? '🔴' :
-		profile?.teaching_mode === 'both' ? '🔄' : '🌐'
-	);
 	const modeLabel = $derived(
 		profile?.teaching_mode === 'offline' ? $t('profile.teacher.modeOffline') :
 		profile?.teaching_mode === 'both' ? $t('profile.teacher.modeBoth') :
@@ -91,6 +94,19 @@
 			editingAchievements = false;
 		} finally {
 			savingAchievements = false;
+		}
+	}
+
+	async function saveTeachingInfo() {
+		savingTeachingInfo = true;
+		try {
+			await api.put('/teachers/me', {
+				teaching_mode: teachingModeValue || undefined,
+				city: cityValue || undefined,
+			});
+			editingTeachingInfo = false;
+		} finally {
+			savingTeachingInfo = false;
 		}
 	}
 
@@ -162,19 +178,75 @@
 							{$t('profile.teacher.rating', { values: { rating: (profile.average_rating ?? 0).toFixed(1), count: profile.total_ratings } })}
 						{/if}
 					</p>
-					{#if profile.teaching_mode || profile.city || (profile.teaching_methods ?? []).length > 0}
+					{#if profile.teaching_mode || profile.city || isOwn}
 						<hr class="border-border mt-3 mb-3" />
-						<div class="flex flex-wrap gap-2">
-							{#if profile.teaching_mode}
-								<Badge variant="active">{modeIcon} {modeLabel}</Badge>
-							{/if}
-							{#if profile.city}
-								<Badge variant="teal">📍 {profile.city}</Badge>
-							{/if}
-							{#each (profile.teaching_methods ?? []) as method}
-								<Badge variant="violet" label={method} />
-							{/each}
-						</div>
+						{#if editingTeachingInfo}
+							<div class="flex flex-wrap gap-2 items-center">
+								<select
+									bind:value={teachingModeValue}
+									class="bg-white border border-primary rounded-sm px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/15"
+								>
+									<option value="online">{$t('profile.teacher.modeOnline')}</option>
+									<option value="offline">{$t('profile.teacher.modeOffline')}</option>
+									<option value="both">{$t('profile.teacher.modeBoth')}</option>
+								</select>
+								<input
+									type="text"
+									bind:value={cityValue}
+									placeholder={$t('profile.teacher.cityPlaceholder')}
+									class="bg-white border border-border rounded-sm px-2 py-1.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15"
+								/>
+								<Button variant="primary" size="sm" loading={savingTeachingInfo} onclick={saveTeachingInfo}>{$t('common.save')}</Button>
+								<Button variant="ghost" size="sm" onclick={() => {
+									editingTeachingInfo = false;
+									teachingModeValue = profile?.teaching_mode ?? 'online';
+									cityValue = profile?.city ?? '';
+								}}>{$t('common.cancel')}</Button>
+							</div>
+						{:else}
+							<div class="flex flex-wrap gap-2 items-center">
+								{#if profile.teaching_mode}
+									<Badge variant="active">
+										<svg
+											width="12" height="12" viewBox="0 0 24 24"
+											fill="none" stroke="currentColor" stroke-width="2"
+											stroke-linecap="round" stroke-linejoin="round"
+											class="inline-block align-middle -mt-px{profile.teaching_mode === 'offline' ? ' opacity-50' : ''}"
+											aria-hidden="true"
+										>
+											<circle cx="12" cy="12" r="10"/>
+											<path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+										</svg>
+										{modeLabel}
+									</Badge>
+								{/if}
+								{#if profile.city}
+									<Badge variant="teal">
+										<svg
+											width="12" height="12" viewBox="0 0 24 24"
+											fill="none" stroke="currentColor" stroke-width="2"
+											stroke-linecap="round" stroke-linejoin="round"
+											class="inline-block align-middle -mt-px" aria-hidden="true"
+										>
+											<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+											<circle cx="12" cy="10" r="3"/>
+										</svg>
+										{profile.city}
+									</Badge>
+								{/if}
+								{#if isOwn}
+									<button
+										onclick={() => openSection('teachingInfo')}
+										class="text-text2 hover:text-text transition-colors p-1"
+										aria-label={$t('common.edit')}
+									>
+										<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+											<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+										</svg>
+									</button>
+								{/if}
+							</div>
+						{/if}
 					{/if}
 				</div>
 			</div>
