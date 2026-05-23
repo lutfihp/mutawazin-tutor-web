@@ -23,9 +23,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-23 — session 8)
+## Current Status (as of 2026-05-23 — session 9)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 10 pre-existing warnings)
+### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
 
 ### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed
 
@@ -46,6 +46,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Delta v7 backend | All `/sessions/recurring` endpoints accept `teacher_id` for admin | ✅ |
 | Dashboards | Teacher dashboard (real names + My Students roster), Student dashboard, Admin → `/admin` redirect | ✅ |
 | Profiles | Teacher profile (**redesigned** — per-section pencil editing, Card header + chips row, **handoff SVG icons** for credential sections, **SVG star** replacing ★ Unicode), Student profile (**age badge from DOB**) | ✅ |
+| Teacher profile chips row | Chips row uses **inline SVGs** (globe for mode, map-pin for city). Offline mode → globe `opacity-50`. **Teaching methods badges removed** (not in handoff). Mode + city are **editable inline** via `PUT /teachers/me` following the per-section pencil pattern. | ✅ |
+| Error pages | `static/errors/502.html`, `503.html`, `504.html` translated to **Bahasa Indonesia**. `src/lib/components/ErrorState.svelte` — Svelte 5 snippet-based presentational component (tone variants: blue/teal/amber/rose/slate). `src/routes/+error.svelte` — full handoff implementation: 401/403/404/429/500 + fallback, each with correct icon, copy, and actions. | ✅ |
 | Courses | Filter + grid, create via subject picker, suggest new subject, admin+teacher can create, admin Enroll Student | ✅ |
 | Calendar | Month grid, session pills + recurring badge, availability panel, Recurring templates, Add Session, Availability CRUD | ✅ |
 | Reports | Score grid, create/edit modal, Share button + panel, public `/report/share/:token` page | ✅ |
@@ -65,7 +67,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 4. **Mobile testing** — hamburger sidebar untested at 375px viewport.
 
-5. **Teacher profile — live verify** — redesign not yet tested against live backend. Confirm `GET /teachers/:user_id` returns `courses[]` with `name`, `age_categories`, `description`, and that `PUT /teachers/me` accepts per-section payloads.
+5. **Teacher profile — live verify** — redesign + chips row edit not yet tested against live backend. Confirm `GET /teachers/:user_id` returns `courses[]` with `name`, `age_categories`, `description`, and that `PUT /teachers/me` accepts per-section payloads (bio, university, experience, achievements, teaching_mode, city).
 
 6. **Admin calendar — recurring student picker** — the recurring modal for private sessions uses a plain text input for student ID (not a dropdown). When backend student list is confirmed available, replace with a `<select>` from `adminStudents`.
 
@@ -96,7 +98,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **Admin table header alignment** | All `<th>` in admin tables use `text-left`, including the Actions column. The `<td>` for the actions column keeps `text-right` so the `⋮` button stays right-aligned, but the header label is left-aligned. |
 | **Admin courses page pattern** | `/admin/courses` loads courses + teachers + subjects in parallel on mount. `teacherMap` (teacher_id → full_name) is built from the teacher list for display. Price per age category is stored as `Record<string, string>` in state (for input binding) and converted to `Record<string, number>` on submit. |
 | **Teacher profile per-section edit pattern** | `src/routes/teachers/[id]/+page.svelte` has one `editing*` / `saving*` / save-function triple per editable section (bio, university, experience, achievements). `openSection(name)` sets the named section to `true` and all others to `false` — enforces mutual exclusion so only one section is editable at a time. Camera overlay on avatar is always shown to `isOwn` (no editMode toggle). |
-| **Teacher profile data display** | API data is adapted to the design: `university: string` shown as a single name row; `teaching_experience: [{subject, year_from, year_to}]` shown as subject + year range; `achievements: string[]` shown as plain string rows. Sections are hidden on public view when empty; on own view they show "Not set" with a pencil button. `teaching_mode`, `city`, `teaching_methods[]` shown as Badge chips below a `<hr>` in the profile header card. |
+| **Teacher profile data display** | API data is adapted to the design: `university: string` shown as a single name row; `teaching_experience: [{subject, year_from, year_to}]` shown as subject + year range; `achievements: string[]` shown as plain string rows. Sections are hidden on public view when empty; on own view they show "Not set" with a pencil button. `teaching_mode` and `city` shown as SVG-icon chips below a `<hr>` in the profile header card. **`teaching_methods[]` chips are removed** — not in the current handoff. |
+| **Teacher profile chips row** | Globe SVG = teaching_mode (online/offline/both). Offline-only → globe gets `opacity-50` class. Map-pin SVG = city. Both chips use `stroke="currentColor"` inline SVG. When `isOwn`, a pencil button opens inline edit: `<select>` for mode + `<input>` for city, saves via `PUT /teachers/me`. Follows the same `editingTeachingInfo` / `savingTeachingInfo` / `openSection('teachingInfo')` pattern as other sections. |
+| **ErrorState component** | `src/lib/components/ErrorState.svelte` — Svelte 5 `$props()` with snippet props: `icon?`, `actions?`, `extra?`. Props: `tone` (blue/teal/amber/rose/slate), `code`, `title`, `body`, `noTile`. Used exclusively by `src/routes/+error.svelte`. Static nginx error pages (`static/errors/502.html`, `503.html`, `504.html`) are pure HTML/CSS/inline SVG — no JS, no external fonts, text in Bahasa Indonesia. |
 | **Admin calendar pattern** | `src/routes/admin/calendar/+page.svelte` — CSR, loads in `onMount`. Fetches sessions via `GET /calendar/admin?from=&to=&teacher_id=`. Teacher list from `GET /admin/teachers` (use `teacher.user_id ?? teacher.id` as ID). Courses from `GET /courses`. Students from `GET /admin/students`. Session edit uses `PUT /sessions/:id`. Session create requires `teacher_id` in body. Recurring endpoints now accept `teacher_id` query (GET) and body field (POST) per delta v7. |
 | **Admin calendar teacher ID field** | Teachers from `GET /admin/teachers` expose both `user_id` and `id` — always use `teacher.user_id ?? teacher.id` as the key (same as admin/courses page). The `teacher_id` on sessions matches this value. |
 | **Session edit (admin)** | `PUT /sessions/:id` — admin can edit title, starts_at, ends_at, mode, price, teacher_id, student_id, course_id. Teacher role can only edit title/time/mode/price (teacher_id/student_id/course_id ignored). Endpoint added in delta v6. |
@@ -122,6 +126,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │   │   ├── stores/adminBadge.ts    ← writable<number> pendingApprovalCount
 │   │   ├── utils/avatar.ts, date.ts, cn.ts
 │   │   ├── components/ui/          ← Badge, Avatar, Button, Card, Input, Modal, DropdownMenu
+│   │   ├── components/ErrorState.svelte  ← full-page error state (tone variants, snippet props)
 │   │   └── components/layout/      ← Logo, Navbar, Sidebar, AuthLayout
 │   ├── locales/en.json, id.json
 │   └── routes/
@@ -144,6 +149,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │       ├── reports/[studentId]/
 │       └── report/share/[token]/   ← Public report share page (no auth)
 ├── static/brand-kit/               ← All brand assets served statically
+├── static/errors/                  ← nginx static error pages (502/503/504) in Bahasa Indonesia
 └── docs/
     ├── content-audit.csv           ← Dead links / fake data audit with decisions
     └── superpowers/specs/ + plans/ ← Implementation specs and plans
@@ -219,16 +225,21 @@ The FastAPI backend must be running at `http://localhost:8000`.
    - Per-section pencil editing (About, University, Experience, Achievements)
    - SVG icons render correctly in credential section tiles (graduation cap, briefcase, star)
    - SVG star renders in rating meta line and featured badge
-   - Chips row (mode/city/methods) shows correctly
+   - Chips row: globe icon shows mode, map-pin shows city, teaching_methods row is gone
+   - Click pencil on chips row → select + input appear → save via `PUT /teachers/me`
+
+3. **Error pages smoke test:**
+   - Navigate to `http://localhost:5173/nonexistent` → should show 404 blue tone with compass icon and "Go home" + "Browse courses" buttons
+   - Open `static/errors/502.html`, `503.html`, `504.html` in browser → verify Indonesian text and layout
 
 **Priority 2 — Follow-up feature (frontend only, endpoints already exist)**
-3. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
+4. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
 
 **Priority 3 — Runtime QA (use `docs/qa-checklist.md`)**
-4. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
-5. Test delta v5: create/edit/delete courses on `/admin/courses` against live backend
-6. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
-7. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
+5. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
+6. Test delta v5: create/edit/delete courses on `/admin/courses` against live backend
+7. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
+8. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
 
 **Priority 4 — Mobile + Visual QA**
 8. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
