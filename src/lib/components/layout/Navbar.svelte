@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { user } from '$lib/stores/auth';
 	import { sidebarOpen } from '$lib/stores/sidebar';
@@ -14,6 +15,9 @@
 	let scrolled = $state(false);
 	let currentLang = $derived($locale === 'id' ? 'id' : 'en');
 
+	let profileName = $state('');
+	let profileSrc = $state('');
+
 	function handleScroll() {
 		scrolled = window.scrollY > 4;
 	}
@@ -26,7 +30,6 @@
 		setLang(lang);
 	}
 
-	// Landing page detection
 	const isLanding = $derived(!$user);
 
 	async function logout() {
@@ -34,6 +37,20 @@
 		user.set(null);
 		goto('/');
 	}
+
+	onMount(async () => {
+		if (!$user || $user.role === 'admin') return;
+		try {
+			const endpoint = $user.role === 'teacher'
+				? `/teachers/${$user.id}`
+				: `/students/${$user.id}`;
+			const profile = await api.get<{ full_name?: string; photo_url?: string }>(endpoint);
+			profileName = profile?.full_name ?? '';
+			profileSrc = profile?.photo_url ?? '';
+		} catch {
+			// Avatar renders as blank colored circle — acceptable fallback
+		}
+	});
 </script>
 
 <svelte:window onscroll={handleScroll} />
@@ -98,7 +115,12 @@
 
 	<!-- Authenticated: avatar + logout -->
 	{#if $user}
-		<Avatar name={$user.id} id={$user.id} size="sm" />
+		{#if $user.role !== 'admin'}
+			{@const profileHref = $user.role === 'teacher' ? `/teachers/${$user.id}` : `/students/${$user.id}`}
+			<a href={profileHref} class="flex-none rounded-pill focus-visible:ring-2 focus-visible:ring-primary" aria-label="My profile">
+				<Avatar name={profileName} src={profileSrc} id={$user.id} size="sm" />
+			</a>
+		{/if}
 		<button
 			onclick={logout}
 			class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors"
