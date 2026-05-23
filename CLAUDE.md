@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-23 — session 9)
+## Current Status (as of 2026-05-24 — session 10)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
 
@@ -56,12 +56,15 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Navigation | Logout button, Sidebar profile/reports hrefs wired via `userId` prop chain | ✅ |
 | `/teachers` public page | Featured teachers grid, footer + landing "Browse all" links | ✅ |
 | Delta v4 backend | Email/username availability checks, Delete teacher/student/subject with confirmation modals, `"deleted"` status filtering | ✅ |
+| Delta v8 backend | `GET /admin/stats` now returns `active_courses` (count of courses with status === "active"). Frontend already reads `s.active_courses ?? 0` — no frontend change needed. | ✅ |
+| Navbar avatar | Admin: no avatar. Teacher/Student: `onMount` fetches own profile (`GET /teachers/:id` or `GET /students/:id`), renders Avatar as link to their profile page. Uses `full_name` + `photo_url` — falls back to blank colored circle if fetch fails. | ✅ |
+| Course detail page | `src/routes/courses/[id]/` — server load fetches `GET /courses/:id` (throws 404 if not found). Page shows: name + status badges, description, teacher link, pricing grid by age category. Role-conditional: student sees "Enrolled" badge if enrolled; teacher/admin sees enrolled count; admin sees "Manage enrollments →" link to `/admin/courses`. No self-enrollment (admin-only). | ✅ |
 
 ### What is NOT done yet (known gaps)
 
 1. **Admin Courses — student enrollment management** — enroll/unenroll students per course (`POST /courses/:id/enroll`, `DELETE /courses/:id/enroll/:student_id`). Deferred to follow-up; the page exists but has no student management UI yet.
 
-2. **Runtime verification** — admin calendar, session edit, teacher profile redesign, and all previous delta features not yet tested against live backend.
+2. **Runtime verification** — admin calendar, session edit, teacher profile redesign, navbar avatar fetch, course detail page, and all previous delta features not yet tested against live backend.
 
 3. **Availability slot `id` field** — not yet tested live. If edit/delete fail, fix `{@const slotId = slot.id ?? slot.slot_id ?? ''}` in `src/routes/calendar/+page.svelte`.
 
@@ -70,6 +73,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 5. **Teacher profile — live verify** — redesign + chips row edit not yet tested against live backend. Confirm `GET /teachers/:user_id` returns `courses[]` with `name`, `age_categories`, `description`, and that `PUT /teachers/me` accepts per-section payloads (bio, university, experience, achievements, teaching_mode, city).
 
 6. **Admin calendar — recurring student picker** — the recurring modal for private sessions uses a plain text input for student ID (not a dropdown). When backend student list is confirmed available, replace with a `<select>` from `adminStudents`.
+
+7. **Course detail page — live verify** — not yet tested against live backend. Confirm `GET /courses/:id` returns the expected shape (especially `enrolled_student_ids[]` and `price_by_age_category`). Verify the 404 error page renders correctly for unknown course IDs.
 
 ---
 
@@ -104,6 +109,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **Admin calendar pattern** | `src/routes/admin/calendar/+page.svelte` — CSR, loads in `onMount`. Fetches sessions via `GET /calendar/admin?from=&to=&teacher_id=`. Teacher list from `GET /admin/teachers` (use `teacher.user_id ?? teacher.id` as ID). Courses from `GET /courses`. Students from `GET /admin/students`. Session edit uses `PUT /sessions/:id`. Session create requires `teacher_id` in body. Recurring endpoints now accept `teacher_id` query (GET) and body field (POST) per delta v7. |
 | **Admin calendar teacher ID field** | Teachers from `GET /admin/teachers` expose both `user_id` and `id` — always use `teacher.user_id ?? teacher.id` as the key (same as admin/courses page). The `teacher_id` on sessions matches this value. |
 | **Session edit (admin)** | `PUT /sessions/:id` — admin can edit title, starts_at, ends_at, mode, price, teacher_id, student_id, course_id. Teacher role can only edit title/time/mode/price (teacher_id/student_id/course_id ignored). Endpoint added in delta v6. |
+| **Navbar profile fetch pattern** | `Navbar.svelte` fetches the logged-in user's own profile on `onMount` (teacher → `GET /teachers/:id`, student → `GET /students/:id`). Stores `profileName` + `profileSrc` in local `$state`. Admin gets no avatar. Teacher/student Avatar is wrapped in `<a>` linking to their profile page. No changes to `hooks.server.ts`, `app.d.ts`, or the `User` store type — JWT only carries `{ id, role, status }`. |
+| **Course detail page pattern** | `src/routes/courses/[id]/+page.server.ts` — SSR load: auth guard + `GET /courses/:id` + `throw error(404)` if not found, returns `{ course, user: locals.user }`. Parent `src/routes/courses/+layout.svelte` provides `<AuthLayout>` — no new layout needed. Page uses `AGE_KEYS` map to translate API age-category strings to existing `courses.age*` i18n keys. Price formatted with `Intl.NumberFormat('id-ID', { currency: 'IDR' })`. Student self-enrollment is NOT allowed — enrollment is admin-only via `/admin/courses`. |
 
 ---
 
@@ -145,6 +152,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │       ├── teachers/[id]/
 │       ├── students/[id]/
 │       ├── courses/
+│       ├── courses/[id]/               ← Course detail page (server load + Svelte page)
 │       ├── calendar/
 │       ├── reports/[studentId]/
 │       └── report/share/[token]/   ← Public report share page (no auth)
@@ -161,7 +169,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 
 Updated API contract is at `D:\Codading Repo\mutawazin-tutor-api\docs\api-contract\api-types.ts`.
 
-Key endpoints active as of 2026-05-23:
+Key endpoints active as of 2026-05-24:
 - Auth: login, register, verify-email, refresh, logout, forgot-password, reset-password, step-up
 - **Availability checks (public):** `GET /auth/check/email?email=<val>` → `{ available: boolean }`, `GET /auth/check/username?username=<val>` → `{ available: boolean }`
 - Subjects: `GET /subjects`, `POST /subjects/suggest`, admin CRUD at `/admin/subjects`
@@ -180,6 +188,8 @@ Key endpoints active as of 2026-05-23:
 - **Admin calendar (delta v6):** `GET /calendar/admin?from=&to=&teacher_id=` (admin only)
 - **Admin courses (delta v5):** `POST /admin/courses`, `PUT /admin/courses/:id`, `DELETE /admin/courses/:id`
 - **Course enrollment:** `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id` (admin only)
+- **Course detail (delta v8):** `GET /courses/:id` — any authenticated role, returns `{ id, teacher_id, subject_id, name, subject_status, age_categories, price_by_age_category, description, status, enrolled_student_ids[] }`. Returns 404 if not found.
+- **Admin stats (delta v8):** `GET /admin/stats` returns `{ total_teachers, total_students, active_courses }` — `active_courses` is count of courses with status === "active".
 - Availability: `POST /availability`, `PUT /availability/:slot_id`, `DELETE /availability/:slot_id`
 
 ---
@@ -212,34 +222,48 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Live verify new features**
-1. **Admin calendar** — log in as admin, open `/admin/calendar`:
+**Priority 1 — Live verify session 10 features**
+1. **Admin dashboard stat** — log in as admin, open `/admin`. Confirm "Active Courses" card shows a non-zero count matching actual active courses in the database.
+
+2. **Navbar avatar** — log in as each role:
+   - Admin: no avatar between lang toggle and Sign out
+   - Teacher: colored circle with name initials (or photo) appears; clicking navigates to `/teachers/:id`
+   - Student: same, links to `/students/:id`
+
+3. **Course detail page** — open `/courses`, click "View Course →" on any card:
+   - Page loads without 404
+   - Name shown as `h1`, status badge visible
+   - Pricing grid shows age categories with Rp-formatted prices
+   - Teacher section has "View Profile →" link
+   - Student enrolled in the course sees green "Enrolled" badge
+   - Teacher/admin sees enrolled count; admin sees "Manage enrollments →" link
+   - Navigating to a non-existent course ID shows the 404 error page
+
+**Priority 2 — Live verify previous sessions**
+4. **Admin calendar** — log in as admin, open `/admin/calendar`:
    - Confirm sessions load from `GET /calendar/admin`
    - Select a teacher from the picker — confirm calendar refetches filtered sessions
    - Click a session pill → edit modal → save via `PUT /sessions/:id`
    - Click "+ Add Session" with no filter → teacher picker appears; with filter → teacher pre-filled
    - With teacher filter active: confirm recurring panel loads that teacher's templates
-   - Create/edit/delete a recurring template via the panel
 
-2. **Teacher profile** — log in as a teacher, visit own profile:
+5. **Teacher profile** — log in as a teacher, visit own profile:
    - Per-section pencil editing (About, University, Experience, Achievements)
-   - SVG icons render correctly in credential section tiles (graduation cap, briefcase, star)
-   - SVG star renders in rating meta line and featured badge
-   - Chips row: globe icon shows mode, map-pin shows city, teaching_methods row is gone
+   - SVG icons render correctly in credential section tiles
+   - Chips row: globe icon shows mode, map-pin shows city
    - Click pencil on chips row → select + input appear → save via `PUT /teachers/me`
 
-3. **Error pages smoke test:**
-   - Navigate to `http://localhost:5173/nonexistent` → should show 404 blue tone with compass icon and "Go home" + "Browse courses" buttons
-   - Open `static/errors/502.html`, `503.html`, `504.html` in browser → verify Indonesian text and layout
+6. **Error pages smoke test:**
+   - Navigate to `http://localhost:5173/nonexistent` → 404 blue tone, compass icon, "Go home" + "Browse courses" buttons
+   - Open `static/errors/502.html`, `503.html`, `504.html` in browser → verify Indonesian text
 
-**Priority 2 — Follow-up feature (frontend only, endpoints already exist)**
-4. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
+**Priority 3 — Follow-up feature (frontend only, endpoints already exist)**
+7. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
 
-**Priority 3 — Runtime QA (use `docs/qa-checklist.md`)**
-5. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
-6. Test delta v5: create/edit/delete courses on `/admin/courses` against live backend
-7. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
-8. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
+**Priority 4 — Runtime QA**
+8. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
+9. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
+10. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
 
-**Priority 4 — Mobile + Visual QA**
-8. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
+**Priority 5 — Mobile + Visual QA**
+11. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
