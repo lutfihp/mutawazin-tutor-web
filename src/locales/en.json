@@ -318,6 +318,13 @@
       "subjectLabel": "Subject",
       "subjectPlaceholder": "e.g. Mathematics",
       "ageLabel": "Age categories"
+    },
+    "detail": {
+      "back": "← Courses",
+      "teacher": "Teacher",
+      "pricing": "Pricing",
+      "isEnrolled": "Enrolled",
+      "manageEnrollments": "Manage enrollments →"
     }
   },
   "calendar": {

@@ -318,6 +318,13 @@
       "subjectLabel": "Mata pelajaran",
       "subjectPlaceholder": "mis. Matematika",
       "ageLabel": "Kategori usia"
+    },
+    "detail": {
+      "back": "← Kursus",
+      "teacher": "Guru",
+      "pricing": "Harga",
+      "isEnrolled": "Terdaftar",
+      "manageEnrollments": "Kelola pendaftaran →"
     }
   },
   "calendar": {
