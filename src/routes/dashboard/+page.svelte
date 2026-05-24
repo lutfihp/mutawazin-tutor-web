@@ -273,9 +273,6 @@
 			<Card padding="none">
 				{#snippet head()}
 					<h2 class="font-semibold">{$t('dashboard.student.latestReport')}</h2>
-					{#if d.latest_report}
-						<Badge variant="success" label={$t('status.present')} />
-					{/if}
 				{/snippet}
 				{#if d.latest_report}
 					<div class="p-5">
