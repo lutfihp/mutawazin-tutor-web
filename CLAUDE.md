@@ -23,11 +23,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-24 — session 11)
+## Current Status (as of 2026-05-25 — session 13)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
 
-### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed
+### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–13 commits local only, not yet pushed)
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -59,6 +59,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Delta v8 backend | `GET /admin/stats` now returns `active_courses` (count of courses with status === "active"). Frontend already reads `s.active_courses ?? 0` — no frontend change needed. | ✅ |
 | Navbar avatar | Admin: no avatar. Teacher/Student: `onMount` fetches own profile (`GET /teachers/:id` or `GET /students/:id`), renders Avatar as link to their profile page. Uses `full_name` + `photo_url` — falls back to blank colored circle if fetch fails. | ✅ |
 | Course detail page | `src/routes/courses/[id]/` — server load fetches `GET /courses/:id` (throws 404 if not found). Page shows: name + status badges, description, teacher link, pricing grid by age category. Role-conditional: student sees "Enrolled" badge if enrolled; teacher/admin sees enrolled count; admin sees "Manage enrollments →" link to `/admin/courses`. No self-enrollment (admin-only). | ✅ |
+| Delta v9 attendance removal | `attendance` field removed from all frontend: report list page (state, filter dropdown, modal radio, payload, $effect tracking), student profile recent reports section, public share page, and dashboard latest report hardcoded badge. Dead i18n keys removed from `en.json` and `id.json` (`attendanceFilter`, `modal.attendance/*Option`, `status.present/late/absent`). | ✅ |
+| Bug fixes (session 12) | Course detail shows `teacher_name` as primary text. Report page + share page use correct `sc.max_score` field (not `sc.max`). Report page + share page use `formatDate(report.created_at)` (not `report.date`). Dead "View Full" button removed from reports footer (teacher-only now). | ✅ |
+| UI polish (session 12) | Attendance badge deleted from report list entirely (not just hidden). Student age badge uses translatable i18n key `profile.student.yearsOld` (`{age} years old` / `{age} tahun`). Teacher profile course cards use `text-text2` for age categories (was `text-text3`, too light). | ✅ |
+| Student DOB edit | Student profile (`students/[id]/+page.svelte`) — DOB edit UI added: pencil button → date input → save via `PUT /students/me { date_of_birth }`. Age badge reads `profile.age` (not formula), gated to `isOwn \|\| admin`. Waiting on backend to return `age: int \| null` from `GET /students/:id` before values are non-null. | ✅ (UI done, wired up; live when backend ships delta v9) |
+| i18n fixes (session 13) | Added `common.age` key (EN: "Age", ID: "Usia") to both locale files. Admin students Age column header now uses `$t('common.age')` instead of hardcoded "Age". Admin calendar teacher filter fixed: `aria-label` uses correct path `dashboard.admin.filterByTeacher`; default option uses `courses.allTeachers` ("All teachers" / "Semua guru") instead of raw key. | ✅ |
 
 ### What is NOT done yet (known gaps)
 
@@ -78,10 +83,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 8. **Teacher profile stats — pending backend delta v9** — `GET /teachers/:user_id` does not return `years_experience` or `sessions_completed`; both always show 0. Frontend at `src/routes/teachers/[id]/+page.svelte:173-175` already reads `profile.years_experience ?? 0` and `profile.sessions_completed ?? 0` — no frontend change needed once backend ships. Backend must add: `years_experience = current_year - min(year_from)` across `teaching_experience[]` (0 if empty); `sessions_completed = count of Session where teacher_id == user_id and status == "completed"`.
 
-9. **Student age + DOB edit feature — pending backend delta v9** — Two changes blocked on backend:
-   - Backend: `GET /admin/students` add `age: int | null`, drop `date_of_birth`; `GET /students/:id` add `age: int | null`, keep `date_of_birth` (needed for edit form pre-population).
-   - Frontend `admin/students/+page.svelte:176-181` — replace IIFE+formula with `user.age != null ? String(user.age) : '—'`.
-   - Frontend `students/[id]/+page.svelte:87-92` — replace `{@const age = Math.floor(...)}` formula with `{#if profile.age != null}`. Gate entire age badge to `{#if isOwn || data.user?.role === 'admin'}`. Add DOB edit (pencil + date input, `isOwn` only) that pre-fills from `profile.date_of_birth` and saves via `PUT /students/me { date_of_birth }`, using the same `editingDob` / `savingDob` / `openSection('dob')` pattern as teacher profile.
+9. **Admin students age column — pending backend delta v9** — `admin/students/+page.svelte` Age column still uses IIFE+formula. Once backend ships `age: int | null` on `GET /admin/students`, replace with `user.age != null ? String(user.age) : '—'`. The student profile DOB edit UI is already in place (`students/[id]/+page.svelte`); it just needs backend to return non-null `age` values.
 
 ---
 
@@ -105,7 +107,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **AuthLayout content centering** | `<main>` has `flex-1 sidebar-collapse:ml-60 p-6 lg:p-8`. The `max-w-app mx-auto` is on an inner `<div>` wrapping `{@render children()}`, NOT on `<main>` itself. This centers content within the post-sidebar space on wide viewports. Do not move `max-w-app mx-auto` back to `<main>`. |
 | **DropdownMenu component** | `src/lib/components/ui/DropdownMenu.svelte` — shared three-dot action dropdown. Props: `items: { label, onclick, variant? }[]`. Handles open/close via `onfocusout` on a `tabindex="-1"` wrapper and Escape key. Used on all three admin table pages. |
 | **Admin action pattern** | All admin table rows use `<DropdownMenu>` for actions (View Profile, Delete, Feature/Edit). Delete and Featured actions open confirmation modals before executing. All modals use the existing `<Modal>` component with inline state per page. |
-| **Age from DOB pattern** | **Being replaced by backend-computed `age: int` field (delta v9 pending).** Formula `Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000))` still live in `admin/students/+page.svelte:179` and `students/[id]/+page.svelte:88` until delta v9 is applied. After delta v9: read `user.age` / `profile.age` directly — no FE computation. |
+| **Age from DOB pattern** | **Replaced by backend-computed `age: int` field.** `students/[id]/+page.svelte` already reads `profile.age` directly (formula removed). Formula still in `admin/students/+page.svelte` — replace with `user.age != null ? String(user.age) : '—'` once backend ships delta v9 (`age` field on admin students list). |
 | **DropdownMenu fixed positioning** | `DropdownMenu.svelte` panel uses `position: fixed` with `getBoundingClientRect()` on the trigger button to compute `top` and `right`. This escapes `overflow-x-auto` table containers — do NOT revert to `absolute`. |
 | **Admin table header alignment** | All `<th>` in admin tables use `text-left`, including the Actions column. The `<td>` for the actions column keeps `text-right` so the `⋮` button stays right-aligned, but the header label is left-aligned. |
 | **Admin courses page pattern** | `/admin/courses` loads courses + teachers + subjects in parallel on mount. `teacherMap` (teacher_id → full_name) is built from the teacher list for display. Price per age category is stored as `Record<string, string>` in state (for input binding) and converted to `Record<string, number>` on submit. |
@@ -201,7 +203,8 @@ Key endpoints active as of 2026-05-24:
 - **Delta v9 (PENDING — backend not yet updated):**
   - `GET /teachers/:user_id` adds `years_experience: int` (0 if no teaching_experience), `sessions_completed: int` (count of completed sessions for that teacher)
   - `GET /admin/students` adds `age: int | null` per student, drops `date_of_birth` from list response
-  - `GET /students/:id` adds `age: int | null`, keeps `date_of_birth` (needed for edit form)
+  - `GET /students/:id` adds `age: int | null`, keeps `date_of_birth` (needed for edit form pre-fill)
+  - **Frontend ready:** `students/[id]/+page.svelte` already reads `profile.age` and has DOB edit UI. Admin list still uses formula — fix that column once backend ships.
 
 ---
 
@@ -233,18 +236,18 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 0 — Apply delta v9 frontend changes (once backend confirms it's done)**
+**Priority 0 — Finish delta v9 (once backend confirms it's done)**
 1. **Teacher profile stats** — log in as a teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0). No frontend code change needed — just verify.
 
-2. **Student age + DOB edit — admin list** — open `/admin/students`. Confirm Age column shows a number instead of `—`. Replace the IIFE formula at `admin/students/+page.svelte:179` with `user.age != null ? String(user.age) : '—'`.
+2. **Admin students age column** — open `/admin/students`. Confirm Age column shows a number instead of `—`. Replace the IIFE formula at `admin/students/+page.svelte:179` with `user.age != null ? String(user.age) : '—'`.
 
-3. **Student age + DOB edit — student profile** — open any student profile:
-   - Replace `{@const age = Math.floor(...)}` formula with `{#if profile.age != null}`.
-   - Gate age badge with `{#if isOwn || data.user?.role === 'admin'}` (teacher should NOT see it).
-   - Add DOB edit when `isOwn`: pencil button next to age badge → date input pre-filled from `profile.date_of_birth` → save via `PUT /students/me { date_of_birth }`. Use `editingDob` / `savingDob` following the teacher profile per-section pencil pattern.
+3. **Student DOB edit — live verify** — log in as a student, open own profile. Confirm:
+   - Age badge shows a number (reads `profile.age` from backend)
+   - Pencil button next to age badge appears; click opens date input
+   - Pick a date and save → `PUT /students/me { date_of_birth }` → badge updates
 
-**Priority 1 — Live verify session 10 features**
-1. **Admin dashboard stat** — log in as admin, open `/admin`. Confirm "Active Courses" card shows a non-zero count matching actual active courses in the database.
+**Priority 1 — Live verify sessions 10–12 features**
+1. **Admin dashboard stat** — log in as admin, open `/admin`. Confirm "Active Courses" card shows a non-zero count.
 
 2. **Navbar avatar** — log in as each role:
    - Admin: no avatar between lang toggle and Sign out
@@ -252,39 +255,45 @@ The FastAPI backend must be running at `http://localhost:8000`.
    - Student: same, links to `/students/:id`
 
 3. **Course detail page** — open `/courses`, click "View Course →" on any card:
-   - Page loads without 404
-   - Name shown as `h1`, status badge visible
+   - Page loads without 404, `teacher_name` shown with "View Profile →" link
    - Pricing grid shows age categories with Rp-formatted prices
-   - Teacher section has "View Profile →" link
    - Student enrolled in the course sees green "Enrolled" badge
    - Teacher/admin sees enrolled count; admin sees "Manage enrollments →" link
-   - Navigating to a non-existent course ID shows the 404 error page
+
+4. **Reports page** — log in as a teacher, open a student's reports:
+   - No attendance filter dropdown (removed)
+   - Create/edit modal has no attendance radio section
+   - Scores show correct max values and progress bars
+   - Report rows show formatted date from `created_at`
+
+5. **Public share page** — open a shared report token URL:
+   - Score max values render correctly
+   - Date shows formatted `created_at`
+   - No attendance badge
 
 **Priority 2 — Live verify previous sessions**
-4. **Admin calendar** — log in as admin, open `/admin/calendar`:
+6. **Admin calendar** — log in as admin, open `/admin/calendar`:
    - Confirm sessions load from `GET /calendar/admin`
+   - Teacher filter dropdown should show "All teachers" / "Semua guru" as default option (fixed session 13)
    - Select a teacher from the picker — confirm calendar refetches filtered sessions
    - Click a session pill → edit modal → save via `PUT /sessions/:id`
-   - Click "+ Add Session" with no filter → teacher picker appears; with filter → teacher pre-filled
    - With teacher filter active: confirm recurring panel loads that teacher's templates
 
-5. **Teacher profile** — log in as a teacher, visit own profile:
+7. **Teacher profile** — log in as a teacher, visit own profile:
    - Per-section pencil editing (About, University, Experience, Achievements)
    - SVG icons render correctly in credential section tiles
    - Chips row: globe icon shows mode, map-pin shows city
-   - Click pencil on chips row → select + input appear → save via `PUT /teachers/me`
 
-6. **Error pages smoke test:**
+8. **Error pages smoke test:**
    - Navigate to `http://localhost:5173/nonexistent` → 404 blue tone, compass icon, "Go home" + "Browse courses" buttons
-   - Open `static/errors/502.html`, `503.html`, `504.html` in browser → verify Indonesian text
 
 **Priority 3 — Follow-up feature (frontend only, endpoints already exist)**
-7. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
+9. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
 
 **Priority 4 — Runtime QA**
-8. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
-9. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
-10. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
+10. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
+11. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
+12. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
 
 **Priority 5 — Mobile + Visual QA**
-11. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
+13. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
