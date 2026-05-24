@@ -79,7 +79,7 @@
 	function openEdit(report: any) {
 		editingReport = report;
 		attendance = report.attendance ?? 'Present';
-		scores = report.scores?.map((s: any) => ({ topic: s.topic, score: String(s.score), max: String(s.max) })) ?? [{ topic: '', score: '', max: '10' }];
+		scores = report.scores?.map((s: any) => ({ topic: s.topic, score: String(s.score), max: String(s.max_score) })) ?? [{ topic: '', score: '', max: '10' }];
 		notes = report.notes ?? '';
 		understandingLevel = report.understanding_level ?? '';
 		modalOpen = true;
@@ -92,7 +92,7 @@
 			const payload = {
 				student_id: data.studentId,
 				attendance,
-				scores: scores.filter((s) => s.topic).map((s) => ({ topic: s.topic, score: Number(s.score), max: Number(s.max) })),
+				scores: scores.filter((s) => s.topic).map((s) => ({ topic: s.topic, score: Number(s.score), max_score: Number(s.max) })),
 				notes,
 				understanding_level: understandingLevel || undefined,
 			};
@@ -125,7 +125,7 @@
 	function avgScore(rpt: any): string {
 		if (!rpt.scores?.length) return '';
 		const total = rpt.scores.reduce((s: number, sc: any) => s + sc.score, 0);
-		const maxTotal = rpt.scores.reduce((s: number, sc: any) => s + sc.max, 0);
+		const maxTotal = rpt.scores.reduce((s: number, sc: any) => s + sc.max_score, 0);
 		return `${total} / ${maxTotal}`;
 	}
 
@@ -194,10 +194,9 @@
 						<div>
 							<div class="font-semibold text-base">{report.session_title ?? 'Session'}</div>
 							<div class="text-xs text-text2 mt-0.5 tabular">
-								{report.date ?? ''} · {$t('reports.averageScore', { values: { score: avgScore(report).split('/')[0]?.trim(), max: avgScore(report).split('/')[1]?.trim() } })}
+								{report.created_at ? formatDate(report.created_at) : ''} · {$t('reports.averageScore', { values: { score: avgScore(report).split('/')[0]?.trim(), max: avgScore(report).split('/')[1]?.trim() } })}
 							</div>
 						</div>
-						<Badge variant={attendanceVariant(report.attendance)} label={report.attendance} />
 						{#if report.understanding_level}
 							{@const ulVariant = report.understanding_level === 'A' ? 'success' : report.understanding_level === 'B' ? 'active' : report.understanding_level === 'C' ? 'warning' : 'error'}
 							<Badge variant={ulVariant} label={`${report.understanding_level} — ${$t(`reports.understanding_${report.understanding_level}`)}`} />
@@ -210,9 +209,9 @@
 							{#each report.scores as sc}
 								<div class="bg-bgGray rounded-sm px-3.5 py-3">
 									<div class="text-[11px] uppercase font-medium text-text2 tracking-wide mb-1">{sc.topic}</div>
-									<div class="text-xl font-bold tabular">{sc.score} <span class="text-[13px] text-text2 font-normal">/ {sc.max}</span></div>
+									<div class="text-xl font-bold tabular">{sc.score} <span class="text-[13px] text-text2 font-normal">/ {sc.max_score}</span></div>
 									<div class="mt-1.5 h-1 bg-border rounded-full">
-										<div class="h-1 bg-primary rounded-full" style="width: {Math.min(100, (sc.score / sc.max) * 100)}%;"></div>
+										<div class="h-1 bg-primary rounded-full" style="width: {Math.min(100, (sc.score / sc.max_score) * 100)}%;"></div>
 									</div>
 								</div>
 							{/each}
@@ -227,25 +226,18 @@
 					{/if}
 
 					<!-- Footer -->
-					<div class="flex items-center justify-between pt-3 border-t border-border flex-wrap gap-2">
-						{#if isTeacher}
-							<div class="flex items-center gap-3">
-								<button onclick={() => openEdit(report)} class="text-sm font-medium text-text2 hover:text-text">
-									{$t('reports.editReport')}
-								</button>
-								<button onclick={() => handleShare(report.id)}
-									class="text-sm font-medium text-primary hover:text-primary-dark"
-									disabled={shareLoading === report.id}>
-									{shareLoading === report.id ? '…' : $t('reports.share')}
-								</button>
-							</div>
-						{:else}
-							<span></span>
-						{/if}
-						<a href="#report-{report.id}" class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
-							{$t('reports.viewFull')}
-						</a>
+					{#if isTeacher}
+					<div class="flex items-center gap-3 pt-3 border-t border-border">
+						<button onclick={() => openEdit(report)} class="text-sm font-medium text-text2 hover:text-text">
+							{$t('reports.editReport')}
+						</button>
+						<button onclick={() => handleShare(report.id)}
+							class="text-sm font-medium text-primary hover:text-primary-dark"
+							disabled={shareLoading === report.id}>
+							{shareLoading === report.id ? '…' : $t('reports.share')}
+						</button>
 					</div>
+					{/if}
 					{#if shareData[report.id]}
 						<div class="mt-2 p-3 bg-bgGray border border-border rounded-sm text-sm flex flex-col gap-2">
 							<p class="text-xs font-medium text-text2">{$t('reports.shareLinkTitle')}</p>
