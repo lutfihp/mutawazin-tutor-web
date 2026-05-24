@@ -154,7 +154,7 @@
 							<th class="px-5 py-3 text-left">{$t('common.name')}</th>
 							<th class="px-5 py-3 text-left hidden sm:table-cell">{$t('common.contact')}</th>
 							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('common.status')}</th>
-							<th class="px-5 py-3 text-left hidden md:table-cell">Age</th>
+							<th class="px-5 py-3 text-left hidden md:table-cell">{$t('common.age')}</th>
 							<th class="px-5 py-3 text-left hidden lg:table-cell">{$t('common.type')}</th>
 							<th class="px-5 py-3 text-left">{$t('common.actions')}</th>
 						</tr>
