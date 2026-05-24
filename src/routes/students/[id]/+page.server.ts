@@ -3,11 +3,11 @@ import type { PageServerLoad } from './$types';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
-export const load: PageServerLoad = async ({ params, locals, cookies }) => {
+export const load: PageServerLoad = async ({ params, locals, request }) => {
 	if (!locals.user) throw redirect(302, '/login');
 
-	const token = cookies.get('access_token');
-	const headers = { Cookie: `access_token=${token}` };
+	const cookie = request.headers.get('cookie') ?? '';
+	const headers = { Cookie: cookie };
 
 	try {
 		const [profile, reports] = await Promise.all([

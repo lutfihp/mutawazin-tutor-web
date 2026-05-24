@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
+	import { formatDate } from '$lib/utils/date';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -154,11 +155,9 @@
 			{#if profile.enrolled_courses?.length}
 				<div class="grid sm:grid-cols-2 gap-3">
 					{#each profile.enrolled_courses as course}
-						<div class="border border-border rounded-sm p-3">
-							<Badge variant="active" label={course.subject} class="mb-2" />
-							<div class="font-medium text-sm">{course.title}</div>
-							<div class="text-xs text-text2 mt-0.5">with {course.teacher_name}</div>
-						</div>
+						<a href="/courses/{course.id}" class="block border border-border rounded-sm p-3 hover:border-primary transition-colors">
+							<Badge variant="active" label={course.name} />
+						</a>
 					{/each}
 				</div>
 			{:else}
@@ -177,15 +176,13 @@
 					{#each reports.slice(0, 3) as report}
 						<div class="bg-bgGray rounded-sm p-4">
 							<div class="flex items-center justify-between mb-1">
-								<div class="font-medium text-sm">{report.session_title}</div>
+								<div class="font-medium text-sm">{report.subject_name ?? '—'}</div>
 								<Badge variant={attendanceVariant(report.attendance)} label={report.attendance} />
 							</div>
-							<div class="text-xs text-text2 tabular mb-1">{report.date}</div>
-							{#if report.average_score !== undefined}
-								<div class="text-xs text-text2">
-									{$t('profile.student.avgScore', { values: { score: report.average_score, max: report.max_score ?? 10 } })}
-								</div>
+							{#if report.teacher_name}
+								<div class="text-xs text-text2 mb-1">{$t('profile.student.assignedTo', { values: { name: report.teacher_name } })}</div>
 							{/if}
+							<div class="text-xs text-text2 tabular">{formatDate(report.created_at)}</div>
 						</div>
 					{/each}
 				</div>
