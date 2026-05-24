@@ -469,7 +469,8 @@
       "messageStudent": "Message student",
       "noEnrolledCourses": "No courses enrolled.",
       "noReports": "No reports yet.",
-      "avgScore": "Average score: {score} / {max}"
+      "avgScore": "Average score: {score} / {max}",
+      "yearsOld": "{age} years old"
     }
   },
   "landing": {

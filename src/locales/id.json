@@ -469,7 +469,8 @@
       "messageStudent": "Pesan murid",
       "noEnrolledCourses": "Belum ada kursus.",
       "noReports": "Belum ada laporan.",
-      "avgScore": "Nilai rata-rata: {score} / {max}"
+      "avgScore": "Nilai rata-rata: {score} / {max}",
+      "yearsOld": "{age} tahun"
     }
   },
   "landing": {
