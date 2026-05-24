@@ -43,11 +43,6 @@
 		api.upload('/students/me/photo', fd);
 	}
 
-	function attendanceVariant(a: string): 'success' | 'warning' | 'error' {
-		if (a === 'Present' || a === 'present') return 'success';
-		if (a === 'Late' || a === 'late') return 'warning';
-		return 'error';
-	}
 </script>
 
 <svelte:head>
@@ -175,9 +170,8 @@
 				<div class="flex flex-col gap-3">
 					{#each reports.slice(0, 3) as report}
 						<div class="bg-bgGray rounded-sm p-4">
-							<div class="flex items-center justify-between mb-1">
+							<div class="mb-1">
 								<div class="font-medium text-sm">{report.subject_name ?? '—'}</div>
-								<Badge variant={attendanceVariant(report.attendance)} label={report.attendance} />
 							</div>
 							{#if report.teacher_name}
 								<div class="text-xs text-text2 mb-1">{$t('profile.student.assignedTo', { values: { name: report.teacher_name } })}</div>
