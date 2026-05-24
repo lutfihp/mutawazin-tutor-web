@@ -16,14 +16,12 @@
 	let loading = $state(true);
 
 	// Filters
-	let attendanceFilter = $state('');
 	let fromDate = $state('');
 	let toDate = $state('');
 
 	// Modal
 	let modalOpen = $state(false);
 	let editingReport = $state<any | null>(null);
-	let attendance = $state<'Present' | 'Late' | 'Absent'>('Present');
 	let scores = $state([{ topic: '', score: '', max: '10' }]);
 	let notes = $state('');
 	let understandingLevel = $state<'A' | 'B' | 'C' | 'D' | 'E' | ''>('');
@@ -55,7 +53,6 @@
 		loading = true;
 		try {
 			const params = new URLSearchParams();
-			if (attendanceFilter) params.set('attendance', attendanceFilter);
 			if (fromDate) params.set('from', fromDate);
 			if (toDate) params.set('to', toDate);
 			const result = await api.get<any[]>(`/students/${data.studentId}/reports?${params}`);
@@ -69,7 +66,6 @@
 
 	function openCreate() {
 		editingReport = null;
-		attendance = 'Present';
 		scores = [{ topic: '', score: '', max: '10' }];
 		notes = '';
 		understandingLevel = '';
@@ -78,7 +74,6 @@
 
 	function openEdit(report: any) {
 		editingReport = report;
-		attendance = report.attendance ?? 'Present';
 		scores = report.scores?.map((s: any) => ({ topic: s.topic, score: String(s.score), max: String(s.max_score) })) ?? [{ topic: '', score: '', max: '10' }];
 		notes = report.notes ?? '';
 		understandingLevel = report.understanding_level ?? '';
@@ -91,7 +86,6 @@
 		try {
 			const payload = {
 				student_id: data.studentId,
-				attendance,
 				scores: scores.filter((s) => s.topic).map((s) => ({ topic: s.topic, score: Number(s.score), max_score: Number(s.max) })),
 				notes,
 				understanding_level: understandingLevel || undefined,
@@ -116,12 +110,6 @@
 		if (scores.length > 1) scores = scores.filter((_, idx) => idx !== i);
 	}
 
-	function attendanceVariant(a: string): 'success' | 'warning' | 'error' {
-		if (a === 'Present') return 'success';
-		if (a === 'Late') return 'warning';
-		return 'error';
-	}
-
 	function avgScore(rpt: any): string {
 		if (!rpt.scores?.length) return '';
 		const total = rpt.scores.reduce((s: number, sc: any) => s + sc.score, 0);
@@ -132,7 +120,7 @@
 	onMount(fetchReports);
 
 	$effect(() => {
-		attendanceFilter; fromDate; toDate;
+		fromDate; toDate;
 		fetchReports();
 	});
 </script>
@@ -156,16 +144,6 @@
 
 	<!-- Filters -->
 	<div class="flex gap-3 items-center flex-wrap mb-6">
-		<select
-			bind:value={attendanceFilter}
-			aria-label={$t('reports.attendanceFilter')}
-			class="h-10 px-3 bg-white border border-border rounded-sm text-sm focus:outline-none focus:border-primary"
-		>
-			<option value="">{$t('reports.attendanceFilter')}</option>
-			<option value="Present">{$t('status.present')}</option>
-			<option value="Late">{$t('status.late')}</option>
-			<option value="Absent">{$t('status.absent')}</option>
-		</select>
 		<div class="flex items-center gap-2 text-sm text-text2">
 			<span>{$t('reports.from')}</span>
 			<input type="date" bind:value={fromDate} aria-label="From date"
@@ -266,26 +244,6 @@
 	maxWidth="lg"
 >
 	<form onsubmit={saveReport} class="flex flex-col gap-4">
-		<!-- Attendance -->
-		<div>
-			<p class="text-[13px] font-medium mb-2">{$t('reports.modal.attendance')}</p>
-			<div class="flex gap-2" role="radiogroup" aria-label={$t('reports.modal.attendance')}>
-				{#each [
-					{ val: 'Present', label: $t('reports.modal.presentOption'), bg: 'bg-successBg border-successText text-successText' },
-					{ val: 'Late',    label: $t('reports.modal.lateOption'),    bg: 'bg-warningBg border-warningText text-warningText' },
-					{ val: 'Absent',  label: $t('reports.modal.absentOption'),  bg: 'bg-errorBg border-errorText text-errorText' },
-				] as opt}
-					<label class="flex items-center gap-1.5 cursor-pointer">
-						<input type="radio" name="attendance" value={opt.val} bind:group={attendance} class="sr-only" />
-						<span class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
-						             {attendance === opt.val ? opt.bg : 'border-border text-text2 hover:bg-bgGray'}">
-							{opt.label}
-						</span>
-					</label>
-				{/each}
-			</div>
-		</div>
-
 		<!-- Scores -->
 		<div>
 			<p class="text-[13px] font-medium mb-2">{$t('reports.modal.scoresSection')}</p>
