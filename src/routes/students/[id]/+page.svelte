@@ -101,7 +101,7 @@
 				<div class="flex items-center gap-2 flex-wrap mb-2">
 					{#if isOwn || data.user?.role === 'admin'}
 						{#if profile.age != null}
-							<Badge variant="violet" label={String(profile.age)} />
+							<Badge variant="violet" label={`${profile.age} years old`} />
 						{/if}
 						{#if isOwn}
 							{#if editingDob}
