@@ -173,12 +173,7 @@
 									<Badge variant={statusVariant(user.status ?? '')} label={user.status ?? ''} />
 								</td>
 								<td class="px-5 py-3 hidden md:table-cell text-sm text-text2">
-									{(() => {
-										const dob = user.date_of_birth;
-										if (!dob) return '—';
-										const age = Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));
-										return Number.isFinite(age) && age >= 0 ? String(age) : '—';
-									})()}
+									{user.age != null ? String(user.age) : '—'}
 								</td>
 								<td class="px-5 py-3 text-text2 text-xs hidden lg:table-cell">
 									{user.auth_type === 'username' || user.account_type === 'admin-created'

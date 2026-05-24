@@ -20,6 +20,20 @@
 		editingName = false;
 	}
 
+	let editingDob = $state(false);
+	let dobValue = $state('');
+	let savingDob = $state(false);
+
+	async function saveDob() {
+		savingDob = true;
+		try {
+			await api.put('/students/me', { date_of_birth: dobValue });
+			editingDob = false;
+		} finally {
+			savingDob = false;
+		}
+	}
+
 	function handlePhotoChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (!file) return;
@@ -84,10 +98,30 @@
 					{/if}
 				</div>
 				<div class="flex items-center gap-2 flex-wrap mb-2">
-					{#if profile.date_of_birth}
-						{@const age = Math.floor((Date.now() - new Date(profile.date_of_birth).getTime()) / (365.25 * 24 * 3600 * 1000))}
-						{#if Number.isFinite(age) && age >= 0}
-							<Badge variant="violet" label={String(age)} />
+					{#if isOwn || data.user?.role === 'admin'}
+						{#if profile.age != null}
+							<Badge variant="violet" label={String(profile.age)} />
+						{/if}
+						{#if isOwn}
+							{#if editingDob}
+								<input
+									type="date"
+									bind:value={dobValue}
+									class="bg-white border border-border rounded-sm px-2 py-1.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15"
+								/>
+								<Button variant="primary" size="sm" loading={savingDob} onclick={saveDob}>{$t('common.save')}</Button>
+								<Button variant="ghost" size="sm" onclick={() => { editingDob = false; dobValue = ''; }}>{$t('common.cancel')}</Button>
+							{:else}
+								<button
+									onclick={() => { editingDob = true; dobValue = ''; }}
+									class="text-text2 hover:text-text transition-colors"
+									aria-label="Edit date of birth"
+								>
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+										<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+									</svg>
+								</button>
+							{/if}
 						{/if}
 					{/if}
 				</div>
