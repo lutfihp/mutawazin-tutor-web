@@ -377,9 +377,9 @@
 		<select
 			bind:value={filteredTeacherId}
 			class="bg-white border border-border rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15 min-w-[220px]"
-			aria-label={$t('admin.filterByTeacher')}
+			aria-label={$t('dashboard.admin.filterByTeacher')}
 		>
-			<option value="">{$t('admin.filterByTeacher')}</option>
+			<option value="">{$t('courses.allTeachers')}</option>
 			{#each teachers as teacher}
 				<option value={teacher.user_id ?? teacher.id}>{teacher.full_name}</option>
 			{/each}
