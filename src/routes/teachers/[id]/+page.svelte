@@ -447,7 +447,7 @@
 						{#each profile.courses as course}
 							<div class="border border-border rounded-sm p-3">
 								<p class="text-[15px] font-bold text-teal">{course.name}</p>
-								<p class="text-xs text-text3 mt-0.5">{(course.age_categories ?? []).join(' · ')}</p>
+								<p class="text-xs text-text2 mt-0.5">{(course.age_categories ?? []).join(' · ')}</p>
 								{#if course.description}
 									<p class="text-xs text-text2 mt-1.5 leading-relaxed">{course.description}</p>
 								{/if}
