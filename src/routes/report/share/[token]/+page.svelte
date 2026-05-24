@@ -1,16 +1,11 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { formatDate } from '$lib/utils/date';
 	import Logo from '$lib/components/Logo.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 
 	let { data } = $props();
 	const report = $derived(data.report);
-
-	function attendanceVariant(a: string): 'success' | 'warning' | 'error' {
-		if (a === 'Present' || a === 'present') return 'success';
-		if (a === 'Late' || a === 'late') return 'warning';
-		return 'error';
-	}
 
 	function ulVariant(level: string): 'success' | 'active' | 'warning' | 'error' | 'gray' {
 		const map: Record<string, 'success' | 'active' | 'warning' | 'error'> = {
@@ -48,10 +43,9 @@
 				<div class="flex items-center justify-between mb-3 flex-wrap gap-2">
 					<div>
 						<div class="font-semibold text-base">{report.session_title ?? 'Session'}</div>
-						<div class="text-xs text-text2 mt-0.5 tabular">{report.date ?? ''}</div>
+						<div class="text-xs text-text2 mt-0.5 tabular">{report.created_at ? formatDate(report.created_at) : ''}</div>
 					</div>
 					<div class="flex items-center gap-2 flex-wrap">
-						<Badge variant={attendanceVariant(report.attendance)} label={report.attendance} />
 						{#if report.understanding_level}
 							<Badge variant={ulVariant(report.understanding_level)}
 								label={`${report.understanding_level} — ${$t(`reports.understanding_${report.understanding_level}`)}`} />
@@ -64,9 +58,9 @@
 						{#each report.scores as sc}
 							<div class="bg-bgGray rounded-sm px-3.5 py-3">
 								<div class="text-[11px] uppercase font-medium text-text2 tracking-wide mb-1">{sc.topic}</div>
-								<div class="text-xl font-bold tabular">{sc.score} <span class="text-[13px] text-text2 font-normal">/ {sc.max}</span></div>
+								<div class="text-xl font-bold tabular">{sc.score} <span class="text-[13px] text-text2 font-normal">/ {sc.max_score}</span></div>
 								<div class="mt-1.5 h-1 bg-border rounded-full">
-									<div class="h-1 bg-primary rounded-full" style="width: {Math.min(100, (sc.score / sc.max) * 100)}%;"></div>
+									<div class="h-1 bg-primary rounded-full" style="width: {Math.min(100, (sc.score / sc.max_score) * 100)}%;"></div>
 								</div>
 							</div>
 						{/each}
