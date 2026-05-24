@@ -182,7 +182,8 @@
     "type": "Tipe",
     "actions": "Tindakan",
     "more": "+{n} lainnya",
-    "tutor": "Guru"
+    "tutor": "Guru",
+    "age": "Usia"
   },
   "status": {
     "pending": "Menunggu",

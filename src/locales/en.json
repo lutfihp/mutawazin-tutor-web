@@ -182,7 +182,8 @@
     "type": "Type",
     "actions": "Actions",
     "more": "+{n} more",
-    "tutor": "Tutor"
+    "tutor": "Tutor",
+    "age": "Age"
   },
   "status": {
     "pending": "Pending",
