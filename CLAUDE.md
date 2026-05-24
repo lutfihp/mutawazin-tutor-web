@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-24 — session 10)
+## Current Status (as of 2026-05-24 — session 11)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
 
@@ -76,6 +76,13 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 7. **Course detail page — live verify** — not yet tested against live backend. Confirm `GET /courses/:id` returns the expected shape (especially `enrolled_student_ids[]` and `price_by_age_category`). Verify the 404 error page renders correctly for unknown course IDs.
 
+8. **Teacher profile stats — pending backend delta v9** — `GET /teachers/:user_id` does not return `years_experience` or `sessions_completed`; both always show 0. Frontend at `src/routes/teachers/[id]/+page.svelte:173-175` already reads `profile.years_experience ?? 0` and `profile.sessions_completed ?? 0` — no frontend change needed once backend ships. Backend must add: `years_experience = current_year - min(year_from)` across `teaching_experience[]` (0 if empty); `sessions_completed = count of Session where teacher_id == user_id and status == "completed"`.
+
+9. **Student age + DOB edit feature — pending backend delta v9** — Two changes blocked on backend:
+   - Backend: `GET /admin/students` add `age: int | null`, drop `date_of_birth`; `GET /students/:id` add `age: int | null`, keep `date_of_birth` (needed for edit form pre-population).
+   - Frontend `admin/students/+page.svelte:176-181` — replace IIFE+formula with `user.age != null ? String(user.age) : '—'`.
+   - Frontend `students/[id]/+page.svelte:87-92` — replace `{@const age = Math.floor(...)}` formula with `{#if profile.age != null}`. Gate entire age badge to `{#if isOwn || data.user?.role === 'admin'}`. Add DOB edit (pencil + date input, `isOwn` only) that pre-fills from `profile.date_of_birth` and saves via `PUT /students/me { date_of_birth }`, using the same `editingDob` / `savingDob` / `openSection('dob')` pattern as teacher profile.
+
 ---
 
 ## Architecture Decisions (already made — don't change these)
@@ -98,7 +105,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **AuthLayout content centering** | `<main>` has `flex-1 sidebar-collapse:ml-60 p-6 lg:p-8`. The `max-w-app mx-auto` is on an inner `<div>` wrapping `{@render children()}`, NOT on `<main>` itself. This centers content within the post-sidebar space on wide viewports. Do not move `max-w-app mx-auto` back to `<main>`. |
 | **DropdownMenu component** | `src/lib/components/ui/DropdownMenu.svelte` — shared three-dot action dropdown. Props: `items: { label, onclick, variant? }[]`. Handles open/close via `onfocusout` on a `tabindex="-1"` wrapper and Escape key. Used on all three admin table pages. |
 | **Admin action pattern** | All admin table rows use `<DropdownMenu>` for actions (View Profile, Delete, Feature/Edit). Delete and Featured actions open confirmation modals before executing. All modals use the existing `<Modal>` component with inline state per page. |
-| **Age from DOB pattern** | `Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000))` — used in both admin/students table and students/:id profile. Check `Number.isFinite(age) && age >= 0` before rendering. |
+| **Age from DOB pattern** | **Being replaced by backend-computed `age: int` field (delta v9 pending).** Formula `Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000))` still live in `admin/students/+page.svelte:179` and `students/[id]/+page.svelte:88` until delta v9 is applied. After delta v9: read `user.age` / `profile.age` directly — no FE computation. |
 | **DropdownMenu fixed positioning** | `DropdownMenu.svelte` panel uses `position: fixed` with `getBoundingClientRect()` on the trigger button to compute `top` and `right`. This escapes `overflow-x-auto` table containers — do NOT revert to `absolute`. |
 | **Admin table header alignment** | All `<th>` in admin tables use `text-left`, including the Actions column. The `<td>` for the actions column keeps `text-right` so the `⋮` button stays right-aligned, but the header label is left-aligned. |
 | **Admin courses page pattern** | `/admin/courses` loads courses + teachers + subjects in parallel on mount. `teacherMap` (teacher_id → full_name) is built from the teacher list for display. Price per age category is stored as `Record<string, string>` in state (for input binding) and converted to `Record<string, number>` on submit. |
@@ -191,6 +198,10 @@ Key endpoints active as of 2026-05-24:
 - **Course detail (delta v8):** `GET /courses/:id` — any authenticated role, returns `{ id, teacher_id, subject_id, name, subject_status, age_categories, price_by_age_category, description, status, enrolled_student_ids[] }`. Returns 404 if not found.
 - **Admin stats (delta v8):** `GET /admin/stats` returns `{ total_teachers, total_students, active_courses }` — `active_courses` is count of courses with status === "active".
 - Availability: `POST /availability`, `PUT /availability/:slot_id`, `DELETE /availability/:slot_id`
+- **Delta v9 (PENDING — backend not yet updated):**
+  - `GET /teachers/:user_id` adds `years_experience: int` (0 if no teaching_experience), `sessions_completed: int` (count of completed sessions for that teacher)
+  - `GET /admin/students` adds `age: int | null` per student, drops `date_of_birth` from list response
+  - `GET /students/:id` adds `age: int | null`, keeps `date_of_birth` (needed for edit form)
 
 ---
 
@@ -221,6 +232,16 @@ The FastAPI backend must be running at `http://localhost:8000`.
 ---
 
 ## What to Do Next Session
+
+**Priority 0 — Apply delta v9 frontend changes (once backend confirms it's done)**
+1. **Teacher profile stats** — log in as a teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0). No frontend code change needed — just verify.
+
+2. **Student age + DOB edit — admin list** — open `/admin/students`. Confirm Age column shows a number instead of `—`. Replace the IIFE formula at `admin/students/+page.svelte:179` with `user.age != null ? String(user.age) : '—'`.
+
+3. **Student age + DOB edit — student profile** — open any student profile:
+   - Replace `{@const age = Math.floor(...)}` formula with `{#if profile.age != null}`.
+   - Gate age badge with `{#if isOwn || data.user?.role === 'admin'}` (teacher should NOT see it).
+   - Add DOB edit when `isOwn`: pencil button next to age badge → date input pre-filled from `profile.date_of_birth` → save via `PUT /students/me { date_of_birth }`. Use `editingDob` / `savingDob` following the teacher profile per-section pencil pattern.
 
 **Priority 1 — Live verify session 10 features**
 1. **Admin dashboard stat** — log in as admin, open `/admin`. Confirm "Active Courses" card shows a non-zero count matching actual active courses in the database.
