@@ -23,11 +23,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-25 — session 13)
+## Current Status (as of 2026-05-27 — session 14)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
 
-### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–13 commits local only, not yet pushed)
+### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–14 commits local only, not yet pushed)
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -64,6 +64,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | UI polish (session 12) | Attendance badge deleted from report list entirely (not just hidden). Student age badge uses translatable i18n key `profile.student.yearsOld` (`{age} years old` / `{age} tahun`). Teacher profile course cards use `text-text2` for age categories (was `text-text3`, too light). | ✅ |
 | Student DOB edit | Student profile (`students/[id]/+page.svelte`) — DOB edit UI added: pencil button → date input → save via `PUT /students/me { date_of_birth }`. Age badge reads `profile.age` (not formula), gated to `isOwn \|\| admin`. Waiting on backend to return `age: int \| null` from `GET /students/:id` before values are non-null. | ✅ (UI done, wired up; live when backend ships delta v9) |
 | i18n fixes (session 13) | Added `common.age` key (EN: "Age", ID: "Usia") to both locale files. Admin students Age column header now uses `$t('common.age')` instead of hardcoded "Age". Admin calendar teacher filter fixed: `aria-label` uses correct path `dashboard.admin.filterByTeacher`; default option uses `courses.allTeachers` ("All teachers" / "Semua guru") instead of raw key. | ✅ |
+| CI/CD pipeline (session 14) | `adapter-auto` → `adapter-node` (required for Docker). `Dockerfile` (node:22-alpine, non-root `app` user, port 3000). `docker-compose.yml` (port 3000, `env_file: .env`, restart: unless-stopped). `.github/workflows/deploy.yml.disabled` — GitHub Actions: npm build in CI → rsync artifact to VPS → `docker compose up --build -d`. `docs/deployment-guide.md` — full 9-step VPS setup guide. **Workflow is disabled** pending VPS setup + GitHub secrets. | ✅ (code done; first deploy pending) |
 
 ### What is NOT done yet (known gaps)
 
@@ -99,6 +100,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **focusTrap action** | `src/lib/actions/focusTrap.ts` — shared by Modal and mobile Sidebar. |
 | **Static gradient lookup** | Course band variants use a 6-element `BAND_VARIANTS` array with full static Tailwind arbitrary-value strings. Tailwind purge requires static strings. |
 | **hooks.server.ts populates locals.user** | Auth context lives in `src/hooks.server.ts`. All `+page.server.ts` guards check `locals.user` set by the hook — NOT by `+layout.server.ts`. Do not remove the hook or move this logic. |
+| **adapter-node (not adapter-auto)** | Switched from `@sveltejs/adapter-auto` to `@sveltejs/adapter-node` for Docker deployment. Build output lands in `build/`, entry point is `build/index.js`, default port 3000. VPS `.env` must contain `ORIGIN=https://mutawazinprivate.com` for CSRF protection. |
 | **Subjects = name only** | `Subject` model has only `{ id, name, status }` — no subject field or age_categories. Age categories live on `Course` directly. `/catalog` endpoints renamed to `/subjects`. |
 | **5-level age categories** | Values: `"pre-school"`, `"elementary"`, `"middle-school"`, `"high-school"`, `"general"`. Old `"kids"/"teens"/"adults"` are gone. |
 | **pendingApprovalCount store** | `src/lib/stores/adminBadge.ts` — currently unused after admin restructure (sidebar badge removed). Store still exists but is no longer written to. |
@@ -165,10 +167,15 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │       ├── calendar/
 │       ├── reports/[studentId]/
 │       └── report/share/[token]/   ← Public report share page (no auth)
+├── Dockerfile                      ← node:22-alpine runtime image (receives pre-built artifacts from CI)
+├── docker-compose.yml              ← frontend service on port 3000, env_file: .env
+├── .dockerignore
+├── .github/workflows/deploy.yml.disabled  ← CI/CD pipeline (rename to .yml to activate)
 ├── static/brand-kit/               ← All brand assets served statically
 ├── static/errors/                  ← nginx static error pages (502/503/504) in Bahasa Indonesia
 └── docs/
     ├── content-audit.csv           ← Dead links / fake data audit with decisions
+    ├── deployment-guide.md         ← Step-by-step VPS deployment guide (SSH key, secrets, Nginx, first deploy)
     └── superpowers/specs/ + plans/ ← Implementation specs and plans
 ```
 
@@ -236,7 +243,16 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 0 — Finish delta v9 (once backend confirms it's done)**
+**Priority 0 — First production deploy (VPS setup)**
+Follow `docs/deployment-guide.md` step by step:
+1. SSH into VPS: `mkdir -p /root/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /root/mutawazin-web/.env`
+2. Generate deploy SSH key locally and add public key to VPS `~/.ssh/authorized_keys`
+3. Add 5 GitHub secrets: `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH=/root/mutawazin-web`, `VITE_API_URL=https://api.mutawazinprivate.com`
+4. Configure Nginx on VPS to proxy `mutawazinprivate.com` → `localhost:3000`
+5. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
+6. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
+
+**Priority 1 — Finish delta v9 (once backend confirms it's done)**
 1. **Teacher profile stats** — log in as a teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0). No frontend code change needed — just verify.
 
 2. **Admin students age column** — open `/admin/students`. Confirm Age column shows a number instead of `—`. Replace the IIFE formula at `admin/students/+page.svelte:179` with `user.age != null ? String(user.age) : '—'`.
@@ -246,7 +262,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
    - Pencil button next to age badge appears; click opens date input
    - Pick a date and save → `PUT /students/me { date_of_birth }` → badge updates
 
-**Priority 1 — Live verify sessions 10–12 features**
+**Priority 2 — Live verify sessions 10–12 features**
 1. **Admin dashboard stat** — log in as admin, open `/admin`. Confirm "Active Courses" card shows a non-zero count.
 
 2. **Navbar avatar** — log in as each role:
@@ -271,7 +287,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
    - Date shows formatted `created_at`
    - No attendance badge
 
-**Priority 2 — Live verify previous sessions**
+**Priority 3 — Live verify previous sessions**
 6. **Admin calendar** — log in as admin, open `/admin/calendar`:
    - Confirm sessions load from `GET /calendar/admin`
    - Teacher filter dropdown should show "All teachers" / "Semua guru" as default option (fixed session 13)
@@ -287,13 +303,13 @@ The FastAPI backend must be running at `http://localhost:8000`.
 8. **Error pages smoke test:**
    - Navigate to `http://localhost:5173/nonexistent` → 404 blue tone, compass icon, "Go home" + "Browse courses" buttons
 
-**Priority 3 — Follow-up feature (frontend only, endpoints already exist)**
+**Priority 4 — Follow-up feature (frontend only, endpoints already exist)**
 9. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
 
-**Priority 4 — Runtime QA**
+**Priority 5 — Runtime QA**
 10. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
 11. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
 12. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
 
-**Priority 5 — Mobile + Visual QA**
+**Priority 6 — Mobile + Visual QA**
 13. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
