@@ -1,0 +1,11 @@
+node_modules
+.svelte-kit
+.env
+.env.*
+docs
+handoffs
+src
+static
+*.log
+.git
+.github
