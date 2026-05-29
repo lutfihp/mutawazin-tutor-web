@@ -172,7 +172,7 @@
 
 	<!-- Table -->
 	<Card padding="none">
-		<div class="overflow-x-auto">
+		<div class="overflow-x-auto" class:opacity-50={loading} class:pointer-events-none={loading}>
 			<table class="w-full text-sm">
 				<thead>
 					<tr class="border-b border-border bg-bgGray">
@@ -185,7 +185,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#if loading}
+					{#if loading && entries.length === 0}
 						{#each { length: 5 } as _}
 							<tr class="border-b border-border">
 								{#each { length: 6 } as _}

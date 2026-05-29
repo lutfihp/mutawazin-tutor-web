@@ -190,12 +190,12 @@
 				<option value="rejected">{$t('status.rejected')}</option>
 			</select>
 		{/snippet}
-		{#if allTeachersLoading}
+		{#if allTeachersLoading && allTeachers.length === 0}
 			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.loading')}</p>
 		{:else if allTeachers.length === 0}
 			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.noResults')}</p>
 		{:else}
-			<div class="overflow-x-auto">
+			<div class="overflow-x-auto" class:opacity-50={allTeachersLoading} class:pointer-events-none={allTeachersLoading}>
 				<table class="w-full text-sm">
 					<thead class="bg-bgGray text-[13px] font-medium text-text2">
 						<tr>
