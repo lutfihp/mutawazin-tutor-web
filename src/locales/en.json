@@ -34,7 +34,7 @@
       "forgotPassword": "Forgot password?",
       "errors": {
         "invalidCredentials": "Invalid email or password.",
-        "pendingApproval": "Your account is pending approval by our team.",
+        "pendingApproval": "Please verify your email address before logging in.",
         "rejected": "Your account has been rejected. Please contact support.",
         "unknown": "Something went wrong. Please try again."
       }
@@ -65,7 +65,7 @@
       "alreadyHaveAccount": "Already have an account?",
       "logIn": "Log in",
       "successTitle": "Check Your Email",
-      "success": "We've sent a verification link to your inbox. Click it to verify your account — our team will then review your application.",
+      "success": "We've sent a verification link to your inbox. Click it to activate your account — you can log in right away while our team reviews your application.",
       "errors": {
         "emailTaken": "This email is already registered.",
         "unknown": "Something went wrong. Please try again."
@@ -86,7 +86,7 @@
       "alreadyHaveAccount": "Already have an account?",
       "logIn": "Log in",
       "successTitle": "Check Your Email",
-      "success": "We've sent a verification link to your inbox. Click it to verify your account.",
+      "success": "We've sent a verification link to your inbox. Click it to activate your account — you can log in immediately after.",
       "errors": {
         "emailTaken": "This email is already registered.",
         "unknown": "Something went wrong. Please try again."
@@ -532,5 +532,9 @@
     "diffBefore": "Before",
     "diffAfter": "After",
     "error": "Failed to load audit logs."
+  },
+  "pendingReview": {
+    "teacherBanner": "Your account is pending admin approval. Your profile and courses aren't visible to the public yet — but you can set up your profile while you wait.",
+    "coursesBanner": "Your courses aren't visible to students yet — your account is pending admin approval."
   }
 }

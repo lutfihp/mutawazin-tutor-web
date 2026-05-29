@@ -133,6 +133,11 @@
 </svelte:head>
 
 <div class="max-w-profile mx-auto py-8">
+	{#if isOwn && data.user?.status === 'email_verified'}
+		<div class="mb-6 rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+			{$t('pendingReview.teacherBanner')}
+		</div>
+	{/if}
 	{#if !profile}
 		<p class="text-text2 text-center py-20">Teacher not found.</p>
 	{:else}

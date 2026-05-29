@@ -34,7 +34,7 @@
       "forgotPassword": "Lupa kata sandi?",
       "errors": {
         "invalidCredentials": "Email atau kata sandi tidak valid.",
-        "pendingApproval": "Akun Anda sedang menunggu persetujuan dari tim kami.",
+        "pendingApproval": "Verifikasi alamat email Anda sebelum masuk.",
         "rejected": "Akun Anda telah ditolak. Silakan hubungi dukungan.",
         "unknown": "Terjadi kesalahan. Silakan coba lagi."
       }
@@ -65,7 +65,7 @@
       "alreadyHaveAccount": "Sudah punya akun?",
       "logIn": "Masuk",
       "successTitle": "Periksa Email Anda",
-      "success": "Kami telah mengirimkan tautan verifikasi ke kotak masuk Anda. Klik tautan tersebut untuk memverifikasi akun — tim kami akan meninjau lamaran Anda.",
+      "success": "Kami telah mengirimkan tautan verifikasi ke kotak masuk Anda. Klik tautan tersebut untuk mengaktifkan akun — Anda bisa langsung masuk sementara tim kami meninjau lamaran Anda.",
       "errors": {
         "emailTaken": "Email ini sudah terdaftar.",
         "unknown": "Terjadi kesalahan. Silakan coba lagi."
@@ -86,7 +86,7 @@
       "alreadyHaveAccount": "Sudah punya akun?",
       "logIn": "Masuk",
       "successTitle": "Periksa Email Anda",
-      "success": "Kami telah mengirimkan tautan verifikasi ke kotak masuk Anda. Klik tautan tersebut untuk mengaktifkan akun Anda.",
+      "success": "Kami telah mengirimkan tautan verifikasi ke kotak masuk Anda. Klik tautan tersebut untuk mengaktifkan akun — Anda bisa langsung masuk setelahnya.",
       "errors": {
         "emailTaken": "Email ini sudah terdaftar.",
         "unknown": "Terjadi kesalahan. Silakan coba lagi."
@@ -532,5 +532,9 @@
     "diffBefore": "Sebelum",
     "diffAfter": "Sesudah",
     "error": "Gagal memuat log audit."
+  },
+  "pendingReview": {
+    "teacherBanner": "Akun Anda sedang menunggu persetujuan admin. Profil dan kursus Anda belum terlihat oleh publik — namun Anda bisa menyiapkan profil Anda sambil menunggu.",
+    "coursesBanner": "Kursus Anda belum terlihat oleh murid — akun Anda sedang menunggu persetujuan admin."
   }
 }

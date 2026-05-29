@@ -6,6 +6,8 @@ const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 export const load: PageServerLoad = async ({ locals, cookies }) => {
 	if (!locals.user) throw redirect(302, '/login');
 	if (locals.user.role === 'admin') throw redirect(302, '/admin');
+	if (locals.user.role === 'teacher' && locals.user.status === 'email_verified')
+		throw redirect(302, `/teachers/${locals.user.id}`);
 
 	const token = cookies.get('access_token');
 	const headers = { Cookie: `access_token=${token}` };
