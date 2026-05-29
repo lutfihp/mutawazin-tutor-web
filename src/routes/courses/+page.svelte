@@ -33,12 +33,12 @@
 	let ageFilters = $state<string[]>([]);
 	let statusFilter = $state('');
 
-	// Course data
-	let courses = $state<any[]>([]);
-	let loading = $state(true);
+	// Course data — initialized from SSR, updated by client fetches
+	let courses = $state<any[]>(data.courses ?? []);
+	let loading = $state(false);
 	let subjects = $state<{ id: string; name: string }[]>([]);
 	let page = $state(1);
-	let totalPages = $state(1);
+	let totalPages = $state(data.totalPages ?? 1);
 	const pageSize = 12;
 
 	// Create modal
@@ -178,20 +178,12 @@
 	}
 
 	onMount(async () => {
-		await fetchCourses();
 		try {
 			const body = await api.get<PaginatedResponse<{ id: string; name: string; status: string }>>('/subjects?status=verified');
 			subjects = body.data;
 		} catch {
 			subjects = [];
 		}
-	});
-
-	$effect(() => {
-		subjectFilter;
-		statusFilter;
-		page = 1;
-		scheduleRefetch();
 	});
 </script>
 
@@ -238,6 +230,7 @@
 		<!-- Subject select -->
 		<select
 			bind:value={subjectFilter}
+			onchange={() => { page = 1; scheduleRefetch(); }}
 			aria-label={$t('courses.allSubjects')}
 			class="h-10 px-3 bg-white border border-border rounded-sm text-sm focus:outline-none focus:border-primary"
 		>
@@ -266,6 +259,7 @@
 		<!-- Status select -->
 		<select
 			bind:value={statusFilter}
+			onchange={() => { page = 1; scheduleRefetch(); }}
 			aria-label={$t('courses.allStatuses')}
 			class="h-10 px-3 bg-white border border-border rounded-sm text-sm focus:outline-none focus:border-primary"
 		>
@@ -276,7 +270,7 @@
 	</div>
 
 	<!-- Course grid -->
-	{#if loading}
+	{#if loading && courses.length === 0}
 		<div class="flex items-center justify-center py-20" role="status" aria-label={$t('common.loading')}>
 			<div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
 		</div>
@@ -285,7 +279,7 @@
 			<p class="text-text2">{$t('courses.noResults')}</p>
 		</div>
 	{:else}
-		<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+		<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5" class:opacity-50={loading} class:pointer-events-none={loading}>
 			{#each courses as course}
 				{@const bandClass = bandVariant(course.id ?? 'default')}
 				<div class="bg-white border border-border rounded-DEFAULT shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 flex flex-col overflow-hidden">
