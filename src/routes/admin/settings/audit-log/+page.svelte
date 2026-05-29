@@ -31,10 +31,10 @@
 		DELETE: 'bg-red-100 text-red-800',
 	};
 
-	const roleBadge: Record<string, string> = {
-		admin:   'bg-violet-100 text-violet-800',
-		teacher: 'bg-teal-100 text-teal-800',
-		student: 'bg-amber-100 text-amber-800',
+	const dotColor: Record<string, string> = {
+		admin:   'bg-violet-600',
+		teacher: 'bg-teal-600',
+		student: 'bg-amber-500',
 	};
 
 	// ── Helpers ──────────────────────────────────────────────────────────────
@@ -151,6 +151,20 @@
 		</div>
 	</Card>
 
+	<!-- Role legend -->
+	<div class="flex items-center gap-4 text-xs text-text2">
+		<span>Actor role:</span>
+		<span class="flex items-center gap-1.5">
+			<span class="w-2 h-2 rounded-full bg-violet-600"></span> Admin
+		</span>
+		<span class="flex items-center gap-1.5">
+			<span class="w-2 h-2 rounded-full bg-teal-600"></span> Teacher
+		</span>
+		<span class="flex items-center gap-1.5">
+			<span class="w-2 h-2 rounded-full bg-amber-500"></span> Student
+		</span>
+	</div>
+
 	<!-- Error banner -->
 	{#if error}
 		<div class="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -192,11 +206,10 @@
 							<tr class="border-b border-border hover:bg-bgGray/50">
 								<td class="px-4 py-3 whitespace-nowrap">{formatTimestamp(entry.timestamp)}</td>
 								<td class="px-4 py-3">
-									<div class="flex flex-col gap-1">
-										<span>{actorLabel(entry)}</span>
-										<span class="inline-flex items-center rounded-pill px-2.5 py-0.5 text-xs font-medium {roleBadge[entry.actor_role] ?? 'bg-bgGray text-muted'}">
-											{entry.actor_role}
-										</span>
+									<div class="flex items-center gap-2">
+										<span class="w-2 h-2 rounded-full flex-none {dotColor[entry.actor_role] ?? 'bg-border'}"
+											  title={entry.actor_role}></span>
+										<span class="font-medium">{actorLabel(entry)}</span>
 									</div>
 								</td>
 								<td class="px-4 py-3">
@@ -204,10 +217,7 @@
 										{entry.action}
 									</span>
 								</td>
-								<td class="px-4 py-3">
-									<span>{entry.resource_type}</span>
-									<span class="block text-xs text-text2">{truncateId(entry.resource_id)}</span>
-								</td>
+								<td class="px-4 py-3">{entry.resource_type}</td>
 								<td class="px-4 py-3 text-xs text-text2 whitespace-nowrap">{entry.method} {entry.endpoint}</td>
 								<td class="px-4 py-3">
 									{#if entry.before !== null || entry.after !== null}
