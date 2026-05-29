@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-29 — session 15)
+## Current Status (as of 2026-05-30 — session 16)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
 
@@ -67,6 +67,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | CI/CD pipeline (session 14) | `adapter-auto` → `adapter-node` (required for Docker). `Dockerfile` (node:22-alpine, non-root `app` user, port 3000). `docker-compose.yml` (port 3000, `env_file: .env`, restart: unless-stopped). `.github/workflows/deploy.yml.disabled` — GitHub Actions: npm build in CI → rsync artifact to VPS → `docker compose up --build -d`. `docs/deployment-guide.md` — full 9-step VPS setup guide. **Workflow is disabled** pending VPS setup + GitHub secrets. | ✅ (code done; first deploy pending) |
 | Delta v11 pagination (session 15) | All list API responses migrated from plain arrays to `PaginatedResponse<T>`. Added `PaginationMeta` + `PaginatedResponse<T>` types to `api.ts`. New `<Pagination />` component (`src/lib/components/ui/Pagination.svelte`) — hidden when `totalPages <= 1`. **Category A (pagination UI):** admin/teachers (pageSize 25), admin/students (25), admin/subjects (25), courses (12), reports (20). **Category B (unwrap only):** admin/courses (3 sub-calls), admin/calendar (3 sub-calls + recurring), calendar (3 sub-calls), dashboard (students), register/teacher (subjects). Server-side `+page.server.ts` files fixed: `.then((b: any) => b.data ?? [])` on all list fetches. Audit log breaking changes fixed (was using deleted `AuditLogListResponse` type). | ✅ |
 | Audit log UI polish (session 15) | `src/routes/admin/settings/audit-log/+page.svelte`: Actor column — role pill badge replaced with 8×8px colored dot (`bg-violet-600` admin, `bg-teal-600` teacher, `bg-amber-500` student, `bg-border` fallback) + `title` tooltip. Resource column — shows `resource_type` only, UUID fragment removed. Legend added between filter card and table card: "Actor role: ● Admin ● Teacher ● Student". `truncateId` kept (still used in diff panel expanded row). | ✅ |
+| Filter flicker fix (session 16) | **admin/teachers, admin/students, audit-log:** Changed loading guard from `{#if loading}` (replaces table with skeleton on every filter change) to `{#if loading && list.length === 0}` (skeleton only on first load). Added `class:opacity-50={loading} class:pointer-events-none={loading}` on the table wrapper so subsequent loads dim the existing rows instead of replacing them. Pattern: show skeletons when the list is genuinely empty; overlay when refreshing. | ✅ |
+| Courses SSR initial load (session 16) | `src/routes/courses/+page.server.ts` now fetches `GET /courses?page=1&limit=12` server-side and returns `{ courses, totalPages }`. `+page.svelte` initializes `courses` and `totalPages` from `data` (SSR props), sets `loading = false` initially, removes the `onMount` call to `fetchCourses()`, and removes the `$effect` that watched filters (replaced with explicit `onchange` handlers on each filter `<select>`). Result: courses page renders with data on first load — no loading spinner on initial visit. Subsequent filter/page changes still use CSR fetch with opacity overlay. | ✅ |
+| Deployment guide update (session 16) | `docs/deployment-guide.md` updated to match actual VPS state from backend deployment: references `mutawazin` non-root user (not `root`), deploy directory is `/home/mutawazin/mutawazin-web` (not `/root/mutawazin-web`), reuses existing `github_deploy` SSH keypair (already on VPS from backend CI setup) instead of generating a new key. | ✅ |
 
 ### What is NOT done yet (known gaps)
 
@@ -87,6 +90,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 8. **Teacher profile stats — pending backend delta v9** — `GET /teachers/:user_id` does not return `years_experience` or `sessions_completed`; both always show 0. Frontend at `src/routes/teachers/[id]/+page.svelte:173-175` already reads `profile.years_experience ?? 0` and `profile.sessions_completed ?? 0` — no frontend change needed once backend ships. Backend must add: `years_experience = current_year - min(year_from)` across `teaching_experience[]` (0 if empty); `sessions_completed = count of Session where teacher_id == user_id and status == "completed"`.
 
 9. **Admin students age column — pending backend delta v9** — `admin/students/+page.svelte` Age column still uses IIFE+formula. Once backend ships `age: int | null` on `GET /admin/students`, replace with `user.age != null ? String(user.age) : '—'`. The student profile DOB edit UI is already in place (`students/[id]/+page.svelte`); it just needs backend to return non-null `age` values.
+
+10. **Courses SSR — verify `access_token` cookie forwarding** — `+page.server.ts` manually forwards the `access_token` cookie header to the API. Live-verify that the SSR fetch actually returns data (not 401). If the backend requires a Bearer token instead of cookie, change header to `Authorization: Bearer ${token}`. Also verify filter changes after SSR load still work (CSR refetch path).
 
 ---
 
@@ -127,6 +132,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **PaginatedResponse pattern** | All list endpoints return `{ data: T[]; pagination: { page, pageSize, totalItems, totalPages } }`. Types `PaginationMeta` and `PaginatedResponse<T>` are in `src/lib/api.ts`. CSR pages: `api.get<PaginatedResponse<T>>(url)` → destructure `data` + `pagination`. Server-side `+page.server.ts` uses native `fetch` → chain `.then((b: any) => b.data ?? [])` to unwrap. Never use the old plain-array shape. |
 | **Pagination component** | `src/lib/components/ui/Pagination.svelte` — props: `page: number`, `totalPages: number`, `onPage: (n: number) => void`. Renders nothing when `totalPages <= 1`. Placed inside the table `<Card>` after the `<table>`, before `</Card>`. Caller manages `page` state and passes a `changePage(n)` handler that sets `page = n` and refetches. Category A pages (primary list content) get the full UI. Category B pages (sub-calls for pickers/dropdowns) just unwrap `.data` — no pagination UI needed. |
 | **Server-side filter pattern (paginated)** | Admin pages with status filters (teachers, students) pass the filter as a query param to the API (`?status=active`) instead of doing client-side array filtering. `onchange` on the select resets `page = 1` then calls the fetch function. The old `filteredTeachers` / `filteredStudents` `$derived` values were removed — they are incompatible with server-side pagination. |
+| **Flicker-free loading pattern** | All list pages use a two-state loading display: (1) `{#if loading && list.length === 0}` → show skeleton rows or spinner only on first/empty load; (2) `class:opacity-50={loading} class:pointer-events-none={loading}` on the table/grid wrapper → dim existing content during filter/page refreshes. Never unconditionally replace the table with a skeleton on every fetch — that causes visible flicker. Applied to: admin/teachers, admin/students, audit-log, courses. |
+| **Courses SSR initial load pattern** | `src/routes/courses/+page.server.ts` fetches the first page SSR and returns `{ courses, totalPages }`. `+page.svelte` initializes state from `data` (no `onMount` fetch). Filter `<select>` elements use explicit `onchange` handlers (`() => { page = 1; scheduleRefetch(); }`) instead of a reactive `$effect` watching filter vars — `$effect` caused double-fetches on mount. Never use `$effect` to trigger side-effects on filter state changes. |
 
 ---
 
@@ -249,13 +256,15 @@ The FastAPI backend must be running at `http://localhost:8000`.
 ## What to Do Next Session
 
 **Priority 0 — First production deploy (VPS setup)**
-Follow `docs/deployment-guide.md` step by step:
-1. SSH into VPS: `mkdir -p /root/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /root/mutawazin-web/.env`
-2. Generate deploy SSH key locally and add public key to VPS `~/.ssh/authorized_keys`
-3. Add 5 GitHub secrets: `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH=/root/mutawazin-web`, `VITE_API_URL=https://api.mutawazinprivate.com`
-4. Configure Nginx on VPS to proxy `mutawazinprivate.com` → `localhost:3000`
-5. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
-6. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
+Follow `docs/deployment-guide.md` step by step (updated — references `mutawazin` user and existing `github_deploy` SSH keypair):
+1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
+2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
+3. Confirm existing SSH key: `ls ~/.ssh/github_deploy.pub` — reuse it (already authorized from backend CI)
+4. Print private key and add to **this** GitHub repo's secrets: `cat ~/.ssh/github_deploy`
+5. Add 5 GitHub secrets: `SSH_HOST`, `SSH_USER=mutawazin`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH=/home/mutawazin/mutawazin-web`, `VITE_API_URL=https://api.mutawazinprivate.com`
+6. Configure Nginx on VPS to proxy `mutawazinprivate.com` → `localhost:3000` (SSL via Certbot)
+7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
+8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
 **Priority 1 — Finish delta v9 (once backend confirms it's done)**
 1. **Teacher profile stats** — log in as a teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0). No frontend code change needed — just verify.
