@@ -18,6 +18,7 @@
     "pendingApprovals": "Menunggu Persetujuan",
     "settings": "Pengaturan",
     "subjects": "Mata Pelajaran",
+    "auditLog": "Log Audit",
     "logout": "Keluar"
   },
   "auth": {
@@ -510,5 +511,26 @@
     "footerContact": "Kontak",
     "footerPrivacy": "Kebijakan Privasi",
     "footerCopyright": "© {year} Mutawazin. Semua hak dilindungi."
+  },
+  "auditLog": {
+    "title": "Log Audit",
+    "filterFrom": "Dari",
+    "filterTo": "Sampai",
+    "filterAction": "Semua aksi",
+    "filterResource": "Semua tipe resource",
+    "apply": "Terapkan",
+    "reset": "Reset",
+    "empty": "Tidak ada log yang ditemukan. Coba ubah filter.",
+    "viewDiff": "Lihat perubahan",
+    "colWhen": "Waktu",
+    "colActor": "Pelaku",
+    "colAction": "Aksi",
+    "colResource": "Resource",
+    "colEndpoint": "Endpoint",
+    "colChanges": "Perubahan",
+    "diffKey": "Kunci",
+    "diffBefore": "Sebelum",
+    "diffAfter": "Sesudah",
+    "error": "Gagal memuat log audit."
   }
 }

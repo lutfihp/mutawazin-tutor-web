@@ -10,6 +10,7 @@
 		Calendar,
 		FileText,
 		Users,
+		Shield,
 	} from 'lucide-svelte';
 	import { pendingApprovalCount } from '$lib/stores/adminBadge';
 
@@ -21,6 +22,7 @@
 		href: string;
 		icon: typeof Home;
 		count?: number;
+		sectionLabel?: string;
 	};
 
 	const items = $derived(({
@@ -30,7 +32,8 @@
 			{ id: 'students',  labelKey: 'nav.students',   href: '/admin/students',  icon: User },
 			{ id: 'subjects',  labelKey: 'nav.subjects',   href: '/admin/subjects',  icon: BookOpen },
 			{ id: 'courses',   labelKey: 'nav.courses',    href: '/admin/courses',   icon: BookOpen },
-		{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/admin/calendar',  icon: Calendar },
+		{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/admin/calendar',             icon: Calendar },
+			{ id: 'audit-log', labelKey: 'nav.auditLog',  href: '/admin/settings/audit-log',   icon: Shield, sectionLabel: 'nav.settings' },
 		],
 		teacher: [
 			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',                  icon: Home },
@@ -73,6 +76,11 @@
 			{role === 'admin' ? 'Admin' : 'Menu'}
 		</p>
 		{#each items as item}
+			{#if item.sectionLabel}
+				<p class="px-3 py-1.5 mt-2 text-[11px] font-semibold uppercase tracking-widest text-text2">
+					{$t(item.sectionLabel)}
+				</p>
+			{/if}
 			{@const active = isActive(item.href)}
 			<a
 				href={item.href}
@@ -134,6 +142,11 @@
 		</div>
 		<nav class="p-3 flex flex-col gap-0.5 overflow-y-auto flex-1">
 			{#each items as item}
+				{#if item.sectionLabel}
+					<p class="px-3 py-1.5 mt-2 text-[11px] font-semibold uppercase tracking-widest text-text2">
+						{$t(item.sectionLabel)}
+					</p>
+				{/if}
 				{@const active = isActive(item.href)}
 				<a
 					href={item.href}

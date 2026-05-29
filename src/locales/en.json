@@ -18,6 +18,7 @@
     "pendingApprovals": "Pending Approvals",
     "settings": "Settings",
     "subjects": "Subjects",
+    "auditLog": "Audit Log",
     "logout": "Sign out"
   },
   "auth": {
@@ -510,5 +511,26 @@
     "footerContact": "Contact",
     "footerPrivacy": "Privacy Policy",
     "footerCopyright": "© {year} Mutawazin. All rights reserved."
+  },
+  "auditLog": {
+    "title": "Audit Log",
+    "filterFrom": "From",
+    "filterTo": "To",
+    "filterAction": "All actions",
+    "filterResource": "All resource types",
+    "apply": "Apply",
+    "reset": "Reset",
+    "empty": "No audit logs found. Try adjusting your filters.",
+    "viewDiff": "View diff",
+    "colWhen": "When",
+    "colActor": "Actor",
+    "colAction": "Action",
+    "colResource": "Resource",
+    "colEndpoint": "Endpoint",
+    "colChanges": "Changes",
+    "diffKey": "Key",
+    "diffBefore": "Before",
+    "diffAfter": "After",
+    "error": "Failed to load audit logs."
   }
 }

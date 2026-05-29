@@ -39,3 +39,26 @@ export const api = {
 	upload: <T>(path: string, formData: FormData) =>
 		request<T>(path, { method: 'POST', body: formData, headers: {} }),
 };
+
+export type AuditLogEntry = {
+	id: string;
+	actor_id: string;
+	actor_email: string | null;
+	actor_username: string | null;
+	actor_role: string;
+	action: 'CREATE' | 'UPDATE' | 'DELETE';
+	resource_type: string;
+	resource_id: string | null;
+	before: Record<string, unknown> | null;
+	after: Record<string, unknown> | null;
+	endpoint: string;
+	method: string;
+	timestamp: string;
+};
+
+export type AuditLogListResponse = {
+	total: number;
+	page: number;
+	page_size: number;
+	items: AuditLogEntry[];
+};
