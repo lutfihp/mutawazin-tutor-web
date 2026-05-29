@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
 	import { calendarGrid, toISODate, formatMonth } from '$lib/utils/date';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -74,8 +74,8 @@
 	async function fetchRecurringTemplates() {
 		if (!filteredTeacherId) { recurringTemplates = []; return; }
 		try {
-			const d = await api.get<any[]>(`/sessions/recurring?teacher_id=${filteredTeacherId}`);
-			recurringTemplates = Array.isArray(d) ? d : [];
+			const body = await api.get<PaginatedResponse<any>>(`/sessions/recurring?teacher_id=${filteredTeacherId}`);
+			recurringTemplates = body.data;
 		} catch {
 			recurringTemplates = [];
 		}
@@ -320,16 +320,14 @@
 	$effect(() => { filteredTeacherId; fetchRecurringTemplates(); });
 
 	onMount(async () => {
-		const [teachersRes, coursesRes, studentsRes] = await Promise.all([
-			api.get<any[]>('/admin/teachers').catch(() => []),
-			api.get<any[]>('/courses').catch(() => []),
-			api.get<any[]>('/admin/students').catch(() => []),
+		const [teachersBody, coursesBody, studentsBody] = await Promise.all([
+			api.get<PaginatedResponse<any>>('/admin/teachers').catch(() => ({ data: [], pagination: { totalPages: 1 } })),
+			api.get<PaginatedResponse<any>>('/courses').catch(() => ({ data: [], pagination: { totalPages: 1 } })),
+			api.get<PaginatedResponse<any>>('/admin/students').catch(() => ({ data: [], pagination: { totalPages: 1 } })),
 		]);
-		teachers = Array.isArray(teachersRes)
-			? teachersRes.filter((t: any) => t.status !== 'deleted' && t.status !== 'pending')
-			: [];
-		adminCourses = Array.isArray(coursesRes) ? coursesRes : [];
-		adminStudents = Array.isArray(studentsRes) ? studentsRes : [];
+		teachers = teachersBody.data.filter((t: any) => t.status !== 'deleted' && t.status !== 'pending');
+		adminCourses = coursesBody.data;
+		adminStudents = studentsBody.data;
 	});
 </script>
 

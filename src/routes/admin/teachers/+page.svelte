@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
@@ -16,24 +17,25 @@
 	let statusFilter = $state('');
 	let featuredMap = $state<Record<string, boolean>>({});
 	let featuredLoading = $state<Record<string, boolean>>({});
-
-	const filteredTeachers = $derived(
-		allTeachers.filter((u: any) =>
-			statusFilter ? (u.status ?? '').toLowerCase() === statusFilter : true
-		)
-	);
+	let page = $state(1);
+	let totalPages = $state(1);
+	const pageSize = 25;
 
 	async function fetchTeachers() {
 		allTeachersLoading = true;
 		try {
-			const teachers = await api.get<any[]>('/admin/teachers');
-			allTeachers = (Array.isArray(teachers) ? teachers : [])
+			const params = new URLSearchParams({ page: String(page), limit: String(pageSize) });
+			if (statusFilter) params.set('status', statusFilter);
+			const body = await api.get<PaginatedResponse<any>>(`/admin/teachers?${params}`);
+			allTeachers = body.data
 				.filter((t: any) => t.status !== 'email_verified' && t.status !== 'pending' && t.status !== 'deleted');
+			totalPages = body.pagination.totalPages;
 			featuredMap = Object.fromEntries(
 				allTeachers.map((t: any) => [t.user_id ?? t.id, t.is_featured ?? false])
 			);
 		} catch {
 			allTeachers = [];
+			totalPages = 1;
 		} finally {
 			allTeachersLoading = false;
 		}
@@ -178,6 +180,7 @@
 			<h2 class="font-semibold">{$t('dashboard.admin.allUsers')}</h2>
 			<select
 				bind:value={statusFilter}
+				onchange={() => { page = 1; fetchTeachers(); }}
 				aria-label={$t('common.status')}
 				class="h-8 px-2 text-sm bg-white border border-border rounded-sm focus:outline-none focus:border-primary"
 			>
@@ -189,7 +192,7 @@
 		{/snippet}
 		{#if allTeachersLoading}
 			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.loading')}</p>
-		{:else if filteredTeachers.length === 0}
+		{:else if allTeachers.length === 0}
 			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.noResults')}</p>
 		{:else}
 			<div class="overflow-x-auto">
@@ -204,7 +207,7 @@
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
-						{#each filteredTeachers as user}
+						{#each allTeachers as user}
 							{@const tid = user.user_id ?? user.id}
 							{@const isFeatured = featuredMap[tid] ?? false}
 							<tr class="hover:bg-bgGray/50 transition-colors">
@@ -239,6 +242,7 @@
 				</table>
 			</div>
 		{/if}
+		<Pagination {page} {totalPages} onPage={(n) => { page = n; fetchTeachers(); }} />
 	</Card>
 </div>
 

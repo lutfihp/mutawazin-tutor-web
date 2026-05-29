@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
@@ -36,6 +37,9 @@
 	let courses = $state<any[]>([]);
 	let loading = $state(true);
 	let subjects = $state<{ id: string; name: string }[]>([]);
+	let page = $state(1);
+	let totalPages = $state(1);
+	const pageSize = 12;
 
 	// Create modal
 	let createOpen = $state(false);
@@ -60,8 +64,8 @@
 		if (adminStudents.length > 0) return;
 		adminStudentsLoading = true;
 		try {
-			const result = await api.get<any[]>('/admin/students');
-			adminStudents = Array.isArray(result) ? result : [];
+			const body = await api.get<PaginatedResponse<any>>('/admin/students');
+			adminStudents = body.data;
 		} catch {
 			adminStudents = [];
 		} finally {
@@ -101,8 +105,8 @@
 		if (subjectEntries.length > 0) return;
 		subjectLoading = true;
 		try {
-			const entries = await api.get<{ id: string; name: string; status: string }[]>('/subjects?status=verified');
-			subjectEntries = Array.isArray(entries) ? entries : [];
+			const body = await api.get<PaginatedResponse<{ id: string; name: string; status: string }>>('/subjects?status=verified');
+			subjectEntries = body.data;
 		} catch {
 			subjectEntries = [];
 		} finally {
@@ -115,15 +119,17 @@
 	async function fetchCourses() {
 		loading = true;
 		try {
-			const params = new URLSearchParams();
+			const params = new URLSearchParams({ page: String(page), limit: String(pageSize) });
 			if (query) params.set('search', query);
 			if (subjectFilter) params.set('subject', subjectFilter);
 			if (statusFilter) params.set('status', statusFilter);
 			ageFilters.forEach((a) => params.append('age_category', a));
-			const data = await api.get<any[]>(`/courses?${params}`);
-			courses = Array.isArray(data) ? data : [];
+			const body = await api.get<PaginatedResponse<any>>(`/courses?${params}`);
+			courses = body.data;
+			totalPages = body.pagination.totalPages;
 		} catch {
 			courses = [];
+			totalPages = 1;
 		} finally {
 			loading = false;
 		}
@@ -174,8 +180,8 @@
 	onMount(async () => {
 		await fetchCourses();
 		try {
-			const result = await api.get<{ id: string; name: string; status: string }[]>('/subjects?status=verified');
-			subjects = Array.isArray(result) ? result : [];
+			const body = await api.get<PaginatedResponse<{ id: string; name: string; status: string }>>('/subjects?status=verified');
+			subjects = body.data;
 		} catch {
 			subjects = [];
 		}
@@ -184,6 +190,7 @@
 	$effect(() => {
 		subjectFilter;
 		statusFilter;
+		page = 1;
 		scheduleRefetch();
 	});
 </script>
@@ -193,6 +200,11 @@
 </svelte:head>
 
 <div>
+	{#if data.user?.role === 'teacher' && data.user?.status === 'email_verified'}
+		<div class="mb-5 rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+			{$t('pendingReview.coursesBanner')}
+		</div>
+	{/if}
 	<!-- Page header -->
 	<div class="flex items-center justify-between mb-5 flex-wrap gap-3">
 		<div>
@@ -326,6 +338,7 @@
 			{/each}
 		</div>
 	{/if}
+	<Pagination {page} {totalPages} onPage={(n) => { page = n; fetchCourses(); }} />
 </div>
 
 <!-- Enroll Student Modal -->

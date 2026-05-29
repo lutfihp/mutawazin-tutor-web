@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ params, locals, request }) => {
 		const [profile, reports] = await Promise.all([
 			fetch(`${BASE}/students/${params.id}`, { headers }).then((r) => (r.ok ? r.json() : null)),
 			fetch(`${BASE}/students/${params.id}/reports`, { headers }).then((r) =>
-				r.ok ? r.json() : []
+				r.ok ? r.json().then((b: any) => b.data ?? []) : []
 			),
 		]);
 		return { profile, reports };

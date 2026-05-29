@@ -13,13 +13,13 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 		const [stats, pendingTeachers, pendingStudents, pendingSubjects] = await Promise.all([
 			fetch(`${BASE}/admin/stats`, { headers }).then((r) => (r.ok ? r.json() : {})),
 			fetch(`${BASE}/admin/teachers?status=email_verified`, { headers }).then((r) =>
-				r.ok ? r.json() : []
+				r.ok ? r.json().then((b: any) => b.data ?? []) : []
 			),
 			fetch(`${BASE}/admin/students?status=email_verified`, { headers }).then((r) =>
-				r.ok ? r.json() : []
+				r.ok ? r.json().then((b: any) => b.data ?? []) : []
 			),
 			fetch(`${BASE}/admin/subjects?status=pending`, { headers }).then((r) =>
-				r.ok ? r.json() : []
+				r.ok ? r.json().then((b: any) => b.data ?? []) : []
 			),
 		]);
 		return { stats, pendingTeachers, pendingStudents, pendingSubjects };

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -11,6 +12,9 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let allSubjects = $state<any[]>([]);
 	let subjectsLoading = $state(true);
+	let page = $state(1);
+	let totalPages = $state(1);
+	const pageSize = 25;
 
 	let createSubjectOpen = $state(false);
 	let newSubjectName = $state('');
@@ -32,10 +36,13 @@
 	async function fetchSubjects() {
 		subjectsLoading = true;
 		try {
-			const result = await api.get<any[]>('/subjects?status=verified');
-			allSubjects = (Array.isArray(result) ? result : []).filter((s: any) => s.status !== 'deleted');
+			const params = new URLSearchParams({ status: 'verified', page: String(page), limit: String(pageSize) });
+			const body = await api.get<PaginatedResponse<any>>(`/subjects?${params}`);
+			allSubjects = body.data.filter((s: any) => s.status !== 'deleted');
+			totalPages = body.pagination.totalPages;
 		} catch {
 			allSubjects = [];
+			totalPages = 1;
 		} finally {
 			subjectsLoading = false;
 		}
@@ -154,6 +161,7 @@
 				</table>
 			</div>
 		{/if}
+		<Pagination {page} {totalPages} onPage={(n) => { page = n; fetchSubjects(); }} />
 	</Card>
 </div>
 

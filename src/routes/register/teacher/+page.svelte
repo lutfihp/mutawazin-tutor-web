@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
 	import Logo from '$lib/components/Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ChevronDown, Trash2 } from 'lucide-svelte';
@@ -23,8 +23,8 @@
 
 	onMount(async () => {
 		try {
-			const entries = await api.get<{ id: string; name: string }[]>('/subjects?status=verified');
-			subjectEntries = Array.isArray(entries) ? entries : [];
+			const body = await api.get<PaginatedResponse<{ id: string; name: string }>>('/subjects?status=verified');
+			subjectEntries = body.data;
 		} catch {
 			subjectEntries = [];
 		}

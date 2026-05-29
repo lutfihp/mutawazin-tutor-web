@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -22,15 +22,15 @@
 	async function fetchAll() {
 		loading = true;
 		try {
-			const [coursesRes, teachersRes, subjectsRes] = await Promise.all([
-				api.get<any[]>('/courses'),
-				api.get<any[]>('/admin/teachers'),
-				api.get<any[]>('/subjects?status=verified'),
+			const [coursesBody, teachersBody, subjectsBody] = await Promise.all([
+				api.get<PaginatedResponse<any>>('/courses'),
+				api.get<PaginatedResponse<any>>('/admin/teachers'),
+				api.get<PaginatedResponse<any>>('/subjects?status=verified'),
 			]);
-			allCourses = Array.isArray(coursesRes) ? coursesRes : [];
-			allTeachers = (Array.isArray(teachersRes) ? teachersRes : [])
+			allCourses = coursesBody.data;
+			allTeachers = teachersBody.data
 				.filter((t: any) => t.status !== 'deleted' && t.status !== 'pending' && t.status !== 'email_verified');
-			allSubjects = (Array.isArray(subjectsRes) ? subjectsRes : [])
+			allSubjects = subjectsBody.data
 				.filter((s: any) => s.status !== 'deleted');
 			teacherMap = Object.fromEntries(
 				allTeachers.map((t: any) => [t.user_id ?? t.id, t.full_name ?? t.name ?? '—'])
@@ -226,8 +226,8 @@
 		if (allStudents.length > 0) return;
 		studentsLoading = true;
 		try {
-			const res = await api.get<any[]>('/admin/students');
-			allStudents = (Array.isArray(res) ? res : [])
+			const body = await api.get<PaginatedResponse<any>>('/admin/students');
+			allStudents = body.data
 				.filter((s: any) => s.status !== 'deleted');
 			studentMap = {};
 			for (const s of allStudents) {

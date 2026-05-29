@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
@@ -14,21 +15,22 @@
 	let allStudents = $state<any[]>([]);
 	let allStudentsLoading = $state(true);
 	let statusFilter = $state('');
-
-	const filteredStudents = $derived(
-		allStudents.filter((u: any) =>
-			statusFilter ? (u.status ?? '').toLowerCase() === statusFilter : true
-		)
-	);
+	let page = $state(1);
+	let totalPages = $state(1);
+	const pageSize = 25;
 
 	async function fetchStudents() {
 		allStudentsLoading = true;
 		try {
-			const students = await api.get<any[]>('/admin/students');
-			allStudents = (Array.isArray(students) ? students : [])
+			const params = new URLSearchParams({ page: String(page), limit: String(pageSize) });
+			if (statusFilter) params.set('status', statusFilter);
+			const body = await api.get<PaginatedResponse<any>>(`/admin/students?${params}`);
+			allStudents = body.data
 				.filter((s: any) => s.status !== 'email_verified' && s.status !== 'pending' && s.status !== 'deleted');
+			totalPages = body.pagination.totalPages;
 		} catch {
 			allStudents = [];
+			totalPages = 1;
 		} finally {
 			allStudentsLoading = false;
 		}
@@ -133,6 +135,7 @@
 			<h2 class="font-semibold">{$t('dashboard.admin.allUsers')}</h2>
 			<select
 				bind:value={statusFilter}
+				onchange={() => { page = 1; fetchStudents(); }}
 				aria-label={$t('common.status')}
 				class="h-8 px-2 text-sm bg-white border border-border rounded-sm focus:outline-none focus:border-primary"
 			>
@@ -144,7 +147,7 @@
 		{/snippet}
 		{#if allStudentsLoading}
 			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.loading')}</p>
-		{:else if filteredStudents.length === 0}
+		{:else if allStudents.length === 0}
 			<p class="px-5 py-8 text-sm text-text2 text-center">{$t('common.noResults')}</p>
 		{:else}
 			<div class="overflow-x-auto">
@@ -160,7 +163,7 @@
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
-						{#each filteredStudents as user}
+						{#each allStudents as user}
 							<tr class="hover:bg-bgGray/50 transition-colors">
 								<td class="px-5 py-3">
 									<div class="flex items-center gap-2.5">
@@ -192,6 +195,7 @@
 				</table>
 			</div>
 		{/if}
+		<Pagination {page} {totalPages} onPage={(n) => { page = n; fetchStudents(); }} />
 	</Card>
 </div>
 

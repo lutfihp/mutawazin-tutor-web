@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
 	import { calendarGrid, toISODate, formatMonth } from '$lib/utils/date';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -205,8 +205,8 @@
 	async function fetchRecurringTemplates() {
 		if (!isTeacher) return;
 		try {
-			const d = await api.get<any[]>('/sessions/recurring');
-			recurringTemplates = Array.isArray(d) ? d : [];
+			const body = await api.get<PaginatedResponse<any>>('/sessions/recurring');
+			recurringTemplates = body.data;
 		} catch {
 			recurringTemplates = [];
 		}
@@ -215,8 +215,8 @@
 	async function fetchTeacherCourses() {
 		if (!isTeacher) return;
 		try {
-			const d = await api.get<any[]>('/courses');
-			teacherCourses = Array.isArray(d) ? d : [];
+			const body = await api.get<PaginatedResponse<any>>('/courses');
+			teacherCourses = body.data;
 		} catch {
 			teacherCourses = [];
 		}
@@ -225,8 +225,8 @@
 	async function fetchCalendarStudents() {
 		if (!isTeacher) return;
 		try {
-			const d = await api.get<any[]>('/students');
-			calendarStudents = Array.isArray(d) ? d : [];
+			const body = await api.get<PaginatedResponse<any>>('/students');
+			calendarStudents = body.data;
 		} catch {
 			calendarStudents = [];
 		}

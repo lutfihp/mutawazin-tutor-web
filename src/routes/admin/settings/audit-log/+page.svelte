@@ -2,13 +2,14 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
-	import type { AuditLogEntry, AuditLogListResponse } from '$lib/api';
+	import type { AuditLogEntry, PaginatedResponse } from '$lib/api';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 
 	// ── State ────────────────────────────────────────────────────────────────
 	let entries = $state<AuditLogEntry[]>([]);
-	let total = $state(0);
+	let totalPages = $state(1);
 	let page = $state(1);
 	const pageSize = 50;
 	let loading = $state(false);
@@ -72,10 +73,10 @@
 			if (actionFilter) params.set('action', actionFilter);
 			if (resourceTypeFilter) params.set('resource_type', resourceTypeFilter);
 			params.set('page', String(page));
-			params.set('page_size', String(pageSize));
-			const data = await api.get<AuditLogListResponse>(`/admin/audit-logs?${params}`);
-			entries = data.items;
-			total = data.total;
+			params.set('limit', String(pageSize));
+			const body = await api.get<PaginatedResponse<AuditLogEntry>>(`/admin/audit-logs?${params}`);
+			entries = body.data;
+			totalPages = body.pagination.totalPages;
 		} catch (e) {
 			error = e instanceof Error ? e.message : $t('auditLog.error');
 		} finally {
@@ -278,12 +279,6 @@
 		</div>
 
 		<!-- Pagination -->
-		{#if total > pageSize}
-			<div class="flex items-center justify-between px-4 py-3 border-t border-border">
-				<Button variant="secondary" disabled={page === 1} onclick={() => changePage(page - 1)}>Prev</Button>
-				<span class="text-sm text-text2">Page {page} of {Math.ceil(total / pageSize)}</span>
-				<Button variant="secondary" disabled={page * pageSize >= total} onclick={() => changePage(page + 1)}>Next</Button>
-			</div>
-		{/if}
+		<Pagination {page} {totalPages} onPage={changePage} />
 	</Card>
 </div>

@@ -5,7 +5,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
 
 	let { data } = $props();
 	const d = $derived(data.dashboardData ?? {});
@@ -27,8 +27,8 @@
 	onMount(async () => {
 		if (!isTeacher) return;
 		try {
-			const result = await api.get<any[]>('/students');
-			students = Array.isArray(result) ? result : [];
+			const body = await api.get<PaginatedResponse<any>>('/students');
+			students = body.data;
 		} catch {
 			students = [];
 		} finally {

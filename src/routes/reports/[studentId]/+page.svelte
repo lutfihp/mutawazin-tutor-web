@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { api } from '$lib/api';
+	import { api, type PaginatedResponse } from '$lib/api';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import { formatDate } from '$lib/utils/date';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -14,6 +15,9 @@
 
 	let reports = $state<any[]>([]);
 	let loading = $state(true);
+	let page = $state(1);
+	let totalPages = $state(1);
+	const pageSize = 20;
 
 	// Filters
 	let fromDate = $state('');
@@ -52,13 +56,15 @@
 	async function fetchReports() {
 		loading = true;
 		try {
-			const params = new URLSearchParams();
+			const params = new URLSearchParams({ page: String(page), limit: String(pageSize) });
 			if (fromDate) params.set('from', fromDate);
 			if (toDate) params.set('to', toDate);
-			const result = await api.get<any[]>(`/students/${data.studentId}/reports?${params}`);
-			reports = Array.isArray(result) ? result : [];
+			const body = await api.get<PaginatedResponse<any>>(`/students/${data.studentId}/reports?${params}`);
+			reports = body.data;
+			totalPages = body.pagination.totalPages;
 		} catch {
 			reports = [];
+			totalPages = 1;
 		} finally {
 			loading = false;
 		}
@@ -121,6 +127,7 @@
 
 	$effect(() => {
 		fromDate; toDate;
+		page = 1;
 		fetchReports();
 	});
 </script>
@@ -234,6 +241,7 @@
 			{/each}
 		</div>
 	{/if}
+	<Pagination {page} {totalPages} onPage={(n) => { page = n; fetchReports(); }} />
 </div>
 
 <!-- Create/Edit report modal -->

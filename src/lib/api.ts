@@ -56,9 +56,14 @@ export type AuditLogEntry = {
 	timestamp: string;
 };
 
-export type AuditLogListResponse = {
-	total: number;
+export type PaginationMeta = {
 	page: number;
-	page_size: number;
-	items: AuditLogEntry[];
+	pageSize: number;
+	totalItems: number;
+	totalPages: number;
+};
+
+export type PaginatedResponse<T> = {
+	data: T[];
+	pagination: PaginationMeta;
 };
