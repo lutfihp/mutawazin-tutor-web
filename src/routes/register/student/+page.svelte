@@ -51,13 +51,13 @@
 	<div class="w-full max-w-auth bg-white border border-border rounded-lg shadow-sm p-8">
 		{#if success}
 			<div class="text-center py-4">
-				<div class="w-16 h-16 bg-successBg rounded-pill flex items-center justify-center mx-auto mb-4">
-					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-						<polyline points="20 6 9 17 4 12" />
+				<div class="w-16 h-16 bg-blue-50 rounded-pill flex items-center justify-center mx-auto mb-4">
+					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/>
 					</svg>
 				</div>
-				<h1 class="text-[22px] font-semibold mb-2">{$t('auth.verifyEmail.successRegister.title')}</h1>
-				<p class="text-sm text-text2 mb-6">{$t('auth.verifyEmail.successRegister.body')}</p>
+				<h1 class="text-[22px] font-semibold mb-2">{$t('auth.registerStudent.successTitle')}</h1>
+				<p class="text-sm text-text2 mb-6">{$t('auth.registerStudent.success')}</p>
 				<Button variant="secondary" href="/">{$t('auth.verifyEmail.successRegister.cta')}</Button>
 			</div>
 		{:else}

@@ -63,7 +63,8 @@
       "reviewNotice": "Your account will be reviewed by our team before you can start teaching.",
       "alreadyHaveAccount": "Already have an account?",
       "logIn": "Log in",
-      "success": "Check your email to verify your account.",
+      "successTitle": "Check Your Email",
+      "success": "We've sent a verification link to your inbox. Click it to verify your account — our team will then review your application.",
       "errors": {
         "emailTaken": "This email is already registered.",
         "unknown": "Something went wrong. Please try again."
@@ -83,7 +84,8 @@
       "submit": "Create Student Account",
       "alreadyHaveAccount": "Already have an account?",
       "logIn": "Log in",
-      "success": "Check your email to verify your account.",
+      "successTitle": "Check Your Email",
+      "success": "We've sent a verification link to your inbox. Click it to verify your account.",
       "errors": {
         "emailTaken": "This email is already registered.",
         "unknown": "Something went wrong. Please try again."

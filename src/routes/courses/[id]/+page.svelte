@@ -77,13 +77,18 @@
 	<!-- Teacher -->
 	<Card padding="default">
 		<div class="flex items-center justify-between">
-			<span class="text-sm text-text2">{$t('courses.detail.teacher')}</span>
-			<a
-				href="/teachers/{course?.teacher_id}"
-				class="text-sm font-semibold text-primary hover:text-primary-dark"
-			>
-				{$t('common.viewProfile')}
-			</a>
+			<div>
+				<p class="text-xs text-text2 mb-0.5">{$t('courses.detail.teacher')}</p>
+				<p class="font-semibold">{course?.teacher_name ?? '—'}</p>
+			</div>
+			{#if course?.teacher_id}
+				<a
+					href="/teachers/{course.teacher_id}"
+					class="text-sm font-semibold text-primary hover:text-primary-dark"
+				>
+					{$t('common.viewProfile')}
+				</a>
+			{/if}
 		</div>
 	</Card>
 

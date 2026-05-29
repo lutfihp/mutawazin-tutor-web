@@ -63,7 +63,8 @@
       "reviewNotice": "Akun Anda akan ditinjau oleh tim kami sebelum Anda dapat mulai mengajar.",
       "alreadyHaveAccount": "Sudah punya akun?",
       "logIn": "Masuk",
-      "success": "Periksa email Anda untuk memverifikasi akun.",
+      "successTitle": "Periksa Email Anda",
+      "success": "Kami telah mengirimkan tautan verifikasi ke kotak masuk Anda. Klik tautan tersebut untuk memverifikasi akun — tim kami akan meninjau lamaran Anda.",
       "errors": {
         "emailTaken": "Email ini sudah terdaftar.",
         "unknown": "Terjadi kesalahan. Silakan coba lagi."
@@ -83,7 +84,8 @@
       "submit": "Buat Akun Murid",
       "alreadyHaveAccount": "Sudah punya akun?",
       "logIn": "Masuk",
-      "success": "Periksa email Anda untuk memverifikasi akun.",
+      "successTitle": "Periksa Email Anda",
+      "success": "Kami telah mengirimkan tautan verifikasi ke kotak masuk Anda. Klik tautan tersebut untuk mengaktifkan akun Anda.",
       "errors": {
         "emailTaken": "Email ini sudah terdaftar.",
         "unknown": "Terjadi kesalahan. Silakan coba lagi."
