@@ -23,11 +23,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-27 — session 14)
+## Current Status (as of 2026-05-29 — session 15)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
 
-### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–14 commits local only, not yet pushed)
+### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–15 commits local only, not yet pushed)
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -65,6 +65,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Student DOB edit | Student profile (`students/[id]/+page.svelte`) — DOB edit UI added: pencil button → date input → save via `PUT /students/me { date_of_birth }`. Age badge reads `profile.age` (not formula), gated to `isOwn \|\| admin`. Waiting on backend to return `age: int \| null` from `GET /students/:id` before values are non-null. | ✅ (UI done, wired up; live when backend ships delta v9) |
 | i18n fixes (session 13) | Added `common.age` key (EN: "Age", ID: "Usia") to both locale files. Admin students Age column header now uses `$t('common.age')` instead of hardcoded "Age". Admin calendar teacher filter fixed: `aria-label` uses correct path `dashboard.admin.filterByTeacher`; default option uses `courses.allTeachers` ("All teachers" / "Semua guru") instead of raw key. | ✅ |
 | CI/CD pipeline (session 14) | `adapter-auto` → `adapter-node` (required for Docker). `Dockerfile` (node:22-alpine, non-root `app` user, port 3000). `docker-compose.yml` (port 3000, `env_file: .env`, restart: unless-stopped). `.github/workflows/deploy.yml.disabled` — GitHub Actions: npm build in CI → rsync artifact to VPS → `docker compose up --build -d`. `docs/deployment-guide.md` — full 9-step VPS setup guide. **Workflow is disabled** pending VPS setup + GitHub secrets. | ✅ (code done; first deploy pending) |
+| Delta v11 pagination (session 15) | All list API responses migrated from plain arrays to `PaginatedResponse<T>`. Added `PaginationMeta` + `PaginatedResponse<T>` types to `api.ts`. New `<Pagination />` component (`src/lib/components/ui/Pagination.svelte`) — hidden when `totalPages <= 1`. **Category A (pagination UI):** admin/teachers (pageSize 25), admin/students (25), admin/subjects (25), courses (12), reports (20). **Category B (unwrap only):** admin/courses (3 sub-calls), admin/calendar (3 sub-calls + recurring), calendar (3 sub-calls), dashboard (students), register/teacher (subjects). Server-side `+page.server.ts` files fixed: `.then((b: any) => b.data ?? [])` on all list fetches. Audit log breaking changes fixed (was using deleted `AuditLogListResponse` type). | ✅ |
+| Audit log UI polish (session 15) | `src/routes/admin/settings/audit-log/+page.svelte`: Actor column — role pill badge replaced with 8×8px colored dot (`bg-violet-600` admin, `bg-teal-600` teacher, `bg-amber-500` student, `bg-border` fallback) + `title` tooltip. Resource column — shows `resource_type` only, UUID fragment removed. Legend added between filter card and table card: "Actor role: ● Admin ● Teacher ● Student". `truncateId` kept (still used in diff panel expanded row). | ✅ |
 
 ### What is NOT done yet (known gaps)
 
@@ -122,6 +124,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **Session edit (admin)** | `PUT /sessions/:id` — admin can edit title, starts_at, ends_at, mode, price, teacher_id, student_id, course_id. Teacher role can only edit title/time/mode/price (teacher_id/student_id/course_id ignored). Endpoint added in delta v6. |
 | **Navbar profile fetch pattern** | `Navbar.svelte` fetches the logged-in user's own profile on `onMount` (teacher → `GET /teachers/:id`, student → `GET /students/:id`). Stores `profileName` + `profileSrc` in local `$state`. Admin gets no avatar. Teacher/student Avatar is wrapped in `<a>` linking to their profile page. No changes to `hooks.server.ts`, `app.d.ts`, or the `User` store type — JWT only carries `{ id, role, status }`. |
 | **Course detail page pattern** | `src/routes/courses/[id]/+page.server.ts` — SSR load: auth guard + `GET /courses/:id` + `throw error(404)` if not found, returns `{ course, user: locals.user }`. Parent `src/routes/courses/+layout.svelte` provides `<AuthLayout>` — no new layout needed. Page uses `AGE_KEYS` map to translate API age-category strings to existing `courses.age*` i18n keys. Price formatted with `Intl.NumberFormat('id-ID', { currency: 'IDR' })`. Student self-enrollment is NOT allowed — enrollment is admin-only via `/admin/courses`. |
+| **PaginatedResponse pattern** | All list endpoints return `{ data: T[]; pagination: { page, pageSize, totalItems, totalPages } }`. Types `PaginationMeta` and `PaginatedResponse<T>` are in `src/lib/api.ts`. CSR pages: `api.get<PaginatedResponse<T>>(url)` → destructure `data` + `pagination`. Server-side `+page.server.ts` uses native `fetch` → chain `.then((b: any) => b.data ?? [])` to unwrap. Never use the old plain-array shape. |
+| **Pagination component** | `src/lib/components/ui/Pagination.svelte` — props: `page: number`, `totalPages: number`, `onPage: (n: number) => void`. Renders nothing when `totalPages <= 1`. Placed inside the table `<Card>` after the `<table>`, before `</Card>`. Caller manages `page` state and passes a `changePage(n)` handler that sets `page = n` and refetches. Category A pages (primary list content) get the full UI. Category B pages (sub-calls for pickers/dropdowns) just unwrap `.data` — no pagination UI needed. |
+| **Server-side filter pattern (paginated)** | Admin pages with status filters (teachers, students) pass the filter as a query param to the API (`?status=active`) instead of doing client-side array filtering. `onchange` on the select resets `page = 1` then calls the fetch function. The old `filteredTeachers` / `filteredStudents` `$derived` values were removed — they are incompatible with server-side pagination. |
 
 ---
 
@@ -143,7 +148,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │   │   ├── stores/sidebar.ts       ← writable<boolean> sidebarOpen
 │   │   ├── stores/adminBadge.ts    ← writable<number> pendingApprovalCount
 │   │   ├── utils/avatar.ts, date.ts, cn.ts
-│   │   ├── components/ui/          ← Badge, Avatar, Button, Card, Input, Modal, DropdownMenu
+│   │   ├── components/ui/          ← Badge, Avatar, Button, Card, Input, Modal, DropdownMenu, Pagination
 │   │   ├── components/ErrorState.svelte  ← full-page error state (tone variants, snippet props)
 │   │   └── components/layout/      ← Logo, Navbar, Sidebar, AuthLayout
 │   ├── locales/en.json, id.json
@@ -303,8 +308,10 @@ Follow `docs/deployment-guide.md` step by step:
 8. **Error pages smoke test:**
    - Navigate to `http://localhost:5173/nonexistent` → 404 blue tone, compass icon, "Go home" + "Browse courses" buttons
 
-**Priority 4 — Follow-up feature (frontend only, endpoints already exist)**
+**Priority 4 — Follow-up features (frontend only, endpoints already exist)**
 9. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
+
+10. **Audit log — pagination live verify:** Open `/admin/settings/audit-log`, confirm Prev/Next buttons appear when there is more than one page of results. Confirm dot colors match roles (violet = admin, teal = teacher, amber = student). Confirm resource column shows type only (no UUID). Confirm legend renders between filter and table.
 
 **Priority 5 — Runtime QA**
 10. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
