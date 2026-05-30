@@ -1,3 +1,228 @@
+# Write Report Flow + Dashboard Report Titles — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Fix teacher dashboard report card titles (currently show raw IDs) and replace the broken "Write Report" quick action with a dedicated session-first `/reports/new` page.
+
+**Architecture:** Two independent fixes in Task 1–2 (dashboard-only changes), plus a new three-step page (`/reports/new`) in Tasks 3–5. The new page uses a `step` state machine (`'sessions' | 'students' | 'form'`) on a single URL — no routing between steps. Session data comes from `GET /calendar/me`, student names from `GET /students`, report submission to `POST /sessions/:id/reports`.
+
+**Tech Stack:** SvelteKit (Svelte 5 runes), TypeScript, Tailwind v3, svelte-i18n, existing `$lib/components/ui/` components.
+
+---
+
+## File Map
+
+| File | Action | Purpose |
+|---|---|---|
+| `src/lib/api.ts` | Modify | Add `DashboardReportItem` type |
+| `src/routes/dashboard/+page.svelte` | Modify | Fix report card titles; fix Quick Action href |
+| `src/locales/en.json` | Modify | Add `reports.new.*` i18n keys |
+| `src/locales/id.json` | Modify | Same keys in Bahasa Indonesia |
+| `src/routes/reports/new/+layout.svelte` | Create | AuthLayout wrapper (mirrors `reports/[studentId]/+layout.svelte`) |
+| `src/routes/reports/new/+page.server.ts` | Create | Teacher-only auth guard |
+| `src/routes/reports/new/+page.svelte` | Create | Three-step write-report page |
+
+---
+
+## Task 1: Add DashboardReportItem type
+
+**Files:**
+- Modify: `src/lib/api.ts`
+
+- [ ] **Step 1: Add the type at the end of `src/lib/api.ts`**
+
+Append after the existing `PaginatedResponse<T>` type (after line 69):
+
+```typescript
+export type DashboardReportItem = {
+	id: string;
+	session_id: string;
+	student_id: string;
+	teacher_id: string;
+	scores: { topic: string; score: number; max_score: number }[];
+	notes: string | null;
+	created_at: string;
+	subject_name: string | null;
+	student_name: string | null;
+	session_date: string | null;
+};
+```
+
+- [ ] **Step 2: Verify type check passes**
+
+Run: `npm run check`
+Expected: 0 errors (12 pre-existing warnings are fine).
+
+---
+
+## Task 2: Fix dashboard report card titles + Quick Action href
+
+**Files:**
+- Modify: `src/routes/dashboard/+page.svelte`
+
+- [ ] **Step 1: Add `formatDate` import**
+
+The dashboard currently does not import `formatDate`. Add it to the import block at the top of the `<script>` (after line 8, alongside the existing imports):
+
+```typescript
+import { formatDate } from '$lib/utils/date';
+```
+
+Full updated import block (lines 1–11 of the `<script>`):
+
+```typescript
+import { onMount } from 'svelte';
+import { t } from 'svelte-i18n';
+import Badge from '$lib/components/ui/Badge.svelte';
+import Card from '$lib/components/ui/Card.svelte';
+import Avatar from '$lib/components/ui/Avatar.svelte';
+import Button from '$lib/components/ui/Button.svelte';
+import { api, type PaginatedResponse } from '$lib/api';
+import { formatDate } from '$lib/utils/date';
+```
+
+- [ ] **Step 2: Replace the report card title lines**
+
+At line 134–135, replace:
+
+```svelte
+<div class="font-medium text-sm truncate">{report.student_id} · {report.session_id}</div>
+<div class="text-xs text-text2 tabular">{report.created_at}</div>
+```
+
+With:
+
+```svelte
+<div class="font-medium text-sm truncate">
+    {report.subject_name ?? 'No subject'} — {report.student_name ?? 'Unknown student'}
+</div>
+<div class="text-xs text-text2 tabular">
+    {formatDate(report.session_date ?? report.created_at)}
+</div>
+```
+
+- [ ] **Step 3: Fix Quick Action href**
+
+In the Quick Actions array (line 154), the `writeReport` entry currently has `href: '/dashboard#private-students'`. Change it to `href: '/reports/new'`:
+
+```svelte
+{ titleKey: 'dashboard.teacher.writeReport', descKey: 'dashboard.teacher.writeReportDesc', href: '/reports/new', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
+```
+
+- [ ] **Step 4: Verify type check passes**
+
+Run: `npm run check`
+Expected: 0 errors.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/lib/api.ts src/routes/dashboard/+page.svelte
+git commit -m "fix(dashboard): show readable report titles using delta v12 fields + fix Write Report href"
+```
+
+---
+
+## Task 3: Add i18n keys for /reports/new
+
+**Files:**
+- Modify: `src/locales/en.json`
+- Modify: `src/locales/id.json`
+
+- [ ] **Step 1: Add keys to `src/locales/en.json`**
+
+Inside the `"reports"` object, add a `"new"` sub-object. The `"reports"` object currently ends with `"modal": { ... }`. Add `"new"` as a sibling to `"modal"`:
+
+```json
+"new": {
+  "title": "Write a Report",
+  "selectSession": "Select a completed session",
+  "selectStudent": "Select a student",
+  "noCompletedSessions": "No completed sessions in the last 30 days.",
+  "noStudents": "No students found for this session.",
+  "reportFor": "Report for {name}",
+  "saved": "Report saved successfully.",
+  "writeAnother": "Write another report",
+  "saveError": "Failed to save report. Please try again."
+}
+```
+
+- [ ] **Step 2: Add keys to `src/locales/id.json`**
+
+Add the same `"new"` sub-object inside the `"reports"` object:
+
+```json
+"new": {
+  "title": "Tulis Laporan",
+  "selectSession": "Pilih sesi yang sudah selesai",
+  "selectStudent": "Pilih siswa",
+  "noCompletedSessions": "Tidak ada sesi selesai dalam 30 hari terakhir.",
+  "noStudents": "Tidak ada siswa ditemukan untuk sesi ini.",
+  "reportFor": "Laporan untuk {name}",
+  "saved": "Laporan berhasil disimpan.",
+  "writeAnother": "Tulis laporan lain",
+  "saveError": "Gagal menyimpan laporan. Silakan coba lagi."
+}
+```
+
+- [ ] **Step 3: Verify type check passes**
+
+Run: `npm run check`
+Expected: 0 errors.
+
+---
+
+## Task 4: Create layout + auth guard for /reports/new
+
+**Files:**
+- Create: `src/routes/reports/new/+layout.svelte`
+- Create: `src/routes/reports/new/+page.server.ts`
+
+The `<AuthLayout>` wrapper lives in `src/routes/reports/[studentId]/+layout.svelte`, not in a shared parent. The new route needs its own identical layout file so the sidebar and authenticated shell render correctly.
+
+- [ ] **Step 1: Create `src/routes/reports/new/+layout.svelte`**
+
+```svelte
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+	import AuthLayout from '$lib/components/layout/AuthLayout.svelte';
+	let { data, children }: { data: App.PageData; children?: Snippet } = $props();
+	const role = $derived((data.user?.role ?? 'student') as 'admin' | 'teacher' | 'student');
+</script>
+
+<AuthLayout {role} userId={data.user?.id ?? ''}>
+	{#if children}{@render children()}{/if}
+</AuthLayout>
+```
+
+- [ ] **Step 2: Create `src/routes/reports/new/+page.server.ts`**
+
+```typescript
+import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ locals }) => {
+	if (!locals.user) throw redirect(302, '/login');
+	if (locals.user.role !== 'teacher') throw redirect(302, '/dashboard');
+	return {};
+};
+```
+
+- [ ] **Step 3: Verify type check passes**
+
+Run: `npm run check`
+Expected: 0 errors.
+
+---
+
+## Task 5: Create /reports/new page
+
+**Files:**
+- Create: `src/routes/reports/new/+page.svelte`
+
+- [ ] **Step 1: Create the file with the full implementation**
+
+```svelte
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
@@ -43,9 +268,8 @@
 
 		if (sessionsResult.status === 'fulfilled') {
 			const all = Array.isArray(sessionsResult.value) ? sessionsResult.value : [];
-			const nowMs = Date.now();
 			sessions = all
-				.filter((s: any) => new Date(s.starts_at).getTime() <= nowMs)
+				.filter((s: any) => s.status === 'completed')
 				.sort((a: any, b: any) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime());
 		}
 
@@ -117,7 +341,7 @@
 			});
 			savedOk = true;
 		} catch {
-			saveError = 'Failed to save report. Please try again.';
+			saveError = $t('reports.new.saveError');
 		} finally {
 			saveLoading = false;
 		}
@@ -138,7 +362,7 @@
 </svelte:head>
 
 <div class="max-w-lg mx-auto flex flex-col gap-4">
-	<!-- Page title + back arrow -->
+	<!-- Page title -->
 	<div class="flex items-center gap-3">
 		{#if step !== 'sessions'}
 			<button
@@ -330,3 +554,38 @@
 		{/if}
 	{/if}
 </div>
+```
+
+- [ ] **Step 2: Verify type check passes**
+
+Run: `npm run check`
+Expected: 0 errors.
+
+- [ ] **Step 3: Manual smoke test**
+
+Start the dev server: `npm run dev`
+
+Test sequence (login as teacher at `http://localhost:5173`):
+
+1. Go to `/dashboard` → click "Write Report" quick action → should navigate to `/reports/new`
+2. On `/reports/new`:
+   - Step 1: Completed sessions list loads. If empty, shows "No completed sessions in the last 30 days."
+   - Click a session → step 2 shows
+3. Step 2: Student list for that session. Private session shows one student; group session shows all enrolled.
+   - Click a student → step 3 shows
+4. Step 3: Form with score rows, notes, understanding level.
+   - Fill in at least one score topic + score + max
+   - Click "Create Report" → success banner appears
+   - Click "Write another report" → resets to step 1
+5. Use back arrow: from step 3 → returns to step 2; from step 2 → returns to step 1
+6. Non-teacher visiting `/reports/new` (e.g. student) → redirects to `/dashboard`
+
+Also verify dashboard changes:
+7. Go to `/dashboard` as teacher → Recent Reports cards show "{subject_name} — {student_name}" and formatted date instead of raw IDs
+
+- [ ] **Step 4: Commit all new route files**
+
+```bash
+git add src/routes/reports/new/+layout.svelte src/routes/reports/new/+page.server.ts src/routes/reports/new/+page.svelte src/locales/en.json src/locales/id.json
+git commit -m "feat(reports): add /reports/new — session-first write report flow"
+```

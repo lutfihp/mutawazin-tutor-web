@@ -116,13 +116,6 @@
 		if (scores.length > 1) scores = scores.filter((_, idx) => idx !== i);
 	}
 
-	function avgScore(rpt: any): string {
-		if (!rpt.scores?.length) return '';
-		const total = rpt.scores.reduce((s: number, sc: any) => s + sc.score, 0);
-		const maxTotal = rpt.scores.reduce((s: number, sc: any) => s + sc.max_score, 0);
-		return `${total} / ${maxTotal}`;
-	}
-
 	onMount(fetchReports);
 
 	$effect(() => {
@@ -177,9 +170,9 @@
 					<!-- Head -->
 					<div class="flex items-center justify-between mb-3 flex-wrap gap-2">
 						<div>
-							<div class="font-semibold text-base">{report.session_title ?? 'Session'}</div>
+							<div class="font-semibold text-base">{[report.subject_name, report.teacher_name].filter(Boolean).join(' — ') || 'Session'}</div>
 							<div class="text-xs text-text2 mt-0.5 tabular">
-								{report.created_at ? formatDate(report.created_at) : ''} · {$t('reports.averageScore', { values: { score: avgScore(report).split('/')[0]?.trim(), max: avgScore(report).split('/')[1]?.trim() } })}
+								{report.created_at ? formatDate(report.created_at) : ''}
 							</div>
 						</div>
 						{#if report.understanding_level}
@@ -194,10 +187,7 @@
 							{#each report.scores as sc}
 								<div class="bg-bgGray rounded-sm px-3.5 py-3">
 									<div class="text-[11px] uppercase font-medium text-text2 tracking-wide mb-1">{sc.topic}</div>
-									<div class="text-xl font-bold tabular">{sc.score} <span class="text-[13px] text-text2 font-normal">/ {sc.max_score}</span></div>
-									<div class="mt-1.5 h-1 bg-border rounded-full">
-										<div class="h-1 bg-primary rounded-full" style="width: {Math.min(100, (sc.score / sc.max_score) * 100)}%;"></div>
-									</div>
+									<div class="text-xl font-bold tabular">{sc.score}</div>
 								</div>
 							{/each}
 						</div>

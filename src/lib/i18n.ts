@@ -3,7 +3,7 @@ import { init, register, locale } from 'svelte-i18n';
 
 const SUPPORTED = ['en', 'id'] as const;
 export type Lang = (typeof SUPPORTED)[number];
-export const DEFAULT_LANG: Lang = 'en';
+export const DEFAULT_LANG: Lang = 'id';
 
 register('en', () => import('../locales/en.json'));
 register('id', () => import('../locales/id.json'));

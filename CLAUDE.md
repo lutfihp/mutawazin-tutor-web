@@ -23,9 +23,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-30 — session 16)
+## Current Status (as of 2026-05-30 — session 18)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 12 pre-existing warnings)
+### Build status: ✅ Passes `npm run check` (0 errors, 14 pre-existing warnings)
 
 ### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–15 commits local only, not yet pushed)
 
@@ -70,6 +70,12 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Filter flicker fix (session 16) | **admin/teachers, admin/students, audit-log:** Changed loading guard from `{#if loading}` (replaces table with skeleton on every filter change) to `{#if loading && list.length === 0}` (skeleton only on first load). Added `class:opacity-50={loading} class:pointer-events-none={loading}` on the table wrapper so subsequent loads dim the existing rows instead of replacing them. Pattern: show skeletons when the list is genuinely empty; overlay when refreshing. | ✅ |
 | Courses SSR initial load (session 16) | `src/routes/courses/+page.server.ts` now fetches `GET /courses?page=1&limit=12` server-side and returns `{ courses, totalPages }`. `+page.svelte` initializes `courses` and `totalPages` from `data` (SSR props), sets `loading = false` initially, removes the `onMount` call to `fetchCourses()`, and removes the `$effect` that watched filters (replaced with explicit `onchange` handlers on each filter `<select>`). Result: courses page renders with data on first load — no loading spinner on initial visit. Subsequent filter/page changes still use CSR fetch with opacity overlay. | ✅ |
 | Deployment guide update (session 16) | `docs/deployment-guide.md` updated to match actual VPS state from backend deployment: references `mutawazin` non-root user (not `root`), deploy directory is `/home/mutawazin/mutawazin-web` (not `/root/mutawazin-web`), reuses existing `github_deploy` SSH keypair (already on VPS from backend CI setup) instead of generating a new key. | ✅ |
+| Delta v12 — dashboard report titles (session 17) | `GET /dashboard/teacher` now returns `subject_name: string\|null`, `student_name: string\|null`, `session_date: string\|null` on each `recent_reports` item. Added `DashboardReportItem` type to `src/lib/api.ts`. Dashboard report cards now show `"{subject_name} — {student_name}"` + `formatDate(session_date ?? created_at)` instead of raw IDs. | ✅ |
+| Write Report flow — `/reports/new` (session 17) | New dedicated page replacing broken "Write Report" quick action (was `href=/dashboard#private-students`, now `/reports/new`). Three-step state machine on one URL: (1) session list — `GET /calendar/me` last 30 days, filtered to `starts_at <= now`, sorted newest first; (2) student picker — private session uses `session.student_id`, group session fetches `GET /courses/:course_id` → `enrolled_student_ids`; (3) report form — scores, notes, understanding level A–E, submits to `POST /sessions/:id/reports`. Auth guard: teacher-only. Layout: `src/routes/reports/new/+layout.svelte` (own AuthLayout wrapper, separate from `[studentId]` layout). | ✅ |
+| API gap analysis (session 18) | Read full `api-types.ts` contract, compared against all frontend API calls. Key finding: approve/reject for teachers/students IS implemented on `/admin` overview page (not `/admin/teachers`). Documented 5 remaining gaps in `docs/api-gap-analysis.md`: `POST /auth/resend-verification`, `PUT /teachers/me/credentials`, `PUT /courses/{id}` (teacher non-admin edit), plus 3 unconsumed read endpoints (`GET /sessions/{id}`, `GET /sessions/{id}/rating`, `GET /reports/{id}`). | ✅ |
+| Reports page UI polish (session 18) | `src/routes/reports/[studentId]/+page.svelte` — card title now shows `subject_name — teacher_name` (e.g. "Matematika — Ahmad Fauzi") instead of `session_title`. Removed `avgScore()` function and average score text from subtitle — subtitle is date only. Score tiles show raw score number only — no `/ max_score`, no progress bar (max score varies per topic, making comparison misleading). Scores section already conditionally hidden when `scores: []`. | ✅ |
+| Favicon (session 18) | Added `<link rel="icon">` tags to `src/app.html` — SVG primary (`/brand-kit/svg/favicon.svg`) + PNG fallbacks (32×32, 16×16) from existing brand kit. No files copied — links point to existing `static/brand-kit/` assets. | ✅ |
+| Default language ID (session 18) | Changed `DEFAULT_LANG` from `'en'` to `'id'` in `src/lib/i18n.ts`. Bahasa Indonesia is now the default for new visitors. Users with a stored `lang` preference in localStorage/cookie are unaffected. | ✅ |
 
 ### What is NOT done yet (known gaps)
 
@@ -87,9 +93,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 7. **Course detail page — live verify** — not yet tested against live backend. Confirm `GET /courses/:id` returns the expected shape (especially `enrolled_student_ids[]` and `price_by_age_category`). Verify the 404 error page renders correctly for unknown course IDs.
 
-8. **Teacher profile stats — pending backend delta v9** — `GET /teachers/:user_id` does not return `years_experience` or `sessions_completed`; both always show 0. Frontend at `src/routes/teachers/[id]/+page.svelte:173-175` already reads `profile.years_experience ?? 0` and `profile.sessions_completed ?? 0` — no frontend change needed once backend ships. Backend must add: `years_experience = current_year - min(year_from)` across `teaching_experience[]` (0 if empty); `sessions_completed = count of Session where teacher_id == user_id and status == "completed"`.
+8. **Teacher profile stats — verify live (delta v9 shipped)** — Backend now returns `years_experience` and `sessions_completed`. Frontend at `src/routes/teachers/[id]/+page.svelte` already reads `profile.years_experience ?? 0` and `profile.sessions_completed ?? 0`. Just verify the numbers show correctly in production.
 
-9. **Admin students age column — pending backend delta v9** — `admin/students/+page.svelte` Age column still uses IIFE+formula. Once backend ships `age: int | null` on `GET /admin/students`, replace with `user.age != null ? String(user.age) : '—'`. The student profile DOB edit UI is already in place (`students/[id]/+page.svelte`); it just needs backend to return non-null `age` values.
+9. **Admin students age column — one-line fix needed (delta v9 shipped)** — Backend now returns `age: int | null` on `GET /admin/students`. Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`. Student profile DOB edit is already wired up — just verify live.
 
 10. **Courses SSR — verify `access_token` cookie forwarding** — `+page.server.ts` manually forwards the `access_token` cookie header to the API. Live-verify that the SSR fetch actually returns data (not 401). If the backend requires a Bearer token instead of cookie, change header to `Authorization: Bearer ${token}`. Also verify filter changes after SSR load still work (CSR refetch path).
 
@@ -134,6 +140,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **Server-side filter pattern (paginated)** | Admin pages with status filters (teachers, students) pass the filter as a query param to the API (`?status=active`) instead of doing client-side array filtering. `onchange` on the select resets `page = 1` then calls the fetch function. The old `filteredTeachers` / `filteredStudents` `$derived` values were removed — they are incompatible with server-side pagination. |
 | **Flicker-free loading pattern** | All list pages use a two-state loading display: (1) `{#if loading && list.length === 0}` → show skeleton rows or spinner only on first/empty load; (2) `class:opacity-50={loading} class:pointer-events-none={loading}` on the table/grid wrapper → dim existing content during filter/page refreshes. Never unconditionally replace the table with a skeleton on every fetch — that causes visible flicker. Applied to: admin/teachers, admin/students, audit-log, courses. |
 | **Courses SSR initial load pattern** | `src/routes/courses/+page.server.ts` fetches the first page SSR and returns `{ courses, totalPages }`. `+page.svelte` initializes state from `data` (no `onMount` fetch). Filter `<select>` elements use explicit `onchange` handlers (`() => { page = 1; scheduleRefetch(); }`) instead of a reactive `$effect` watching filter vars — `$effect` caused double-fetches on mount. Never use `$effect` to trigger side-effects on filter state changes. |
+| **`/reports/new` page pattern** | `src/routes/reports/new/` — teacher-only write-report flow. Has its own `+layout.svelte` (AuthLayout wrapper) because the parent `reports/[studentId]/+layout.svelte` is scoped to that route only. Three-step state machine: `step: 'sessions' \| 'students' \| 'form'`. On mount fetches `GET /calendar/me?from=<30d ago>&to=<today>` + `GET /students` in parallel. Session filter: `starts_at <= now` (not `status === 'completed'` — teacher may finish early). Student resolution: private sessions use `session.student_id` directly; group sessions fetch `GET /courses/:course_id` → `enrolled_student_ids[]` resolved against `studentMap`. Submit: `POST /sessions/:id/reports { student_id, scores, notes, understanding_level? }`. Success shows inline banner + "Write another" resets to step 1. |
 
 ---
 
@@ -177,6 +184,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │       ├── courses/
 │       ├── courses/[id]/               ← Course detail page (server load + Svelte page)
 │       ├── calendar/
+│       ├── reports/new/                ← Write report flow (teacher-only, 3-step: session→student→form)
 │       ├── reports/[studentId]/
 │       └── report/share/[token]/   ← Public report share page (no auth)
 ├── Dockerfile                      ← node:22-alpine runtime image (receives pre-built artifacts from CI)
@@ -219,11 +227,12 @@ Key endpoints active as of 2026-05-24:
 - **Course detail (delta v8):** `GET /courses/:id` — any authenticated role, returns `{ id, teacher_id, subject_id, name, subject_status, age_categories, price_by_age_category, description, status, enrolled_student_ids[] }`. Returns 404 if not found.
 - **Admin stats (delta v8):** `GET /admin/stats` returns `{ total_teachers, total_students, active_courses }` — `active_courses` is count of courses with status === "active".
 - Availability: `POST /availability`, `PUT /availability/:slot_id`, `DELETE /availability/:slot_id`
-- **Delta v9 (PENDING — backend not yet updated):**
-  - `GET /teachers/:user_id` adds `years_experience: int` (0 if no teaching_experience), `sessions_completed: int` (count of completed sessions for that teacher)
-  - `GET /admin/students` adds `age: int | null` per student, drops `date_of_birth` from list response
-  - `GET /students/:id` adds `age: int | null`, keeps `date_of_birth` (needed for edit form pre-fill)
-  - **Frontend ready:** `students/[id]/+page.svelte` already reads `profile.age` and has DOB edit UI. Admin list still uses formula — fix that column once backend ships.
+- **Delta v12 (2026-05-30):** `GET /dashboard/teacher` → `recent_reports` items now include `subject_name: string|null`, `student_name: string|null`, `session_date: string|null` (YYYY-MM-DD). Non-breaking additive change. `DashboardReportItem` type added to `src/lib/api.ts`.
+- **Delta v9 (✅ backend shipped):**
+  - `GET /teachers/:user_id` now returns `years_experience: int` and `sessions_completed: int`
+  - `GET /admin/students` now returns `age: int | null` per student
+  - `GET /students/:id` now returns `age: int | null`, keeps `date_of_birth`
+  - **Frontend action needed:** Admin students Age column still uses IIFE formula — replace with `user.age != null ? String(user.age) : '—'` at `admin/students/+page.svelte`. All other frontend is already wired up.
 
 ---
 
@@ -255,8 +264,17 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 0 — First production deploy (VPS setup)**
-Follow `docs/deployment-guide.md` step by step (updated — references `mutawazin` user and existing `github_deploy` SSH keypair):
+**Priority 1 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
+1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
+2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
+3. Click a private session → one student shown; group session → enrolled students shown
+4. Click a student → report form → fill + submit → success banner → "Write another" resets to step 1
+5. Back arrow: form → students → sessions
+6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
+7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
+
+**Priority 2 — First production deploy (VPS setup)**
+Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
 1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
 2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
 3. Confirm existing SSH key: `ls ~/.ssh/github_deploy.pub` — reuse it (already authorized from backend CI)
@@ -266,66 +284,31 @@ Follow `docs/deployment-guide.md` step by step (updated — references `mutawazi
 7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
 8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
-**Priority 1 — Finish delta v9 (once backend confirms it's done)**
-1. **Teacher profile stats** — log in as a teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0). No frontend code change needed — just verify.
+**Priority 3 — Finish delta v9 (backend now shipped)**
+1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
+2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
+3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-2. **Admin students age column** — open `/admin/students`. Confirm Age column shows a number instead of `—`. Replace the IIFE formula at `admin/students/+page.svelte:179` with `user.age != null ? String(user.age) : '—'`.
+**Priority 4 — Live verify accumulated features**
+1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
+2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
+3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
+4. **Reports page** — teacher view: no attendance filter, card titles are "subject — teacher", score tiles raw number only, date from `created_at`.
+5. **Public share page** — `/report/share/:token`: date and scores render correctly, no attendance badge.
+6. **Admin calendar** — sessions load, teacher filter works, session edit modal saves via `PUT /sessions/:id`.
+7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
+8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-3. **Student DOB edit — live verify** — log in as a student, open own profile. Confirm:
-   - Age badge shows a number (reads `profile.age` from backend)
-   - Pencil button next to age badge appears; click opens date input
-   - Pick a date and save → `PUT /students/me { date_of_birth }` → badge updates
+**Priority 5 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+- `POST /auth/resend-verification` — add resend button to `/verify-email` page
+- `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
+- **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 2 — Live verify sessions 10–12 features**
-1. **Admin dashboard stat** — log in as admin, open `/admin`. Confirm "Active Courses" card shows a non-zero count.
+**Priority 6 — Runtime QA**
+- Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
+- Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
+- Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
+- Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-2. **Navbar avatar** — log in as each role:
-   - Admin: no avatar between lang toggle and Sign out
-   - Teacher: colored circle with name initials (or photo) appears; clicking navigates to `/teachers/:id`
-   - Student: same, links to `/students/:id`
-
-3. **Course detail page** — open `/courses`, click "View Course →" on any card:
-   - Page loads without 404, `teacher_name` shown with "View Profile →" link
-   - Pricing grid shows age categories with Rp-formatted prices
-   - Student enrolled in the course sees green "Enrolled" badge
-   - Teacher/admin sees enrolled count; admin sees "Manage enrollments →" link
-
-4. **Reports page** — log in as a teacher, open a student's reports:
-   - No attendance filter dropdown (removed)
-   - Create/edit modal has no attendance radio section
-   - Scores show correct max values and progress bars
-   - Report rows show formatted date from `created_at`
-
-5. **Public share page** — open a shared report token URL:
-   - Score max values render correctly
-   - Date shows formatted `created_at`
-   - No attendance badge
-
-**Priority 3 — Live verify previous sessions**
-6. **Admin calendar** — log in as admin, open `/admin/calendar`:
-   - Confirm sessions load from `GET /calendar/admin`
-   - Teacher filter dropdown should show "All teachers" / "Semua guru" as default option (fixed session 13)
-   - Select a teacher from the picker — confirm calendar refetches filtered sessions
-   - Click a session pill → edit modal → save via `PUT /sessions/:id`
-   - With teacher filter active: confirm recurring panel loads that teacher's templates
-
-7. **Teacher profile** — log in as a teacher, visit own profile:
-   - Per-section pencil editing (About, University, Experience, Achievements)
-   - SVG icons render correctly in credential section tiles
-   - Chips row: globe icon shows mode, map-pin shows city
-
-8. **Error pages smoke test:**
-   - Navigate to `http://localhost:5173/nonexistent` → 404 blue tone, compass icon, "Go home" + "Browse courses" buttons
-
-**Priority 4 — Follow-up features (frontend only, endpoints already exist)**
-9. **Admin Courses — student enrollment management:** Add enroll/unenroll UI to `/admin/courses`. Endpoints: `POST /courses/:id/enroll { student_id }`, `DELETE /courses/:id/enroll/:student_id`. The page exists; needs a student management panel per course.
-
-10. **Audit log — pagination live verify:** Open `/admin/settings/audit-log`, confirm Prev/Next buttons appear when there is more than one page of results. Confirm dot colors match roles (violet = admin, teal = teacher, amber = student). Confirm resource column shows type only (no UUID). Confirm legend renders between filter and table.
-
-**Priority 5 — Runtime QA**
-10. Test delta v4 features: email check on `/register/teacher` + `/register/student`, username check on admin create modals, Delete actions on all three admin table pages
-11. Test Calendar Add Session form end-to-end (`POST /sessions`, session appears on calendar)
-12. Test Availability CRUD end-to-end (Add/Edit/Delete slots — verify `slot.id` field works)
-
-**Priority 6 — Mobile + Visual QA**
-13. Mobile testing — open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
+**Priority 7 — Mobile + Visual QA**
+- Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
