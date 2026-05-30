@@ -67,3 +67,16 @@ export type PaginatedResponse<T> = {
 	data: T[];
 	pagination: PaginationMeta;
 };
+
+export type DashboardReportItem = {
+	id: string;
+	session_id: string;
+	student_id: string;
+	teacher_id: string;
+	scores: { topic: string; score: number; max_score: number }[];
+	notes: string | null;
+	created_at: string;
+	subject_name: string | null;
+	student_name: string | null;
+	session_date: string | null;
+};

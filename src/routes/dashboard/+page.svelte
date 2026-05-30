@@ -6,6 +6,7 @@
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { api, type PaginatedResponse } from '$lib/api';
+	import { formatDate } from '$lib/utils/date';
 
 	let { data } = $props();
 	const d = $derived(data.dashboardData ?? {});
@@ -131,8 +132,12 @@
 									</svg>
 								</div>
 								<div class="flex-1 min-w-0">
-									<div class="font-medium text-sm truncate">{report.student_id} · {report.session_id}</div>
-									<div class="text-xs text-text2 tabular">{report.created_at}</div>
+									<div class="font-medium text-sm truncate">
+									{report.subject_name ?? 'No subject'} — {report.student_name ?? 'Unknown student'}
+								</div>
+								<div class="text-xs text-text2 tabular">
+									{formatDate(report.session_date ?? report.created_at)}
+								</div>
 								</div>
 								<a href="/reports/{report.student_id}" class="text-xs font-semibold text-primary">{$t('common.view')} →</a>
 							</div>
@@ -151,7 +156,7 @@
 				{#each [
 					{ titleKey: 'dashboard.teacher.createCourse',       descKey: 'dashboard.teacher.createCourseDesc',       href: '/courses',  icon: 'M2 3h20v18H2z M12 3v18' },
 					{ titleKey: 'dashboard.teacher.manageAvailability', descKey: 'dashboard.teacher.manageAvailabilityDesc', href: '/calendar', icon: 'M3 4h18v18H3z M16 2v4M8 2v4M3 10h18' },
-					{ titleKey: 'dashboard.teacher.writeReport',        descKey: 'dashboard.teacher.writeReportDesc',        href: '/dashboard#private-students', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
+					{ titleKey: 'dashboard.teacher.writeReport',        descKey: 'dashboard.teacher.writeReportDesc',        href: '/reports/new', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
 				] as action}
 					<a
 						href={action.href}
