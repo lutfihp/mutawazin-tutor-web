@@ -416,6 +416,17 @@
       "addTopic": "+ Tambah topik",
       "notesLabel": "Catatan",
       "notesPlaceholder": "Catatan guru…"
+    },
+    "new": {
+      "title": "Tulis Laporan",
+      "selectSession": "Pilih sesi yang sudah selesai",
+      "selectStudent": "Pilih siswa",
+      "noCompletedSessions": "Tidak ada sesi selesai dalam 30 hari terakhir.",
+      "noStudents": "Tidak ada siswa ditemukan untuk sesi ini.",
+      "reportFor": "Laporan untuk {name}",
+      "saved": "Laporan berhasil disimpan.",
+      "writeAnother": "Tulis laporan lain",
+      "saveError": "Gagal menyimpan laporan. Silakan coba lagi."
     }
   },
   "profile": {

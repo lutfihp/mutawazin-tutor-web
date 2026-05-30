@@ -416,6 +416,17 @@
       "addTopic": "+ Add topic",
       "notesLabel": "Notes",
       "notesPlaceholder": "Teacher notes…"
+    },
+    "new": {
+      "title": "Write a Report",
+      "selectSession": "Select a completed session",
+      "selectStudent": "Select a student",
+      "noCompletedSessions": "No completed sessions in the last 30 days.",
+      "noStudents": "No students found for this session.",
+      "reportFor": "Report for {name}",
+      "saved": "Report saved successfully.",
+      "writeAnother": "Write another report",
+      "saveError": "Failed to save report. Please try again."
     }
   },
   "profile": {
