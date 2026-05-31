@@ -129,7 +129,7 @@
 		</button>
 	{:else}
 		<!-- Landing CTAs -->
-		<a href="/login" class="hidden nav-collapse:inline-flex items-center px-3 py-1.5 text-sm font-semibold text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">
+		<a href="/login" class="inline-flex items-center px-3 py-1.5 text-sm font-semibold text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">
 			{$t('nav.login')}
 		</a>
 	{/if}
