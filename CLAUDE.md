@@ -23,9 +23,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-05-30 — session 18)
+## Current Status (as of 2026-06-06 — session 19)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 14 pre-existing warnings)
+### Build status: ✅ Passes `npm run check` (0 errors, 16 pre-existing warnings)
 
 ### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–15 commits local only, not yet pushed)
 
@@ -76,6 +76,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Reports page UI polish (session 18) | `src/routes/reports/[studentId]/+page.svelte` — card title now shows `subject_name — teacher_name` (e.g. "Matematika — Ahmad Fauzi") instead of `session_title`. Removed `avgScore()` function and average score text from subtitle — subtitle is date only. Score tiles show raw score number only — no `/ max_score`, no progress bar (max score varies per topic, making comparison misleading). Scores section already conditionally hidden when `scores: []`. | ✅ |
 | Favicon (session 18) | Added `<link rel="icon">` tags to `src/app.html` — SVG primary (`/brand-kit/svg/favicon.svg`) + PNG fallbacks (32×32, 16×16) from existing brand kit. No files copied — links point to existing `static/brand-kit/` assets. | ✅ |
 | Default language ID (session 18) | Changed `DEFAULT_LANG` from `'en'` to `'id'` in `src/lib/i18n.ts`. Bahasa Indonesia is now the default for new visitors. Users with a stored `lang` preference in localStorage/cookie are unaffected. | ✅ |
+| Delta v13 — phone number (session 19) | Optional private `phone_number: string\|null` field added to teacher and student profiles. **Teacher profile:** new Phone Number card after Achievements (same per-section pencil pattern — `editingPhoneNumber`/`savingPhoneNumber`/`savePhoneNumber()`/`openSection('phoneNumber')`). Visible to `isOwn \|\| isAdmin`. Added `isAdmin = $derived(data.user?.role === 'admin')` to teacher profile. **Student profile:** inline phone row after DOB (same inline-edit pattern as DOB). Owner always sees field + pencil; admin sees field only when non-null; teacher callers see nothing (API returns null). Cross-cancel with DOB edit. **Types:** `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`. **i18n:** `profile.phoneNumber` + `profile.phoneNumberPlaceholder` added to `en.json` + `id.json`. 4 commits on `main`, not yet pushed. | ✅ (code done; live verify pending) |
 
 ### What is NOT done yet (known gaps)
 
@@ -98,6 +99,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 9. **Admin students age column — one-line fix needed (delta v9 shipped)** — Backend now returns `age: int | null` on `GET /admin/students`. Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`. Student profile DOB edit is already wired up — just verify live.
 
 10. **Courses SSR — verify `access_token` cookie forwarding** — `+page.server.ts` manually forwards the `access_token` cookie header to the API. Live-verify that the SSR fetch actually returns data (not 401). If the backend requires a Bearer token instead of cookie, change header to `Authorization: Bearer ${token}`. Also verify filter changes after SSR load still work (CSR refetch path).
+
+11. **Delta v13 phone number — live verify** — Log in as teacher (own profile): Phone Number card appears, pencil opens `<input type="tel">`, save calls `PUT /teachers/me { phone_number }`, value persists. Log in as admin: card visible on any teacher/student profile with no pencil. Log in as another teacher: card NOT visible on peer profiles. Log in as student (own profile): phone row appears, pencil opens inline edit, DOB edit closes phone and vice versa. Push the 4 delta v13 commits to GitHub remote: `git push origin main`.
 
 ---
 
@@ -228,6 +231,7 @@ Key endpoints active as of 2026-05-24:
 - **Admin stats (delta v8):** `GET /admin/stats` returns `{ total_teachers, total_students, active_courses }` — `active_courses` is count of courses with status === "active".
 - Availability: `POST /availability`, `PUT /availability/:slot_id`, `DELETE /availability/:slot_id`
 - **Delta v12 (2026-05-30):** `GET /dashboard/teacher` → `recent_reports` items now include `subject_name: string|null`, `student_name: string|null`, `session_date: string|null` (YYYY-MM-DD). Non-breaking additive change. `DashboardReportItem` type added to `src/lib/api.ts`.
+- **Delta v13 (2026-06-06):** `GET /teachers/:user_id`, `PUT /teachers/me`, `GET /students/:id`, `GET /students/me`, `PUT /students/me` — all now include `phone_number: string|null`. Field is private: only returned for owner or admin callers; `null` for all others. Non-breaking additive change. Types `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`.
 - **Delta v9 (✅ backend shipped):**
   - `GET /teachers/:user_id` now returns `years_experience: int` and `sessions_completed: int`
   - `GET /admin/students` now returns `age: int | null` per student
@@ -264,7 +268,15 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
+**Priority 1 — Push delta v13 commits + live verify phone number**
+1. `git push origin main` — push the 4 delta v13 commits (phone number feature)
+2. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
+3. Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi"
+4. Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible
+5. Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa
+6. Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null)
+
+**Priority 2 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
 1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
 2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
 3. Click a private session → one student shown; group session → enrolled students shown
@@ -273,7 +285,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
 7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
 
-**Priority 2 — First production deploy (VPS setup)**
+**Priority 3 — First production deploy (VPS setup)**
 Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
 1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
 2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
@@ -284,12 +296,12 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
 8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
-**Priority 3 — Finish delta v9 (backend now shipped)**
+**Priority 4 — Finish delta v9 (backend now shipped)**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
 2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-**Priority 4 — Live verify accumulated features**
+**Priority 5 — Live verify accumulated features**
 1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
 2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
 3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
@@ -299,16 +311,16 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
 8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-**Priority 5 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+**Priority 6 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
 - `POST /auth/resend-verification` — add resend button to `/verify-email` page
 - `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
 - **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 6 — Runtime QA**
+**Priority 7 — Runtime QA**
 - Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
 - Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
 - Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
 - Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-**Priority 7 — Mobile + Visual QA**
+**Priority 8 — Mobile + Visual QA**
 - Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
