@@ -9,6 +9,7 @@
 	let { data } = $props();
 	const profile = $derived(data.profile);
 	const isOwn = $derived(data.user?.id === profile?.user_id);
+	const isAdmin = $derived(data.user?.role === 'admin');
 
 	// ── Bio
 	let editingBio = $state(false);
@@ -38,13 +39,19 @@
 	let cityValue = $state(profile?.city ?? '');
 	let savingTeachingInfo = $state(false);
 
+	// ── Phone Number
+	let editingPhoneNumber = $state(false);
+	let phoneNumberValue = $state(profile?.phone_number ?? '');
+	let savingPhoneNumber = $state(false);
+
 	// ── Mutual exclusion: only one section editable at a time
-	function openSection(name: 'bio' | 'university' | 'experience' | 'achievements' | 'teachingInfo') {
+	function openSection(name: 'bio' | 'university' | 'experience' | 'achievements' | 'teachingInfo' | 'phoneNumber') {
 		editingBio = name === 'bio';
 		editingUniversity = name === 'university';
 		editingExperience = name === 'experience';
 		editingAchievements = name === 'achievements';
 		editingTeachingInfo = name === 'teachingInfo';
+		editingPhoneNumber = name === 'phoneNumber';
 	}
 
 	// ── Mode display
@@ -107,6 +114,16 @@
 			editingTeachingInfo = false;
 		} finally {
 			savingTeachingInfo = false;
+		}
+	}
+
+	async function savePhoneNumber() {
+		savingPhoneNumber = true;
+		try {
+			await api.put('/teachers/me', { phone_number: phoneNumberValue || undefined });
+			editingPhoneNumber = false;
+		} finally {
+			savingPhoneNumber = false;
 		}
 	}
 
