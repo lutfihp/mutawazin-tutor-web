@@ -455,6 +455,45 @@
 			</Card>
 		{/if}
 
+		<!-- ── Phone Number ── -->
+		{#if isOwn || isAdmin}
+			<Card padding="lg" class="mb-4">
+				<div class="flex items-center gap-2.5 mb-3">
+					<span class="w-9 h-9 rounded-lg bg-bgGray text-text2 flex items-center justify-center flex-none" aria-hidden="true">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.06 6.06l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+						</svg>
+					</span>
+					<h2 class="font-semibold text-lg flex-1">{$t('profile.phoneNumber')}</h2>
+					{#if isOwn && !editingPhoneNumber}
+						<button
+							onclick={() => openSection('phoneNumber')}
+							class="text-text2 hover:text-text transition-colors p-1"
+							aria-label={$t('common.edit')}
+						>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+								<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/>
+							</svg>
+						</button>
+					{/if}
+				</div>
+				{#if editingPhoneNumber}
+					<input
+						type="tel"
+						bind:value={phoneNumberValue}
+						placeholder={$t('profile.phoneNumberPlaceholder')}
+						class="w-full bg-white border border-primary rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/15"
+					/>
+					<div class="flex gap-2 mt-2">
+						<Button variant="primary" size="sm" loading={savingPhoneNumber} onclick={savePhoneNumber}>{$t('common.save')}</Button>
+						<Button variant="ghost" size="sm" onclick={() => { editingPhoneNumber = false; phoneNumberValue = profile?.phone_number ?? ''; }}>{$t('common.cancel')}</Button>
+					</div>
+				{:else}
+					<p class="text-sm font-medium text-text">{phoneNumberValue || $t('profile.teacher.notSet')}</p>
+				{/if}
+			</Card>
+		{/if}
+
 		<!-- ── Current Courses ── -->
 		{#if profile.courses?.length || isOwn}
 			<Card padding="lg">
