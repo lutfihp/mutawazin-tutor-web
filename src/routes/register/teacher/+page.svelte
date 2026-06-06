@@ -20,6 +20,7 @@
 	let error = $state('');
 	let emailAvailable = $state<boolean | null>(null);
 	let emailDebounce: ReturnType<typeof setTimeout>;
+	let loadingSubjects = $state(true);
 
 	onMount(async () => {
 		try {
@@ -27,6 +28,8 @@
 			subjectEntries = body.data;
 		} catch {
 			subjectEntries = [];
+		} finally {
+			loadingSubjects = false;
 		}
 	});
 
@@ -152,8 +155,10 @@
 				<!-- Subject multi-select -->
 				<div class="flex flex-col gap-1.5">
 					<label class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
-					{#if subjectEntries.length === 0}
+					{#if loadingSubjects}
 						<p class="text-sm text-text2">{$t('common.loading')}</p>
+					{:else if subjectEntries.length === 0}
+						<p class="text-sm text-text2">No subjects available. Please try refreshing the page.</p>
 					{:else}
 						<div class="border border-border rounded-sm bg-white max-h-48 overflow-y-auto divide-y divide-border">
 							{#each subjectEntries as entry}
