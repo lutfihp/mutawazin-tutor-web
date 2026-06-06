@@ -430,6 +430,8 @@
     }
   },
   "profile": {
+    "phoneNumber": "Phone Number",
+    "phoneNumberPlaceholder": "e.g. 081234567890",
     "teacher": {
       "editView": "Edit view",
       "publicPreview": "Public preview",

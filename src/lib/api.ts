@@ -1,10 +1,15 @@
 const BASE = import.meta.env.VITE_API_URL;
 
 async function request<T>(path: string, options: RequestInit = {}, retry = true): Promise<T> {
+	const method = (options.method ?? 'GET').toUpperCase();
+	const hasBody = method !== 'GET' && method !== 'HEAD' && method !== 'DELETE';
 	const res = await fetch(`${BASE}${path}`, {
 		...options,
 		credentials: 'include',
-		headers: { 'Content-Type': 'application/json', ...options.headers },
+		headers: {
+			...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+			...options.headers,
+		},
 	});
 
 	if (res.status === 401 && retry) {
@@ -79,4 +84,55 @@ export type DashboardReportItem = {
 	subject_name: string | null;
 	student_name: string | null;
 	session_date: string | null;
+};
+
+export type TeacherProfileResponse = {
+	id: string;
+	user_id: string;
+	full_name: string;
+	photo_url: string | null;
+	bio: string;
+	teaching_mode: string;
+	city: string | null;
+	university: string | null;
+	teaching_experience: Array<{ year_from: number; year_to: number | null; subject: string }>;
+	achievements: string[];
+	subjects: string[];
+	credentials: Array<{ title: string; institution: string; year: number | null }>;
+	is_featured: boolean;
+	courses: Array<{ id: string; name: string; age_categories: string[]; description: string | null }>;
+	average_rating: number | null;
+	total_ratings: number;
+	sessions_completed: number;
+	years_experience: number;
+	phone_number: string | null;
+};
+
+export type UpdateTeacherProfileRequest = {
+	full_name?: string;
+	bio?: string;
+	teaching_mode?: string;
+	city?: string;
+	university?: string;
+	teaching_experience?: Array<{ year_from: number; year_to: number | null; subject: string }>;
+	achievements?: string[];
+	phone_number?: string;
+};
+
+export type StudentProfileResponse = {
+	id: string;
+	user_id: string;
+	full_name: string;
+	photo_url: string | null;
+	age: number | null;
+	age_category: string | null;
+	assigned_teacher_id: string | null;
+	enrolled_courses: Array<{ id: string; name: string }>;
+	phone_number: string | null;
+};
+
+export type UpdateStudentProfileRequest = {
+	full_name?: string;
+	date_of_birth?: string;
+	phone_number?: string;
 };

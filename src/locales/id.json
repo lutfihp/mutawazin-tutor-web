@@ -430,6 +430,8 @@
     }
   },
   "profile": {
+    "phoneNumber": "Nomor Telepon",
+    "phoneNumberPlaceholder": "Contoh: 081234567890",
     "teacher": {
       "editView": "Tampilan edit",
       "publicPreview": "Pratinjau publik",
