@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
+	import { api } from '$lib/api';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import Modal from '$lib/components/ui/Modal.svelte';
 
 	let { data } = $props();
 	const course = $derived(data.course);
@@ -10,14 +14,15 @@
 
 	const isStudent = $derived(role === 'student');
 	const isAdmin = $derived(role === 'admin');
+	const isTeacherOwner = $derived(role === 'teacher' && userId === course?.teacher_id);
+	const enrolledCount = $derived(course?.enrolled_student_ids?.length ?? 0);
+	const canDelete = $derived(isTeacherOwner && enrolledCount === 0);
 
 	const isEnrolled = $derived(
 		isStudent &&
 		Array.isArray(course?.enrolled_student_ids) &&
 		course.enrolled_student_ids.includes(userId)
 	);
-
-	const enrolledCount = $derived(course?.enrolled_student_ids?.length ?? 0);
 
 	const AGE_KEYS: Record<string, string> = {
 		'pre-school':    'courses.agePreSchool',
@@ -43,6 +48,30 @@
 
 	function subjectStatusVariant(s: string): 'error' | 'teal' {
 		return s === 'deleted' || s === 'unknown' ? 'error' : 'teal';
+	}
+
+	let deleteOpen = $state(false);
+	let deleteLoading = $state(false);
+	let deleteError = $state('');
+
+	async function handleDelete() {
+		deleteLoading = true;
+		deleteError = '';
+		try {
+			await api.delete(`/courses/${course.id}`);
+			goto('/courses');
+		} catch (err: unknown) {
+			const msg = err instanceof Error ? err.message : '';
+			if (msg.includes('403')) {
+				deleteError = "You don't have permission to delete this course.";
+			} else if (msg.includes('409') || msg.toLowerCase().includes('enrolled')) {
+				deleteError = 'This course has enrolled students and cannot be deleted.';
+			} else {
+				deleteError = msg || 'Failed to delete course.';
+			}
+		} finally {
+			deleteLoading = false;
+		}
 	}
 </script>
 
@@ -129,4 +158,21 @@
 			{$t('courses.detail.manageEnrollments')}
 		</a>
 	{/if}
+
+	{#if canDelete}
+		<div class="pt-2">
+			<Button variant="danger" size="sm" onclick={() => (deleteOpen = true)}>Delete Course</Button>
+		</div>
+	{/if}
 </div>
+
+<Modal open={deleteOpen} title="Delete Course?" onclose={() => (deleteOpen = false)}>
+	{#if deleteError}
+		<div class="mb-3 p-3 bg-errorBg rounded-sm text-sm text-errorText">{deleteError}</div>
+	{/if}
+	<p class="text-sm text-text2">Future scheduled sessions will also be deleted. This action cannot be undone.</p>
+	{#snippet footer()}
+		<Button variant="secondary" size="sm" onclick={() => (deleteOpen = false)}>{$t('common.cancel')}</Button>
+		<Button variant="danger" size="sm" loading={deleteLoading} onclick={handleDelete}>Delete</Button>
+	{/snippet}
+</Modal>
