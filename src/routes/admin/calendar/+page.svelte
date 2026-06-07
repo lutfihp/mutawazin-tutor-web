@@ -100,6 +100,7 @@
 	let sessionActionLoading = $state(false);
 	let sessionActionError = $state('');
 	let cancelConfirming = $state(false);
+	let deleteConfirming = $state(false);
 
 	function openSession(session: any) {
 		selectedSession = session;
@@ -113,6 +114,7 @@
 		eError = '';
 		sessionActionError = '';
 		cancelConfirming = false;
+		deleteConfirming = false;
 		editOpen = true;
 	}
 
@@ -157,6 +159,22 @@
 		} finally {
 			sessionActionLoading = false;
 			cancelConfirming = false;
+		}
+	}
+
+	async function deleteSession() {
+		if (!selectedSession) return;
+		sessionActionLoading = true;
+		sessionActionError = '';
+		try {
+			await api.delete(`/sessions/${selectedSession.id}`);
+			sessions = sessions.filter((s) => s.id !== selectedSession!.id);
+			editOpen = false;
+		} catch (e: any) {
+			sessionActionError = e?.message ?? 'Failed to delete session.';
+		} finally {
+			sessionActionLoading = false;
+			deleteConfirming = false;
 		}
 	}
 
@@ -551,14 +569,19 @@
 				<p class="text-xs text-error mr-auto">{sessionActionError}</p>
 			{/if}
 			{#if cancelConfirming}
-				<span class="text-sm text-text2 mr-auto">Are you sure?</span>
+				<span class="text-sm text-text2 mr-auto">Cancel this session?</span>
 				<Button variant="ghost" size="sm" onclick={() => (cancelConfirming = false)}>{$t('common.cancel')}</Button>
 				<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={cancelSession}>Confirm</Button>
+			{:else if deleteConfirming}
+				<span class="text-sm text-text2 mr-auto">Permanently delete?</span>
+				<Button variant="ghost" size="sm" onclick={() => (deleteConfirming = false)}>{$t('common.cancel')}</Button>
+				<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={deleteSession}>Delete</Button>
 			{:else}
 				{#if selectedSession.status === 'scheduled' || selectedSession.status === 'confirmed' || selectedSession.status === 'Confirmed'}
 					<Button variant="danger" size="sm" onclick={() => (cancelConfirming = true)}>{$t('calendar.modal.cancelSession')}</Button>
 					<Button variant="secondary" size="sm" loading={sessionActionLoading} onclick={markCompleted}>{$t('calendar.modal.markCompleted')}</Button>
 				{/if}
+				<Button variant="ghost" size="sm" onclick={() => (deleteConfirming = true)}>Delete</Button>
 				<Button variant="primary" size="sm" loading={eLoading} onclick={saveEdit}>{$t('common.save')}</Button>
 			{/if}
 		{/snippet}
