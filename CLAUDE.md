@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-07 — session 20)
+## Current Status (as of 2026-06-08 — session 21)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 16 pre-existing warnings)
 
@@ -77,6 +77,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Favicon (session 18) | Added `<link rel="icon">` tags to `src/app.html` — SVG primary (`/brand-kit/svg/favicon.svg`) + PNG fallbacks (32×32, 16×16) from existing brand kit. No files copied — links point to existing `static/brand-kit/` assets. | ✅ |
 | Default language ID (session 18) | Changed `DEFAULT_LANG` from `'en'` to `'id'` in `src/lib/i18n.ts`. Bahasa Indonesia is now the default for new visitors. Users with a stored `lang` preference in localStorage/cookie are unaffected. | ✅ |
 | Teacher registration — phone replaces credentials (session 20) | `src/routes/register/teacher/+page.svelte` — credentials collapsible removed entirely; phone number `<input type="tel">` added after Bio. Label uses `profile.phoneNumber` i18n key (no "(optional)" text). Submit payload: `phone_number: phoneNumber \|\| null`. 7 credential i18n keys removed from `en.json` + `id.json`. 3 commits pushed to `origin/main`. Backend delta v14 needed: add `phone_number: str \| None = None` to `TeacherRegisterRequest`. | ✅ (frontend done; backend delta v14 pending) |
+| Session display_title — remove title/student_id (session 21) | All `session.title` references replaced with `session.display_title` across admin calendar, teacher calendar, dashboard, and reports/new page. Teacher calendar recurring modal now always shows course select (no conditional student vs. course). Admin calendar recurring modal: same change. Dashboard subtitle lines (student_count, student_name, teacher_name) removed. Backend: `display_title` is computed async from `course → subject + enrolled student profiles` via `_compute_display_title()`. | ✅ |
+| Price — admin only (session 21) | Teacher calendar: price inputs removed from Add Session modal and Recurring modal entirely. Backend silently ignores price from teacher callers on sessions, recurring templates, and courses (stored as null / {}). Admin can still set price via their own calendar/course pages. | ✅ |
+| Admin delete session — admin calendar (session 21) | Admin calendar edit modal has a "Delete" button with two-step confirm: "Delete" (ghost) → "Permanently delete?" → "Delete" (danger). Calls `DELETE /sessions/:id`. On success: removes session from local state, closes modal. Backend: `DELETE /sessions/{session_id}` admin-only route; 409 if any Report references the session; hard delete + audit logged. | ✅ |
 | Delta v13 — phone number (session 19) | Optional private `phone_number: string\|null` field added to teacher and student profiles. **Teacher profile:** new Phone Number card after Achievements (same per-section pencil pattern — `editingPhoneNumber`/`savingPhoneNumber`/`savePhoneNumber()`/`openSection('phoneNumber')`). Visible to `isOwn \|\| isAdmin`. Added `isAdmin = $derived(data.user?.role === 'admin')` to teacher profile. **Student profile:** inline phone row after DOB (same inline-edit pattern as DOB). Owner always sees field + pencil; admin sees field only when non-null; teacher callers see nothing (API returns null). Cross-cancel with DOB edit. **Types:** `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`. **i18n:** `profile.phoneNumber` + `profile.phoneNumberPlaceholder` added to `en.json` + `id.json`. 4 commits on `main`, not yet pushed. | ✅ (code done; live verify pending) |
 
 ### What is NOT done yet (known gaps)
@@ -234,6 +237,7 @@ Key endpoints active as of 2026-05-24:
 - **Delta v12 (2026-05-30):** `GET /dashboard/teacher` → `recent_reports` items now include `subject_name: string|null`, `student_name: string|null`, `session_date: string|null` (YYYY-MM-DD). Non-breaking additive change. `DashboardReportItem` type added to `src/lib/api.ts`.
 - **Delta v13 (2026-06-06):** `GET /teachers/:user_id`, `PUT /teachers/me`, `GET /students/:id`, `GET /students/me`, `PUT /students/me` — all now include `phone_number: string|null`. Field is private: only returned for owner or admin callers; `null` for all others. Non-breaking additive change. Types `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`.
 - **Delta v14 (pending — 2026-06-07):** `POST /auth/register/teacher` — add `phone_number: str | None = None` to `TeacherRegisterRequest` and save it on the teacher record at creation. Non-breaking additive change. Backend prompt is in `docs/superpowers/plans/2026-06-07-teacher-register-phone-replace-credentials.md` (Task 3).
+- **Delta v15 (2026-06-08):** Sessions now return `display_title: str` (computed from course subject + enrolled student names) instead of `title`. `student_id` removed from session shape. Dashboard `DashboardSessionItem` now has `display_title` (not `title`) and `course_id` (required, not `student_id`). `DELETE /sessions/{session_id}` — new admin-only endpoint; 409 if any Report references the session.
 - **Delta v9 (✅ backend shipped):**
   - `GET /teachers/:user_id` now returns `years_experience: int` and `sessions_completed: int`
   - `GET /admin/students` now returns `age: int | null` per student
@@ -270,20 +274,27 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Backend delta v14 + live verify teacher registration phone number**
+**Priority 1 — Backend delta v14 (teacher registration phone number)**
 1. Paste the backend prompt from `docs/superpowers/plans/2026-06-07-teacher-register-phone-replace-credentials.md` (Task 3) into the backend Claude Code session — adds `phone_number: str | None = None` to `TeacherRegisterRequest`
 2. Open `/register/teacher`: credentials accordion is gone, phone number field appears between Bio and Subjects, no "(optional)" label
 3. Register with a phone number → account created, teacher profile shows the phone number
 4. Register leaving phone number blank → registration succeeds, phone number is null on the record
 
-**Priority 2 — Live verify delta v13 profile phone numbers**
+**Priority 2 — Live verify session 21 changes (display_title + price + admin delete)**
+1. Admin calendar: open a session — "Delete" button appears in footer; click → "Permanently delete?" confirm → session disappears from calendar
+2. Admin calendar: try deleting a session that has a report → should get a 409 error message
+3. Teacher calendar: Add Session modal has no price field; Recurring modal has no price field
+4. Dashboard (teacher): sessions show `display_title` (e.g. "Matematika — Budi") instead of blank or ID
+5. Reports/new: step heading shows `session.display_title` correctly
+
+**Priority 3 — Live verify delta v13 profile phone numbers**
 1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
 2. Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi"
 3. Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible
 4. Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa
 5. Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null)
 
-**Priority 3 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
+**Priority 4 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
 1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
 2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
 3. Click a private session → one student shown; group session → enrolled students shown
@@ -292,7 +303,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
 7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
 
-**Priority 4 — First production deploy (VPS setup)**
+**Priority 5 — First production deploy (VPS setup)**
 Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
 1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
 2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
@@ -303,12 +314,12 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
 8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
-**Priority 5 — Finish delta v9 (backend now shipped)**
+**Priority 6 — Finish delta v9 (backend now shipped)**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
 2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-**Priority 6 — Live verify accumulated features**
+**Priority 7 — Live verify accumulated features**
 1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
 2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
 3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
@@ -318,16 +329,16 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
 8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-**Priority 7 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+**Priority 8 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
 - `POST /auth/resend-verification` — add resend button to `/verify-email` page
 - `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
 - **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 8 — Runtime QA**
+**Priority 9 — Runtime QA**
 - Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
 - Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
 - Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
 - Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-**Priority 9 — Mobile + Visual QA**
+**Priority 10 — Mobile + Visual QA**
 - Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
