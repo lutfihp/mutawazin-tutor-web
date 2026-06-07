@@ -75,8 +75,7 @@
 								</svg>
 							</div>
 							<div class="flex-1 min-w-0">
-								<div class="font-medium text-sm truncate">{session.title}</div>
-								<div class="text-xs text-text2">{session.type === 'group' ? (session.student_count ?? '') + ' students' : session.student_name ?? ''}</div>
+								<div class="font-medium text-sm truncate">{session.display_title}</div>
 							</div>
 							<Badge variant={statusVariant(session.status)} label={session.status} />
 							<span class="text-xs text-text2 bg-bgGray px-2 py-1 rounded-sm whitespace-nowrap tabular">{session.starts_at}</span>
@@ -228,8 +227,7 @@
 								</svg>
 							</div>
 							<div class="flex-1 min-w-0">
-								<div class="font-medium text-sm truncate">{session.title}</div>
-								<div class="text-xs text-text2">{$t('dashboard.student.withTeacher', { values: { name: session.teacher_name ?? '' } })}</div>
+								<div class="font-medium text-sm truncate">{session.display_title}</div>
 							</div>
 							<Badge variant={statusVariant(session.status)} label={session.status} />
 							<span class="text-xs text-text2 bg-bgGray px-2 py-1 rounded-sm whitespace-nowrap tabular">{session.starts_at}</span>

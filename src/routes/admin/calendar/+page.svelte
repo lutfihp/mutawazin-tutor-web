@@ -46,9 +46,9 @@
 		const rec = session.recurring_template_id ? '↻ ' : '';
 		if (!filteredTeacherId) {
 			const firstName = (teacherMap[session.teacher_id] ?? '').split(' ')[0];
-			return `${rec}${firstName ? firstName + ' · ' : ''}${time} ${session.title}`;
+			return `${rec}${firstName ? firstName + ' · ' : ''}${time} ${session.display_title}`;
 		}
-		return `${rec}${time} ${session.title}`;
+		return `${rec}${time} ${session.display_title}`;
 	}
 
 	// ── Data fetching
@@ -88,14 +88,12 @@
 	// ── Session edit modal (admin — PUT /sessions/:id)
 	let selectedSession = $state<any | null>(null);
 	let editOpen = $state(false);
-	let eTitle = $state('');
 	let eDate = $state('');
 	let eStartTime = $state('');
 	let eEndTime = $state('');
 	let eMode = $state<'online' | 'offline'>('online');
 	let ePrice = $state('');
 	let eTeacherId = $state('');
-	let eStudentId = $state('');
 	let eCourseId = $state('');
 	let eLoading = $state(false);
 	let eError = $state('');
@@ -105,14 +103,12 @@
 
 	function openSession(session: any) {
 		selectedSession = session;
-		eTitle = session.title ?? '';
 		eDate = session.starts_at?.slice(0, 10) ?? '';
 		eStartTime = session.starts_at?.slice(11, 16) ?? '';
 		eEndTime = session.ends_at?.slice(11, 16) ?? '';
 		eMode = (session.mode ?? 'online') as 'online' | 'offline';
 		ePrice = session.price != null ? String(session.price) : '';
 		eTeacherId = session.teacher_id ?? '';
-		eStudentId = session.student_id ?? '';
 		eCourseId = session.course_id ?? '';
 		eError = '';
 		sessionActionError = '';
@@ -132,13 +128,11 @@
 				? new Date(`${eDate}T${eEndTime}:00`).toISOString()
 				: undefined;
 			await api.put(`/sessions/${selectedSession.id}`, {
-				title: eTitle || undefined,
 				starts_at,
 				ends_at,
 				mode: eMode,
 				price: ePrice ? Number(ePrice) : undefined,
 				teacher_id: eTeacherId || undefined,
-				student_id: eStudentId || undefined,
 				course_id: eCourseId || undefined,
 			});
 			editOpen = false;
@@ -184,9 +178,7 @@
 	// ── Add session modal (POST /sessions with teacher_id required)
 	let addOpen = $state(false);
 	let sType = $state<'group' | 'private'>('group');
-	let sTitle = $state('');
 	let sCourseId = $state('');
-	let sStudentId = $state('');
 	let sDate = $state('');
 	let sStartTime = $state('');
 	let sEndTime = $state('');
@@ -204,7 +196,7 @@
 	let sFormEl = $state<HTMLFormElement | null>(null);
 
 	function openAddSession() {
-		sType = 'group'; sTitle = ''; sCourseId = ''; sStudentId = '';
+		sType = 'group'; sCourseId = '';
 		sDate = ''; sStartTime = ''; sEndTime = '';
 		sMode = 'online'; sPrice = '';
 		sTeacherId = filteredTeacherId;
@@ -220,13 +212,11 @@
 			const ends_at = new Date(`${sDate}T${sEndTime}:00`).toISOString();
 			await api.post('/sessions', {
 				type: sType,
-				title: sTitle,
 				starts_at,
 				ends_at,
 				mode: sMode,
 				teacher_id: sTeacherId,
-				course_id: sType === 'group' ? sCourseId : undefined,
-				student_id: sType === 'private' ? sStudentId : undefined,
+				course_id: sCourseId,
 				price: sPrice ? Number(sPrice) : undefined,
 			});
 			addOpen = false;
@@ -243,8 +233,6 @@
 	let recurringDeleteLoading = $state<string | null>(null);
 	let rType = $state<'group' | 'private'>('group');
 	let rCourseId = $state('');
-	let rStudentId = $state('');
-	let rTitle = $state('');
 	let rDayOfWeek = $state(0);
 	let rStartTime = $state('');
 	let rDuration = $state(60);
@@ -255,8 +243,8 @@
 
 	function openAddRecurring() {
 		editingTemplate = null;
-		rType = 'group'; rCourseId = ''; rStudentId = '';
-		rTitle = ''; rDayOfWeek = 0; rStartTime = ''; rDuration = 60;
+		rType = 'group'; rCourseId = '';
+		rDayOfWeek = 0; rStartTime = ''; rDuration = 60;
 		rMode = 'online'; rPrice = undefined;
 		recurringOpen = true;
 	}
@@ -265,8 +253,6 @@
 		editingTemplate = template;
 		rType = template.type ?? 'group';
 		rCourseId = template.course_id ?? '';
-		rStudentId = template.student_id ?? '';
-		rTitle = template.title ?? '';
 		rDayOfWeek = template.day_of_week ?? 0;
 		rStartTime = template.start_time ?? '';
 		rDuration = template.duration_minutes ?? 60;
@@ -281,9 +267,7 @@
 		try {
 			const body = {
 				type: rType,
-				course_id: rType === 'group' ? rCourseId : undefined,
-				student_id: rType === 'private' ? rStudentId : undefined,
-				title: rTitle,
+				course_id: rCourseId,
 				day_of_week: rDayOfWeek,
 				start_time: rStartTime,
 				duration_minutes: rDuration,
@@ -419,7 +403,7 @@
 									<button
 										onclick={() => openSession(session)}
 										class="w-full text-left text-[11px] font-medium rounded px-1.5 py-0.5 truncate tabular {pillClass(session.type, session.status)}"
-										title="{teacherMap[session.teacher_id] ?? ''}: {session.title}"
+										title="{teacherMap[session.teacher_id] ?? ''}: {session.display_title}"
 									>
 										{pillLabel(session)}
 									</button>
@@ -463,7 +447,7 @@
 											{($t('calendar.modal.days') as unknown as string[])[tmpl.day_of_week] ?? tmpl.day_of_week}
 											· {tmpl.start_time}
 										</span>
-										<span class="text-text2 ml-1.5">— {tmpl.title}</span>
+										<span class="text-text2 ml-1.5">— {tmpl.display_title}</span>
 									</div>
 									<div class="flex gap-1">
 										<button onclick={() => openEditRecurring(tmpl)} class="text-text2 hover:text-text p-1" aria-label="Edit recurring session">
@@ -504,11 +488,6 @@
 {#if selectedSession}
 	<Modal open={editOpen} title="Edit Session" onclose={() => { editOpen = false; cancelConfirming = false; }}>
 		<div class="flex flex-col gap-4">
-			<div class="flex flex-col gap-1.5">
-				<label for="eTitle" class="text-[13px] font-medium">{$t('calendar.modal.titleLabel')}</label>
-				<input id="eTitle" type="text" bind:value={eTitle}
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15" />
-			</div>
 			<div class="flex flex-col gap-1.5">
 				<label for="eTeacherId" class="text-[13px] font-medium">Teacher</label>
 				<select id="eTeacherId" bind:value={eTeacherId}
@@ -553,29 +532,16 @@
 				<input id="ePrice" type="number" min="0" step="0.01" bind:value={ePrice}
 					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary tabular" />
 			</div>
-			{#if selectedSession.type === 'group'}
-				<div class="flex flex-col gap-1.5">
-					<label for="eCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
-					<select id="eCourseId" bind:value={eCourseId}
-						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
-						<option value="">— {$t('calendar.modal.courseLabel')}</option>
-						{#each adminCourses.filter((c: any) => !eTeacherId || c.teacher_id === eTeacherId) as course}
-							<option value={course.id}>{course.name ?? course.title}</option>
-						{/each}
-					</select>
-				</div>
-			{:else if selectedSession.type === 'private'}
-				<div class="flex flex-col gap-1.5">
-					<label for="eStudentId" class="text-[13px] font-medium">{$t('calendar.modal.studentLabel')}</label>
-					<select id="eStudentId" bind:value={eStudentId}
-						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
-						<option value="">— {$t('calendar.modal.studentLabel')}</option>
-						{#each adminStudents as student}
-							<option value={student.user_id}>{student.full_name}</option>
-						{/each}
-					</select>
-				</div>
-			{/if}
+			<div class="flex flex-col gap-1.5">
+				<label for="eCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
+				<select id="eCourseId" bind:value={eCourseId}
+					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+					<option value="">— {$t('calendar.modal.courseLabel')}</option>
+					{#each adminCourses.filter((c: any) => !eTeacherId || c.teacher_id === eTeacherId) as course}
+						<option value={course.id}>{course.name ?? course.title}</option>
+					{/each}
+				</select>
+			</div>
 			{#if eError}
 				<p class="text-sm text-error">{eError}</p>
 			{/if}
@@ -634,34 +600,15 @@
 			</div>
 		</div>
 		<div class="flex flex-col gap-1.5">
-			<label for="sTitle" class="text-[13px] font-medium">{$t('calendar.modal.titleLabel')}</label>
-			<input id="sTitle" bind:value={sTitle} required
-				placeholder={$t('calendar.modal.titlePlaceholder')}
-				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15" />
+			<label for="sCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
+			<select id="sCourseId" bind:value={sCourseId} required disabled={!sTeacherId}
+				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary disabled:opacity-60">
+				<option value="">{sTeacherId ? '— ' + $t('calendar.modal.courseLabel') : 'Select a teacher first'}</option>
+				{#each filteredCourses as course}
+					<option value={course.id}>{course.name ?? course.title}</option>
+				{/each}
+			</select>
 		</div>
-		{#if sType === 'group'}
-			<div class="flex flex-col gap-1.5">
-				<label for="sCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
-				<select id="sCourseId" bind:value={sCourseId} required disabled={!sTeacherId}
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary disabled:opacity-60">
-					<option value="">{sTeacherId ? '— ' + $t('calendar.modal.courseLabel') : 'Select a teacher first'}</option>
-					{#each filteredCourses as course}
-						<option value={course.id}>{course.name ?? course.title}</option>
-					{/each}
-				</select>
-			</div>
-		{:else}
-			<div class="flex flex-col gap-1.5">
-				<label for="sStudentId" class="text-[13px] font-medium">{$t('calendar.modal.studentLabel')}</label>
-				<select id="sStudentId" bind:value={sStudentId} required
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
-					<option value="">— {$t('calendar.modal.studentLabel')}</option>
-					{#each adminStudents as student}
-						<option value={student.user_id}>{student.full_name}</option>
-					{/each}
-				</select>
-			</div>
-		{/if}
 		<div class="flex flex-col gap-1.5">
 			<label for="sDate" class="text-[13px] font-medium">{$t('calendar.modal.dateLabel')}</label>
 			<input id="sDate" type="date" bind:value={sDate} required
@@ -726,28 +673,15 @@
 				{/each}
 			</div>
 		</div>
-		{#if rType === 'group'}
-			<div class="flex flex-col gap-1.5">
-				<label for="rCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
-				<select id="rCourseId" bind:value={rCourseId} required
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
-					<option value="">— {$t('calendar.modal.courseLabel')}</option>
-					{#each adminCourses.filter((c: any) => !filteredTeacherId || c.teacher_id === filteredTeacherId) as course}
-						<option value={course.id}>{course.name ?? course.title}</option>
-					{/each}
-				</select>
-			</div>
-		{:else}
-			<div class="flex flex-col gap-1.5">
-				<label for="rStudentId" class="text-[13px] font-medium">{$t('calendar.modal.studentLabel')}</label>
-				<input id="rStudentId" type="text" bind:value={rStudentId} required placeholder="Student ID"
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
-			</div>
-		{/if}
 		<div class="flex flex-col gap-1.5">
-			<label for="rTitle" class="text-[13px] font-medium">{$t('calendar.modal.addTitle')}</label>
-			<input id="rTitle" type="text" bind:value={rTitle} required
-				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+			<label for="rCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
+			<select id="rCourseId" bind:value={rCourseId} required
+				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
+				<option value="">— {$t('calendar.modal.courseLabel')}</option>
+				{#each adminCourses.filter((c: any) => !filteredTeacherId || c.teacher_id === filteredTeacherId) as course}
+					<option value={course.id}>{course.name ?? course.title}</option>
+				{/each}
+			</select>
 		</div>
 		<div class="flex flex-col gap-1.5">
 			<label for="rDay" class="text-[13px] font-medium">{$t('calendar.modal.dayLabel')}</label>

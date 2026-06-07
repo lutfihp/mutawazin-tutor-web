@@ -155,7 +155,7 @@
 			{#if step === 'sessions'}
 				{$t('reports.new.title')}
 			{:else if step === 'students'}
-				{selectedSession?.title ?? ''}
+				{selectedSession?.display_title ?? ''}
 			{:else}
 				{$t('reports.new.reportFor', { values: { name: selectedStudent?.name ?? '' } })}
 			{/if}
@@ -192,7 +192,7 @@
 								</svg>
 							</div>
 							<div class="flex-1 min-w-0">
-								<div class="font-medium text-sm truncate">{session.title}</div>
+								<div class="font-medium text-sm truncate">{session.display_title}</div>
 								<div class="text-xs text-text2 tabular">{formatDate(session.starts_at)}</div>
 							</div>
 							<Badge variant={session.type === 'group' ? 'active' : 'teal'} label={session.type} />
