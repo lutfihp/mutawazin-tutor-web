@@ -4,17 +4,15 @@
 	import { api, type PaginatedResponse } from '$lib/api';
 	import Logo from '$lib/components/Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { ChevronDown, Trash2 } from 'lucide-svelte';
 
 	let fullName = $state('');
 	let email = $state('');
 	let password = $state('');
 	let showPassword = $state(false);
 	let bio = $state('');
+	let phoneNumber = $state('');
 	let subjectIds = $state<string[]>([]);
 	let subjectEntries = $state<{ id: string; name: string }[]>([]);
-	let credentialsOpen = $state(false);
-	let credentials = $state([{ title: '', institution: '', year: '' }]);
 	let loading = $state(false);
 	let success = $state(false);
 	let error = $state('');
@@ -33,16 +31,6 @@
 		}
 	});
 
-	function addCredential() {
-		credentials = [...credentials, { title: '', institution: '', year: '' }];
-	}
-
-	function removeCredential(i: number) {
-		if (credentials.length > 1) {
-			credentials = credentials.filter((_, idx) => idx !== i);
-		}
-	}
-
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		if (emailAvailable === false) return;
@@ -54,12 +42,8 @@
 				email,
 				password,
 				bio,
+				phone_number: phoneNumber || null,
 				subject_ids: subjectIds,
-				credentials: credentials.filter((c) => c.title || c.institution || c.year).map((c) => ({
-					title: c.title,
-					institution: c.institution,
-					year: parseInt(c.year) || 0,
-				})),
 			});
 			success = true;
 		} catch (err: unknown) {
@@ -152,6 +136,13 @@
 						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-vertical min-h-[84px]"></textarea>
 				</div>
 
+				<!-- Phone number -->
+				<div class="flex flex-col gap-1.5">
+					<label for="phoneNumber" class="text-[13px] font-medium">{$t('profile.phoneNumber')}</label>
+					<input id="phoneNumber" type="tel" bind:value={phoneNumber} placeholder={$t('profile.phoneNumberPlaceholder')}
+						class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+				</div>
+
 				<!-- Subject multi-select -->
 				<div class="flex flex-col gap-1.5">
 					<label class="text-[13px] font-medium">{$t('auth.registerTeacher.subjects')}</label>
@@ -181,47 +172,6 @@
 							{/each}
 						</div>
 						<p class="text-xs text-text2">{$t('auth.registerTeacher.subjectHelper')}</p>
-					{/if}
-				</div>
-
-				<!-- Collapsible credentials -->
-				<div>
-					<button
-						type="button"
-						onclick={() => (credentialsOpen = !credentialsOpen)}
-						class="flex items-center justify-between w-full py-3 border-y border-border text-sm font-medium"
-						aria-expanded={credentialsOpen}
-						aria-controls="credentials-panel"
-					>
-						<span>{$t('auth.registerTeacher.credentials')}</span>
-						<ChevronDown size={16} class="text-text2 transition-transform duration-200 {credentialsOpen ? 'rotate-180' : ''}" aria-hidden="true" />
-					</button>
-
-					{#if credentialsOpen}
-						<div id="credentials-panel" class="pt-3 flex flex-col gap-2">
-							{#each credentials as cred, i}
-								<div class="grid grid-cols-[2fr_2fr_1fr_auto] gap-2 items-start">
-									<input type="text" bind:value={cred.title} placeholder={$t('auth.registerTeacher.credTitlePlaceholder')}
-										aria-label={$t('auth.registerTeacher.credTitle')}
-										class="w-full bg-white border border-border rounded-sm px-2.5 py-2 text-[13px] placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-									<input type="text" bind:value={cred.institution} placeholder={$t('auth.registerTeacher.credInstitutionPlaceholder')}
-										aria-label={$t('auth.registerTeacher.credInstitution')}
-										class="w-full bg-white border border-border rounded-sm px-2.5 py-2 text-[13px] placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-									<input type="number" bind:value={cred.year} placeholder="2020"
-										aria-label={$t('auth.registerTeacher.credYear')}
-										class="w-full bg-white border border-border rounded-sm px-2.5 py-2 text-[13px] placeholder:text-text3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-									<button type="button" onclick={() => removeCredential(i)} disabled={credentials.length === 1}
-										class="w-[38px] h-[38px] border border-border rounded-sm text-text2 hover:border-error hover:text-error disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-										aria-label={$t('common.removeRow')}>
-										<Trash2 size={14} aria-hidden="true" />
-									</button>
-								</div>
-							{/each}
-							<button type="button" onclick={addCredential}
-								class="text-sm font-semibold text-primary hover:text-primary-dark text-left py-1">
-								{$t('auth.registerTeacher.addCredential')}
-							</button>
-						</div>
 					{/if}
 				</div>
 
