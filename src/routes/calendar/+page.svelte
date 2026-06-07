@@ -736,13 +736,6 @@
 				</div>
 			</div>
 
-			<!-- Price (optional) -->
-			<div class="flex flex-col gap-1.5">
-				<label for="sPrice" class="text-[13px] font-medium">{$t('calendar.modal.priceLabel')}</label>
-				<input id="sPrice" type="number" min="0" step="0.01" bind:value={sPrice}
-					placeholder="0"
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary" />
-			</div>
 		</form>
 		{#snippet footer()}
 			<Button variant="secondary" size="sm" onclick={() => (addOpen = false)}>{$t('common.cancel')}</Button>
@@ -826,12 +819,6 @@
 				</div>
 			</div>
 
-			<!-- Price -->
-			<div class="flex flex-col gap-1.5">
-				<label for="rPrice" class="text-[13px] font-medium">{$t('calendar.modal.priceLabel')}</label>
-				<input id="rPrice" type="number" bind:value={rPrice} min="0" step="0.01"
-					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary tabular" />
-			</div>
 		</form>
 		{#snippet footer()}
 			<Button variant="secondary" size="sm" onclick={() => (recurringOpen = false)}>{$t('common.cancel')}</Button>
