@@ -29,6 +29,7 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
 		throw new Error(err.detail ?? `HTTP ${res.status}`);
 	}
 
+	if (res.status === 204) return undefined as T;
 	return res.json() as Promise<T>;
 }
 
