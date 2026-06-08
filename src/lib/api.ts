@@ -7,7 +7,7 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
 		...options,
 		credentials: 'include',
 		headers: {
-			...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+			...(hasBody && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
 			...options.headers,
 		},
 	});
@@ -44,6 +44,12 @@ export const api = {
 	upload: <T>(path: string, formData: FormData) =>
 		request<T>(path, { method: 'POST', body: formData, headers: {} }),
 };
+
+export function assetUrl(path: string | null | undefined): string | undefined {
+	if (!path) return undefined;
+	if (path.startsWith('http')) return path;
+	return `${BASE}${path}`;
+}
 
 export type AuditLogEntry = {
 	id: string;
