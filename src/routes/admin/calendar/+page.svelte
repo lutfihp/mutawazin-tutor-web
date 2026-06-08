@@ -95,6 +95,7 @@
 	let ePrice = $state('');
 	let eTeacherId = $state('');
 	let eCourseId = $state('');
+	let eStudentIds = $state<string[]>([]);
 	let eLoading = $state(false);
 	let eError = $state('');
 	let sessionActionLoading = $state(false);
@@ -111,6 +112,7 @@
 		ePrice = session.price != null ? String(session.price) : '';
 		eTeacherId = session.teacher_id ?? '';
 		eCourseId = session.course_id ?? '';
+		eStudentIds = session.student_ids ?? [];
 		eError = '';
 		sessionActionError = '';
 		cancelConfirming = false;
@@ -136,6 +138,7 @@
 				price: ePrice ? Number(ePrice) : undefined,
 				teacher_id: eTeacherId || undefined,
 				course_id: eCourseId || undefined,
+				student_ids: eStudentIds,
 			});
 			editOpen = false;
 			await fetchSessions();
@@ -203,6 +206,7 @@
 	let sMode = $state<'online' | 'offline'>('online');
 	let sPrice = $state('');
 	let sTeacherId = $state('');
+	let sStudentIds = $state<string[]>([]);
 	let sLoading = $state(false);
 
 	// Courses filtered by selected teacher for create modal
@@ -218,6 +222,7 @@
 		sDate = ''; sStartTime = ''; sEndTime = '';
 		sMode = 'online'; sPrice = '';
 		sTeacherId = filteredTeacherId;
+		sStudentIds = [];
 		addOpen = true;
 	}
 
@@ -236,6 +241,7 @@
 				teacher_id: sTeacherId,
 				course_id: sCourseId,
 				price: sPrice ? Number(sPrice) : undefined,
+				student_ids: sStudentIds,
 			});
 			addOpen = false;
 			await fetchSessions();
@@ -560,6 +566,24 @@
 					{/each}
 				</select>
 			</div>
+			<div class="flex flex-col gap-1.5">
+				<label for="eStudentIds" class="text-[13px] font-medium">Students</label>
+				<select
+					id="eStudentIds"
+					multiple
+					class="w-full border border-border rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary h-28"
+					onchange={(e) => {
+						eStudentIds = Array.from((e.target as HTMLSelectElement).selectedOptions).map(o => o.value);
+					}}
+				>
+					{#each adminStudents as student}
+						<option value={student.user_id ?? student.id} selected={eStudentIds.includes(student.user_id ?? student.id)}>
+							{student.full_name ?? student.username ?? student.id}
+						</option>
+					{/each}
+				</select>
+				<p class="text-xs text-text2">Hold Ctrl/Cmd to select multiple</p>
+			</div>
 			{#if eError}
 				<p class="text-sm text-error">{eError}</p>
 			{/if}
@@ -631,6 +655,24 @@
 					<option value={course.id}>{course.name ?? course.title}</option>
 				{/each}
 			</select>
+		</div>
+		<div class="flex flex-col gap-1.5">
+			<label for="sStudentIds" class="text-[13px] font-medium">Students</label>
+			<select
+				id="sStudentIds"
+				multiple
+				class="w-full border border-border rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary h-28"
+				onchange={(e) => {
+					sStudentIds = Array.from((e.target as HTMLSelectElement).selectedOptions).map(o => o.value);
+				}}
+			>
+				{#each adminStudents as student}
+					<option value={student.user_id ?? student.id} selected={sStudentIds.includes(student.user_id ?? student.id)}>
+						{student.full_name ?? student.username ?? student.id}
+					</option>
+				{/each}
+			</select>
+			<p class="text-xs text-text2">Hold Ctrl/Cmd to select multiple</p>
 		</div>
 		<div class="flex flex-col gap-1.5">
 			<label for="sDate" class="text-[13px] font-medium">{$t('calendar.modal.dateLabel')}</label>
