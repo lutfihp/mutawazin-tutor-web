@@ -90,9 +90,11 @@
 
 	async function fetchAvailability() {
 		if (!isTeacher) return;
+		const teacherId = data.user?.id;
+		if (!teacherId) return;
 		try {
-			const data = await api.get<any[]>('/availability');
-			availability = Array.isArray(data) ? data : [];
+			const result = await api.get<any[]>(`/availability/${teacherId}`);
+			availability = Array.isArray(result) ? result : [];
 		} catch {
 			availability = [];
 		}
