@@ -425,6 +425,10 @@
   "profile": {
     "phoneNumber": "Nomor Telepon",
     "phoneNumberPlaceholder": "Contoh: 081234567890",
+    "cropPhoto": "Atur foto profil",
+    "dragToReposition": "Geser foto untuk memposisikan",
+    "savePhoto": "Simpan foto",
+    "zoom": "Zoom",
     "teacher": {
       "editView": "Tampilan edit",
       "publicPreview": "Pratinjau publik",

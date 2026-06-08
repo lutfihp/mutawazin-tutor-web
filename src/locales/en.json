@@ -425,6 +425,10 @@
   "profile": {
     "phoneNumber": "Phone Number",
     "phoneNumberPlaceholder": "e.g. 081234567890",
+    "cropPhoto": "Adjust profile photo",
+    "dragToReposition": "Drag to reposition",
+    "savePhoto": "Save photo",
+    "zoom": "Zoom",
     "teacher": {
       "editView": "Edit view",
       "publicPreview": "Public preview",
