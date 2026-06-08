@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
+	import { AGE_KEYS } from '$lib/utils/ageCategories';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -262,6 +263,7 @@
 									cityValue = profile?.city ?? '';
 								}}>{$t('common.cancel')}</Button>
 							</div>
+							<p class="text-xs text-text2 mt-1">{$t('profile.teacher.teachingInfoHelper')}</p>
 						{:else}
 							<div class="flex flex-wrap gap-2 items-center">
 								{#if profile.teaching_mode}
@@ -415,7 +417,7 @@
 								class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary tabular" />
 							<input type="number" bind:value={exp.year_to} placeholder={$t('profile.teacher.experiencePresent')} aria-label="Year to"
 								class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary tabular" />
-							<input type="text" bind:value={exp.subject} placeholder="e.g. Mathematics" aria-label="Subject"
+							<input type="text" bind:value={exp.subject} placeholder={$t('profile.teacher.experienceSubjectPlaceholder')} aria-label="Subject"
 								class="bg-white border border-border rounded-sm px-2 py-2 text-sm focus:outline-none focus:border-primary" />
 							<button type="button" onclick={() => removeExperience(i)} class="px-2 text-text2 hover:text-error" aria-label={$t('common.removeRow')}>×</button>
 						</div>
@@ -545,7 +547,7 @@
 						{#each profile.courses as course}
 							<div class="border border-border rounded-sm p-3">
 								<p class="text-[15px] font-bold text-teal">{course.name}</p>
-								<p class="text-xs text-text2 mt-0.5">{(course.age_categories ?? []).join(' · ')}</p>
+								<p class="text-xs text-text2 mt-0.5">{(course.age_categories ?? []).map((cat: string) => $t(AGE_KEYS[cat] ?? cat)).join(' · ')}</p>
 								{#if course.description}
 									<p class="text-xs text-text2 mt-1.5 leading-relaxed">{course.description}</p>
 								{/if}
