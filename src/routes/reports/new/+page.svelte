@@ -67,16 +67,11 @@
 		sessionStudents = [];
 
 		try {
-			if (session.type === 'private' || !session.course_id) {
-				const sid = session.student_id;
-				sessionStudents = sid
-					? [{ id: sid, name: studentMap[sid] ?? sid.slice(0, 8) }]
-					: [];
-			} else {
-				const course = await api.get<any>(`/courses/${session.course_id}`);
-				const ids: string[] = course.enrolled_student_ids ?? [];
-				sessionStudents = ids.map((id) => ({ id, name: studentMap[id] ?? id.slice(0, 8) }));
-			}
+			const ids: string[] = session.student_ids ?? [];
+			sessionStudents = ids.map((id: string) => ({
+				id,
+				name: studentMap[id] ?? id.slice(0, 8),
+			}));
 		} catch {
 			sessionStudents = [];
 		} finally {
