@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { api, type PaginatedResponse } from '$lib/api';
+	import { AGE_KEYS } from '$lib/utils/ageCategories';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -306,7 +307,7 @@
 						{/if}
 						<div class="flex flex-wrap gap-1.5">
 							{#each (course.age_categories ?? []) as age}
-								<Badge variant="violet" label={age} />
+								<Badge variant="violet" label={$t(AGE_KEYS[age] ?? age)} />
 							{/each}
 						</div>
 						{#if course.enrolled_count !== undefined}
