@@ -6,6 +6,8 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import PhotoCropModal from '$lib/components/ui/PhotoCropModal.svelte';
+	import { assetUrl } from '$lib/api';
 
 	let { data } = $props();
 	const profile = $derived(data.profile);
@@ -49,15 +51,41 @@
 		}
 	}
 
+	let cropSrc = $state<string | null>(null);
+	let uploading = $state(false);
+	let photoUrlOverride = $state<string | null>(null);
+
 	function handlePhotoChange(e: Event) {
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (!file) return;
-		const fd = new FormData();
-		fd.append('file', file);
-		api.upload('/students/me/photo', fd);
+		cropSrc = URL.createObjectURL(file);
+		(e.target as HTMLInputElement).value = '';
+	}
+
+	async function handleCropConfirm(blob: Blob) {
+		uploading = true;
+		cropSrc = null;
+		try {
+			const fd = new FormData();
+			fd.append('file', blob, 'photo.png');
+			const res = await api.upload<{ photo_url: string }>('/students/me/photo', fd);
+			photoUrlOverride = res.photo_url;
+		} catch {
+			// upload failed silently — avatar stays unchanged
+		} finally {
+			uploading = false;
+		}
 	}
 
 </script>
+
+{#if cropSrc}
+	<PhotoCropModal
+		imageSrc={cropSrc}
+		onConfirm={handleCropConfirm}
+		onCancel={() => { cropSrc = null; }}
+	/>
+{/if}
 
 <svelte:head>
 	<title>{profile?.full_name ?? 'Student Profile'} — Mutawazin</title>
@@ -70,17 +98,26 @@
 		<!-- Profile header -->
 		<div class="flex flex-wrap gap-5 items-start mb-8">
 			<div class="relative flex-none">
-				<Avatar name={profile.full_name} id={profile.user_id} size="xxl" src={profile.photo_url} />
+				<Avatar name={profile.full_name} id={profile.user_id} size="xxl" src={assetUrl(photoUrlOverride ?? profile.photo_url)} />
 				{#if isOwn}
 					<label
 						class="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-pill flex items-center justify-center cursor-pointer border-2 border-white hover:bg-primary-dark transition-colors"
+						class:opacity-50={uploading}
+						class:pointer-events-none={uploading}
 						aria-label="Upload photo"
 					>
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-							<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-							<circle cx="12" cy="13" r="4"/>
-						</svg>
-						<input type="file" accept="image/*" class="sr-only" onchange={handlePhotoChange} />
+						{#if uploading}
+							<svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+								<path d="M12 2a10 10 0 0 1 10 10"/>
+							</svg>
+						{:else}
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+								<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+								<circle cx="12" cy="13" r="4"/>
+							</svg>
+						{/if}
+						<input type="file" accept="image/*" class="sr-only" onchange={handlePhotoChange} disabled={uploading} />
 					</label>
 				{/if}
 			</div>
