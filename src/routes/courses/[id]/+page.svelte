@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
+	import { AGE_KEYS } from '$lib/utils/ageCategories';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -23,14 +24,6 @@
 		Array.isArray(course?.enrolled_student_ids) &&
 		course.enrolled_student_ids.includes(userId)
 	);
-
-	const AGE_KEYS: Record<string, string> = {
-		'pre-school':    'courses.agePreSchool',
-		'elementary':    'courses.ageElementary',
-		'middle-school': 'courses.ageMiddleSchool',
-		'high-school':   'courses.ageHighSchool',
-		'general':       'courses.ageGeneral',
-	};
 
 	function formatPrice(amount: number): string {
 		return new Intl.NumberFormat('id-ID', {
