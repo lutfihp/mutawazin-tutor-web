@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-08 — session 23)
+## Current Status (as of 2026-06-08 — session 24)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 16 pre-existing warnings)
 
@@ -83,6 +83,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Photo upload 422 fix + `assetUrl` helper (session 22) | `api.ts` — `request()` was injecting `Content-Type: application/json` for ALL non-GET bodies including FormData, causing 422 on photo upload. Fixed: skip header when `options.body instanceof FormData`. `assetUrl(path)` helper added to `api.ts` — prefixes relative `/uploads/…` paths with `VITE_API_URL`; pass-through for absolute URLs or nullish values. | ✅ |
 | Photo crop modal — teacher + student profiles (session 22) | `PhotoCropModal.svelte` — cropperjs v1.6.2 (v2 has incompatible API — must stay on v1). Circular crop via `.cropper-view-box` + `.cropper-face` `border-radius: 50%` CSS. Drag-to-reposition, zoom slider. Teacher + student `[id]/+page.svelte`: camera button → `URL.createObjectURL` → open modal → confirm → `POST /teachers/me/photo` or `/students/me/photo` → `photoUrlOverride $state` updates avatar in place without reload. 5 commits local; not yet pushed to `origin/main`. | ✅ |
 | Session `student_ids` — admin multi-select + reports/new fix (session 23) | `src/routes/admin/calendar/+page.svelte` — Add Session and Edit Session modals both include a `<select multiple>` student picker; `student_ids: string[]` sent in both `POST /sessions` and `PUT /sessions/:id` payloads. State: `sStudentIds`/`eStudentIds`; `onchange` reads `HTMLSelectElement.selectedOptions` array. `src/routes/reports/new/+page.svelte` — student resolution simplified: reads `session.student_ids` directly for all session types (private and group); course fetch removed. Backend delta v16. | ✅ |
+| 204 No Content fix (session 24) | `src/lib/api.ts` — `request()` now returns `undefined as T` when `res.status === 204`, skipping the `.json()` call. Fixes "Unexpected end of JSON input" crash on course delete and any other endpoint returning 204 with empty body. | ✅ |
+| Availability calendar fixes (session 24) | `src/routes/calendar/+page.svelte` — (1) `fetchAvailability` was calling `GET /availability` with no path param (silently 404ing); fixed to `GET /availability/${teacherId}`. (2) `hasAvailability` was using `!a.specific_date` for weekly slots, which highlighted every day on the calendar; fixed to `a.specific_date ? a.specific_date === key : a.day_of_week === date.getUTCDay()`. Teachers and admins can now see their availability slots highlighted on the calendar. | ✅ |
 | Delta v13 — phone number (session 19) | Optional private `phone_number: string\|null` field added to teacher and student profiles. **Teacher profile:** new Phone Number card after Achievements (same per-section pencil pattern — `editingPhoneNumber`/`savingPhoneNumber`/`savePhoneNumber()`/`openSection('phoneNumber')`). Visible to `isOwn \|\| isAdmin`. Added `isAdmin = $derived(data.user?.role === 'admin')` to teacher profile. **Student profile:** inline phone row after DOB (same inline-edit pattern as DOB). Owner always sees field + pencil; admin sees field only when non-null; teacher callers see nothing (API returns null). Cross-cancel with DOB edit. **Types:** `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`. **i18n:** `profile.phoneNumber` + `profile.phoneNumberPlaceholder` added to `en.json` + `id.json`. 4 commits on `main`, not yet pushed. | ✅ (code done; live verify pending) |
 
 ### What is NOT done yet (known gaps)
@@ -278,30 +280,19 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Push 5 session-22 commits to `origin/main`**
-
-5 commits are local only — not yet pushed:
-1. `fix: FormData upload 422 — skip JSON content-type for multipart requests; add assetUrl helper`
-2. `feat: add i18n keys for photo crop modal (EN + ID)`
-3. `feat: add PhotoCropModal component (cropperjs v1, circular crop, zoom slider)`
-4. `feat: teacher profile — photo crop modal + uploading state + assetUrl avatar`
-5. `feat: student profile — photo crop modal + uploading state + assetUrl avatar`
-
-Run: `git push origin main` from `d:\Codading Repo\mutawazin\mutawazin-tutor-web`.
-
-Then **live-verify photo upload end-to-end:**
-1. Log in as teacher → own profile → click camera icon → pick image → crop modal opens
-2. Drag image to reposition, adjust zoom slider → click "Simpan foto" → avatar updates without page reload
-3. Reload page — avatar persists (it's stored on the server, served from `/uploads/`)
-4. Repeat as student on `/students/:id`
-
-**Priority 2 — Backend delta v14 (teacher registration phone number)**
+**Priority 1 — Backend delta v14 (teacher registration phone number)**
 1. Paste the backend prompt from `docs/superpowers/plans/2026-06-07-teacher-register-phone-replace-credentials.md` (Task 3) into the backend Claude Code session — adds `phone_number: str | None = None` to `TeacherRegisterRequest`
 2. Open `/register/teacher`: credentials accordion is gone, phone number field appears between Bio and Subjects, no "(optional)" label
 3. Register with a phone number → account created, teacher profile shows the phone number
 4. Register leaving phone number blank → registration succeeds, phone number is null on the record
 
-**Priority 3 — Live verify session 21–23 changes (display_title + price + admin delete + student_ids)**
+**Priority 2 — Live-verify photo upload end-to-end (session 22 — all commits pushed)**
+1. Log in as teacher → own profile → click camera icon → pick image → crop modal opens
+2. Drag image to reposition, adjust zoom slider → click "Simpan foto" → avatar updates without page reload
+3. Reload page — avatar persists (stored on server at `/uploads/`)
+4. Repeat as student on `/students/:id`
+
+**Priority 3 — Live verify session 21–24 changes (display_title + price + admin delete + student_ids + availability)**
 1. Admin calendar: open a session — "Delete" button appears in footer; click → "Permanently delete?" confirm → session disappears from calendar
 2. Admin calendar: try deleting a session that has assigned students → should get a 409 error message
 3. Admin calendar: Add Session modal shows a multi-select student list; select one or more → save → session has `student_ids` set
@@ -310,6 +301,7 @@ Then **live-verify photo upload end-to-end:**
 6. Dashboard (teacher): sessions show `display_title` (e.g. "Matematika — Budi") instead of blank or ID
 7. Reports/new: step 2 (student picker) shows students from `session.student_ids` for both private and group sessions — no course fetch
 8. Reports/new: step heading shows `session.display_title` correctly
+9. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates (weekly slots highlight the right weekday only, specific-date slots highlight only that date)
 
 **Priority 4 — Live verify delta v13 profile phone numbers**
 1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
