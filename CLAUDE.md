@@ -280,19 +280,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Backend delta v14 (teacher registration phone number)**
-1. Paste the backend prompt from `docs/superpowers/plans/2026-06-07-teacher-register-phone-replace-credentials.md` (Task 3) into the backend Claude Code session — adds `phone_number: str | None = None` to `TeacherRegisterRequest`
-2. Open `/register/teacher`: credentials accordion is gone, phone number field appears between Bio and Subjects, no "(optional)" label
-3. Register with a phone number → account created, teacher profile shows the phone number
-4. Register leaving phone number blank → registration succeeds, phone number is null on the record
-
-**Priority 2 — Live-verify photo upload end-to-end (session 22 — all commits pushed)**
-1. Log in as teacher → own profile → click camera icon → pick image → crop modal opens
-2. Drag image to reposition, adjust zoom slider → click "Simpan foto" → avatar updates without page reload
-3. Reload page — avatar persists (stored on server at `/uploads/`)
-4. Repeat as student on `/students/:id`
-
-**Priority 3 — Live verify session 21–24 changes (display_title + price + admin delete + student_ids + availability)**
+**Priority 1 — Live verify session 21–24 changes (display_title + price + admin delete + student_ids + availability)**
 1. Admin calendar: open a session — "Delete" button appears in footer; click → "Permanently delete?" confirm → session disappears from calendar
 2. Admin calendar: try deleting a session that has assigned students → should get a 409 error message
 3. Admin calendar: Add Session modal shows a multi-select student list; select one or more → save → session has `student_ids` set
@@ -303,14 +291,14 @@ The FastAPI backend must be running at `http://localhost:8000`.
 8. Reports/new: step heading shows `session.display_title` correctly
 9. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates (weekly slots highlight the right weekday only, specific-date slots highlight only that date)
 
-**Priority 4 — Live verify delta v13 profile phone numbers**
+**Priority 2 — Live verify delta v13 profile phone numbers**
 1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
 2. Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi"
 3. Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible
 4. Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa
 5. Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null)
 
-**Priority 5 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
+**Priority 3 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
 1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
 2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
 3. Click a private session → one student shown; group session → enrolled students shown
@@ -319,7 +307,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
 7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
 
-**Priority 6 — First production deploy (VPS setup)**
+**Priority 4 — First production deploy (VPS setup)**
 Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
 1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
 2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
@@ -330,12 +318,12 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
 8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
-**Priority 7 — Finish delta v9 (backend now shipped)**
+**Priority 5 — Finish delta v9 (backend now shipped)**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
 2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-**Priority 8 — Live verify accumulated features**
+**Priority 6 — Live verify accumulated features**
 1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
 2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
 3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
@@ -345,16 +333,16 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
 8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-**Priority 9 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+**Priority 7 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
 - `POST /auth/resend-verification` — add resend button to `/verify-email` page
 - `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
 - **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 10 — Runtime QA**
+**Priority 8 — Runtime QA**
 - Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
 - Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
 - Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
 - Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-**Priority 11 — Mobile + Visual QA**
+**Priority 9 — Mobile + Visual QA**
 - Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
