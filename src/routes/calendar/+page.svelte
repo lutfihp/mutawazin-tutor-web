@@ -399,14 +399,6 @@
 			>
 				{$t('common.today')}
 			</button>
-			{#if isTeacher}
-				<Button variant="secondary" size="sm" onclick={openAddRecurring}>
-					{$t('calendar.addRecurring')}
-				</Button>
-				<Button variant="primary" size="sm" onclick={() => (addOpen = true)}>
-					{$t('calendar.addSession')}
-				</Button>
-			{/if}
 		</div>
 	</div>
 
@@ -469,44 +461,6 @@
 		<!-- Right panel -->
 		<div class="flex flex-col gap-4">
 			{#if isTeacher}
-				<!-- Recurring templates panel -->
-				<div class="bg-white border border-border rounded-DEFAULT p-4">
-					<div class="flex items-center justify-between mb-3">
-						<h2 class="font-semibold">{$t('calendar.recurringTitle')}</h2>
-						<Button variant="secondary" size="sm" onclick={openAddRecurring}>{$t('calendar.addRecurring')}</Button>
-					</div>
-					{#if recurringTemplates.length === 0}
-						<p class="text-sm text-text2">{$t('calendar.noRecurring')}</p>
-					{:else}
-						<div class="flex flex-col gap-1.5">
-							{#each recurringTemplates as tmpl}
-								<div class="flex items-center justify-between text-sm py-1 border-b border-border last:border-0">
-									<div>
-										<span class="font-medium tabular">
-											{($t('calendar.modal.days') as unknown as string[])[tmpl.day_of_week] ?? tmpl.day_of_week}
-											· {tmpl.start_time}
-										</span>
-										<span class="text-text2 ml-1.5">— {tmpl.display_title}</span>
-									</div>
-									<div class="flex gap-1">
-										<button onclick={() => openEditRecurring(tmpl)}
-											class="text-text2 hover:text-text p-1"
-											aria-label="Edit recurring session">
-											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-										</button>
-										<button onclick={() => deleteRecurringTemplate(tmpl.id)}
-											class="text-text2 hover:text-error p-1"
-											aria-label="Delete recurring session"
-											disabled={recurringDeleteLoading === tmpl.id}>
-											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-										</button>
-									</div>
-								</div>
-							{/each}
-						</div>
-					{/if}
-				</div>
-
 				<div class="bg-white border border-border rounded-DEFAULT p-4">
 					<div class="flex items-center justify-between mb-3">
 						<h2 class="font-semibold">{$t('calendar.myAvailability')}</h2>
@@ -656,14 +610,7 @@
 				{#if sessionActionError}
 					<p class="text-xs text-error mr-auto">{sessionActionError}</p>
 				{/if}
-				{#if cancelConfirming}
-					<span class="text-sm text-text2 mr-auto">Are you sure?</span>
-					<Button variant="ghost" size="sm" onclick={() => (cancelConfirming = false)}>{$t('common.cancel')}</Button>
-					<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={cancelSession}>Confirm</Button>
-				{:else}
-					<Button variant="danger" size="sm" onclick={() => (cancelConfirming = true)}>{$t('calendar.modal.cancelSession')}</Button>
-					<Button variant="primary" size="sm" loading={sessionActionLoading} onclick={markCompleted}>{$t('calendar.modal.markCompleted')}</Button>
-				{/if}
+				<Button variant="primary" size="sm" loading={sessionActionLoading} onclick={markCompleted}>{$t('calendar.modal.markCompleted')}</Button>
 			{:else}
 				<Button variant="secondary" size="sm" onclick={() => (detailOpen = false)}>{$t('common.close')}</Button>
 			{/if}
