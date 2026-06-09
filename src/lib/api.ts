@@ -12,7 +12,7 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
 		},
 	});
 
-	if (res.status === 401 && retry) {
+	if (res.status === 401 && retry && path !== '/auth/login') {
 		const refreshRes = await fetch(`${BASE}/auth/refresh`, {
 			method: 'POST',
 			credentials: 'include',
