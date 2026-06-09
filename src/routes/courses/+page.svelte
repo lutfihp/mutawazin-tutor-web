@@ -11,6 +11,7 @@
 
 	let { data } = $props();
 	const isTeacher = $derived(data.user?.role === 'teacher' || data.user?.role === 'admin');
+	const isAdmin = $derived(data.user?.role === 'admin');
 
 	// Course band gradient classes — static for Tailwind purge
 	const BAND_VARIANTS = [
@@ -206,7 +207,7 @@
 				<p class="text-sm text-text2 mt-0.5">{$t('courses.resultCount', { values: { n: courses.length } })}</p>
 			{/if}
 		</div>
-		{#if isTeacher}
+		{#if isAdmin}
 			<Button variant="primary" onclick={() => { createOpen = true; loadSubjects(); }}>
 				{$t('courses.createNew')}
 			</Button>
