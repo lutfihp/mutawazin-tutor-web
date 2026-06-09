@@ -6,9 +6,11 @@
   let {
     students,
     value = $bindable([]),
+    max,
   }: {
     students: Student[];
     value: string[];
+    max?: number;
   } = $props();
 
   let query = $state('');
@@ -49,14 +51,18 @@
 
 <div class="relative flex flex-col gap-2">
   <div class="relative">
-    <input
-      type="text"
-      bind:value={query}
-      oninput={() => { open = query.length > 0; }}
-      onblur={() => { setTimeout(() => { open = false; }, 150); }}
-      placeholder="Type name to search..."
-      class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-    />
+    {#if max === undefined || value.length < max}
+      <input
+        type="text"
+        bind:value={query}
+        oninput={() => { open = query.length > 0; }}
+        onblur={() => { setTimeout(() => { open = false; }, 150); }}
+        placeholder="Type name to search..."
+        class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+      />
+    {:else}
+      <p class="text-xs text-text2 py-1">Private session — 1 student only</p>
+    {/if}
     {#if open && filtered.length > 0}
       <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-sm shadow-md z-20 max-h-48 overflow-y-auto">
         {#each filtered as student}

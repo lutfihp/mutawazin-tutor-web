@@ -572,6 +572,7 @@
 				<StudentPicker
 					students={adminStudents.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }))}
 					bind:value={eStudentIds}
+					max={selectedSession?.type === 'private' ? 1 : undefined}
 				/>
 			</div>
 			{#if eError}
@@ -627,7 +628,8 @@
 			<div class="flex gap-2" role="radiogroup" aria-label={$t('calendar.modal.typeLabel')}>
 				{#each ([['group', $t('calendar.modal.typeGroup')], ['private', $t('calendar.modal.typePrivate')]] as const) as [val, label]}
 					<label class="flex items-center gap-1.5 cursor-pointer">
-						<input type="radio" name="sType" value={val} bind:group={sType} class="sr-only" />
+						<input type="radio" name="sType" value={val} bind:group={sType} class="sr-only"
+						oninput={() => { if (val === 'private') sStudentIds = sStudentIds.slice(0, 1); }} />
 						<span class="px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors
 						             {sType === val ? 'bg-primary-light text-primary-dark border-primary' : 'border-border text-text2 hover:bg-bgGray'}">
 							{label}
@@ -651,6 +653,7 @@
 			<StudentPicker
 				students={adminStudents.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }))}
 				bind:value={sStudentIds}
+				max={sType === 'private' ? 1 : undefined}
 			/>
 		</div>
 		<div class="flex flex-col gap-1.5">
