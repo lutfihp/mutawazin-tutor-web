@@ -6,6 +6,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import StudentPicker from '$lib/components/ui/StudentPicker.svelte';
 
 	// ── Month navigation
 	const now = new Date();
@@ -567,22 +568,11 @@
 				</select>
 			</div>
 			<div class="flex flex-col gap-1.5">
-				<label for="eStudentIds" class="text-[13px] font-medium">Students</label>
-				<select
-					id="eStudentIds"
-					multiple
-					class="w-full border border-border rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary h-28"
-					onchange={(e) => {
-						eStudentIds = Array.from((e.target as HTMLSelectElement).selectedOptions).map(o => o.value);
-					}}
-				>
-					{#each adminStudents as student}
-						<option value={student.user_id ?? student.id} selected={eStudentIds.includes(student.user_id ?? student.id)}>
-							{student.full_name ?? student.username ?? student.id}
-						</option>
-					{/each}
-				</select>
-				<p class="text-xs text-text2">Hold Ctrl/Cmd to select multiple</p>
+				<label class="text-[13px] font-medium">Students</label>
+				<StudentPicker
+					students={adminStudents.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }))}
+					bind:value={eStudentIds}
+				/>
 			</div>
 			{#if eError}
 				<p class="text-sm text-error">{eError}</p>
@@ -657,22 +647,11 @@
 			</select>
 		</div>
 		<div class="flex flex-col gap-1.5">
-			<label for="sStudentIds" class="text-[13px] font-medium">Students</label>
-			<select
-				id="sStudentIds"
-				multiple
-				class="w-full border border-border rounded-sm px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary h-28"
-				onchange={(e) => {
-					sStudentIds = Array.from((e.target as HTMLSelectElement).selectedOptions).map(o => o.value);
-				}}
-			>
-				{#each adminStudents as student}
-					<option value={student.user_id ?? student.id} selected={sStudentIds.includes(student.user_id ?? student.id)}>
-						{student.full_name ?? student.username ?? student.id}
-					</option>
-				{/each}
-			</select>
-			<p class="text-xs text-text2">Hold Ctrl/Cmd to select multiple</p>
+			<label class="text-[13px] font-medium">Students</label>
+			<StudentPicker
+				students={adminStudents.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }))}
+				bind:value={sStudentIds}
+			/>
 		</div>
 		<div class="flex flex-col gap-1.5">
 			<label for="sDate" class="text-[13px] font-medium">{$t('calendar.modal.dateLabel')}</label>

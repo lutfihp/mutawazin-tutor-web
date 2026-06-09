@@ -75,7 +75,7 @@
 				full_name: newFullName,
 				username: newUsername,
 				password: newPassword,
-				date_of_birth: newDob,
+				...(newDob ? { date_of_birth: newDob } : {}),
 			});
 			createOpen = false;
 			await fetchStudents();
@@ -245,7 +245,7 @@
 		</div>
 		<div class="flex flex-col gap-1.5">
 			<label for="newDob" class="text-[13px] font-medium">{$t('auth.registerStudent.dob')}</label>
-			<input id="newDob" type="date" bind:value={newDob} required
+			<input id="newDob" type="date" bind:value={newDob}
 				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
 			<p class="text-xs text-text2">{$t('auth.registerStudent.dobHelper')}</p>
 		</div>
