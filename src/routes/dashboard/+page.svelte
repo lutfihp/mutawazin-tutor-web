@@ -6,7 +6,7 @@
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { api, type PaginatedResponse } from '$lib/api';
-	import { formatDate } from '$lib/utils/date';
+	import { formatDate, formatSessionWindow } from '$lib/utils/date';
 
 	let { data } = $props();
 	const d = $derived(data.dashboardData ?? {});
@@ -78,7 +78,7 @@
 								<div class="font-medium text-sm truncate">{session.display_title}</div>
 							</div>
 							<Badge variant={statusVariant(session.status)} label={session.status} />
-							<span class="text-xs text-text2 bg-bgGray px-2 py-1 rounded-sm whitespace-nowrap tabular">{session.starts_at}</span>
+							<span class="text-xs text-text2 bg-bgGray px-2 py-1 rounded-sm whitespace-nowrap tabular">{formatSessionWindow(session.starts_at, session.ends_at)}</span>
 							<a href="/calendar" class="text-xs font-semibold text-primary hover:text-primary-dark">{$t('common.view')} →</a>
 						</div>
 					{/each}
@@ -230,7 +230,7 @@
 								<div class="font-medium text-sm truncate">{session.display_title}</div>
 							</div>
 							<Badge variant={statusVariant(session.status)} label={session.status} />
-							<span class="text-xs text-text2 bg-bgGray px-2 py-1 rounded-sm whitespace-nowrap tabular">{session.starts_at}</span>
+							<span class="text-xs text-text2 bg-bgGray px-2 py-1 rounded-sm whitespace-nowrap tabular">{formatSessionWindow(session.starts_at, session.ends_at)}</span>
 						</div>
 					{/each}
 				{:else}
