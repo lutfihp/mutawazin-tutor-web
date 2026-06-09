@@ -38,7 +38,7 @@
 
 **New behaviour:** Always render the section. Two sub-cases:
 
-- **Has featured teachers (1–6):** Render the existing card grid. Grid uses `sm:grid-cols-2 lg:grid-cols-3` — at 1–3 cards the grid simply left-aligns without stretching to fill, which looks fine.
+- **Has featured teachers (1–3):** Render the existing card grid, sliced to the first 3. Grid uses `sm:grid-cols-2 lg:grid-cols-3` — at 1–2 cards the grid simply left-aligns without stretching to fill, which looks fine.
 - **No featured teachers:** Show a centred text empty state: `"Belum ada guru unggulan. Pantau terus!"` / `"No featured teachers yet. Check back soon!"`. Same `min-h` container so the section doesn't collapse.
 
 **No change to data source** — `+page.server.ts` continues fetching `GET /teachers/featured`.
