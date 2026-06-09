@@ -40,7 +40,7 @@
 			{ id: 'profile',   labelKey: 'nav.myProfile',  href: `/teachers/${userId}`,          icon: User },
 			{ id: 'courses',   labelKey: 'nav.myCourses',  href: '/courses',                     icon: BookOpen },
 			{ id: 'calendar',  labelKey: 'nav.calendar',   href: '/calendar',                    icon: Calendar },
-			{ id: 'reports',   labelKey: 'nav.reports',    href: '/dashboard#private-students',  icon: FileText },
+			{ id: 'reports',   labelKey: 'nav.reports',    href: '/reports',  icon: FileText },
 		],
 		student: [
 			{ id: 'dashboard', labelKey: 'nav.dashboard',  href: '/dashboard',          icon: Home },
