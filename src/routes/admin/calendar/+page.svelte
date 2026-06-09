@@ -75,7 +75,7 @@
 	async function fetchRecurringTemplates() {
 		if (!filteredTeacherId) { recurringTemplates = []; return; }
 		try {
-			const body = await api.get<PaginatedResponse<any>>(`/sessions/recurring?teacher_id=${filteredTeacherId}`);
+			const body = await api.get<PaginatedResponse<any>>(`/sessions/recurring?teacher_id=${filteredTeacherId}&is_active=true`);
 			recurringTemplates = body.data;
 		} catch {
 			recurringTemplates = [];
