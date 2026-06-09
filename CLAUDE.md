@@ -13,13 +13,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ## Working with the Backend
 
-**Backend repo:** `d:\Codading Repo\mutawazin-tutor-api` — FastAPI, separate Claude Code session.
+**Backend repo:** `d:\Codading Repo\mutawazin-tutor-api` — FastAPI, separate Claude Code session (or same session when opened from the parent `d:\Codading Repo\mutawazin` folder).
 
-**Rule: Never edit backend files directly from this session.** If something doesn't work and the cause appears to be in the backend:
-1. Stop immediately — do not attempt to debug or fix the backend
-2. Tell the user: *"This looks like a backend issue. Here's a prompt to paste into the backend Claude Code session:"*
-3. Write a short, factual prompt describing only: **what was called**, **what happened**, and **what was expected** — no root cause analysis, no suggested fix. The backend session has full context to debug and fix it.
-4. Wait for the user to confirm the backend is fixed before continuing on the frontend
+**When working from this repo only (mutawazin-tutor-web as root):** Never edit backend files directly. If something requires a backend change, tell the user: *"This looks like a backend issue. Here's a prompt to paste into the backend Claude Code session:"* — then write a short factual prompt (what was called, what happened, what was expected).
+
+**When working from the parent folder (`d:\Codading Repo\mutawazin`):** Both repos are accessible. Fix backend and frontend in the same session without asking the user to switch. See parent `CLAUDE.md` for the cross-repo workflow.
 
 ---
 
