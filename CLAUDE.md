@@ -21,9 +21,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-10 — session 26)
+## Current Status (as of 2026-06-10 — session 27)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 16 pre-existing warnings)
+### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings)
 
 ### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed and up to date
 
@@ -84,13 +84,16 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Admin calendar — recurring session delete scope (session 26) | Edit modal shows two choices when `selectedSession.recurring_template_id` is set: "This session only" (calls `DELETE /sessions/:id`) and "This + all future" (calls `DELETE /sessions/:id?delete_future=true`). Non-recurring sessions keep the original single confirm. Backend delta v17. | ✅ |
 | Landing page — courses-only search (session 26) | Removed Teachers tab from search section. `searchTab`/`teacherResults` state removed, `runSearch()` simplified to courses-only `GET /search/courses`. Tab switcher UI and teacher results branch removed. | ✅ |
 | Landing page — featured teachers always render (session 26) | Section always renders (removed outer `{#if}` hard-hide). Max 3 cards (`data.featuredTeachers.slice(0, 3)`). Added `{:else}` empty state with `$t('landing.teachersEmpty')`. Added `landing.teachersEmpty` i18n key to EN + ID. | ✅ |
-| Teacher profile — public layout fix (session 26) | `src/routes/teachers/[id]/+layout.svelte` always uses public layout (Navbar + `max-w-profile` main, no sidebar) regardless of auth state. `data.user` is still available to `+page.svelte` via root layout data merging — `isOwn` and `isAdmin` derived values still work. | ✅ |
+| Teacher profile — public layout fix (session 26, corrected session 27) | `src/routes/teachers/[id]/+layout.svelte` branches on role: `teacher`/`student` → `<AuthLayout>` (sidebar preserved); `admin` and unauthenticated → public layout (Navbar + `max-w-profile` main, no admin sidebar). `data.user` is still available to `+page.svelte` via root layout data merging — `isOwn` and `isAdmin` derived values still work. | ✅ |
 | Dashboard — session time format (session 26) | `{session.starts_at}` raw ISO replaced with `formatSessionWindow(session.starts_at, session.ends_at)` in both teacher and student upcoming sessions. Output: `"09:05 – 10:00 · Monday, Jun 10, 2026"`. | ✅ |
 | Dashboard — My Students fix (session 26) | Private Students card removed; Recent Reports promoted to full-width (2-col grid wrapper removed). My Students section: heading uses `$t('dashboard.teacher.myStudents')`, empty state uses `noMyStudents` key, added `studentsError` state for API failures. i18n keys `myStudents`/`noMyStudents`/`studentsError` added to EN + ID. | ✅ |
 | Photo crop modal — teacher + student profiles (session 22) | `PhotoCropModal.svelte` — cropperjs v1.6.2 (v2 has incompatible API — must stay on v1). Circular crop via `.cropper-view-box` + `.cropper-face` `border-radius: 50%` CSS. Drag-to-reposition, zoom slider. Teacher + student `[id]/+page.svelte`: camera button → `URL.createObjectURL` → open modal → confirm → `POST /teachers/me/photo` or `/students/me/photo` → `photoUrlOverride $state` updates avatar in place without reload. 5 commits local; not yet pushed to `origin/main`. | ✅ |
 | Session `student_ids` — admin multi-select + reports/new fix (session 23) | `src/routes/admin/calendar/+page.svelte` — Add Session and Edit Session modals both include a `<select multiple>` student picker; `student_ids: string[]` sent in both `POST /sessions` and `PUT /sessions/:id` payloads. State: `sStudentIds`/`eStudentIds`; `onchange` reads `HTMLSelectElement.selectedOptions` array. `src/routes/reports/new/+page.svelte` — student resolution simplified: reads `session.student_ids` directly for all session types (private and group); course fetch removed. Backend delta v16. | ✅ |
 | 204 No Content fix (session 24) | `src/lib/api.ts` — `request()` now returns `undefined as T` when `res.status === 204`, skipping the `.json()` call. Fixes "Unexpected end of JSON input" crash on course delete and any other endpoint returning 204 with empty body. | ✅ |
 | Availability calendar fixes (session 24) | `src/routes/calendar/+page.svelte` — (1) `fetchAvailability` was calling `GET /availability` with no path param (silently 404ing); fixed to `GET /availability/${teacherId}`. (2) `hasAvailability` was using `!a.specific_date` for weekly slots, which highlighted every day on the calendar; fixed to `a.specific_date ? a.specific_date === key : a.day_of_week === date.getUTCDay()`. Teachers and admins can now see their availability slots highlighted on the calendar. | ✅ |
+| Admin calendar — StudentPicker enrollment filter (session 27) | Both Add Session and Edit Session modals now pass only students enrolled in the selected course to `StudentPicker` (derived from `course.enrolled_student_ids` already in `adminCourses` — no extra API call). Changing the course select clears the student selection via `onchange`. Previously passed all platform students, allowing unenrolled students to be added. | ✅ |
+| Teacher dashboard — My Students fix (session 27) | `GET /students` backend fix: was querying `StudentProfile` by `assigned_teacher_id` (field never set → always empty). Now queries via course enrollment: finds teacher's courses → collects `enrolled_student_ids` → returns those profiles. `GET /students/:id` teacher access also fixed from `assigned_teacher_id` check to course enrollment check. Backend: `app/students/service.py`. | ✅ |
+| Teacher profile — sidebar restored for teacher/student (session 27) | Corrects overly-broad session 26 fix. `teachers/[id]/+layout.svelte` now uses `<AuthLayout>` for `teacher`/`student` visitors (sidebar preserved) and public layout for `admin`/unauthenticated (admin sidebar stays off public pages). Previously all authenticated users lost their sidebar on teacher profile pages. | ✅ |
 | Delta v13 — phone number (session 19) | Optional private `phone_number: string\|null` field added to teacher and student profiles. **Teacher profile:** new Phone Number card after Achievements (same per-section pencil pattern — `editingPhoneNumber`/`savingPhoneNumber`/`savePhoneNumber()`/`openSection('phoneNumber')`). Visible to `isOwn \|\| isAdmin`. Added `isAdmin = $derived(data.user?.role === 'admin')` to teacher profile. **Student profile:** inline phone row after DOB (same inline-edit pattern as DOB). Owner always sees field + pencil; admin sees field only when non-null; teacher callers see nothing (API returns null). Cross-cancel with DOB edit. **Types:** `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`. **i18n:** `profile.phoneNumber` + `profile.phoneNumberPlaceholder` added to `en.json` + `id.json`. 4 commits on `main`, not yet pushed. | ✅ (code done; live verify pending) |
 
 ### What is NOT done yet (known gaps)
@@ -136,7 +139,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **5-level age categories** | Values: `"pre-school"`, `"elementary"`, `"middle-school"`, `"high-school"`, `"general"`. Old `"kids"/"teens"/"adults"` are gone. |
 | **pendingApprovalCount store** | `src/lib/stores/adminBadge.ts` — currently unused after admin restructure (sidebar badge removed). Store still exists but is no longer written to. |
 | **Admin sub-layouts are pass-through** | `/admin/teachers`, `/admin/students`, `/admin/subjects` each have `+layout.svelte` files that are simple `{@render children()}` pass-throughs — no `<AuthLayout>` wrapper. The parent `/admin/+layout.svelte` already provides `<AuthLayout>`. Adding `<AuthLayout>` in a child layout causes double-wrapping (two sidebars, double `ml-60` offset). |
-| **Public pages always use public layout** | Pages under `teachers/[id]/` are public — their `+layout.svelte` always renders `<Navbar>` + `max-w-profile` main, never `<AuthLayout>`. `data.user` is still available in `+page.svelte` via root layout data merging (for `isOwn`/`isAdmin` derived values). Do NOT branch on `data.user` to conditionally render `<AuthLayout>` on public pages — it causes the admin sidebar to appear for authenticated visitors. |
+| **Public pages — role-conditional layout** | Pages under `teachers/[id]/` are public but layout branches on `data.user?.role`: `teacher`/`student` → `<AuthLayout>` (sidebar preserved); `admin` and unauthenticated → public layout (Navbar + `max-w-profile` main). Do NOT apply `<AuthLayout>` for admin on public pages — the admin sidebar would appear on a public profile. `data.user` is available in `+page.svelte` via root layout data merging. |
 | **Sidebar userId prop chain** | `userId` flows: sub-layout `data.user?.id` → `<AuthLayout userId>` → `<Sidebar userId>`. Required for My Profile and My Reports hrefs. All authenticated sub-layouts pass it. |
 | **AuthLayout content centering** | `<main>` has `flex-1 sidebar-collapse:ml-60 p-6 lg:p-8`. The `max-w-app mx-auto` is on an inner `<div>` wrapping `{@render children()}`, NOT on `<main>` itself. This centers content within the post-sidebar space on wide viewports. Do not move `max-w-app mx-auto` back to `<main>`. |
 | **DropdownMenu component** | `src/lib/components/ui/DropdownMenu.svelte` — shared three-dot action dropdown. Props: `items: { label, onclick, variant? }[]`. Handles open/close via `onfocusout` on a `tabindex="-1"` wrapper and Escape key. Used on all three admin table pages. |
@@ -289,7 +292,17 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Live verify session 25 + 26 fixes**
+**Priority 1 — Live verify session 27 bug fixes**
+1. Admin calendar: Add Session → select a course → StudentPicker shows ONLY enrolled students (not all platform students)
+2. Admin calendar: change course in Add/Edit modal → student chips clear automatically
+3. Teacher dashboard: "My Students" section shows students enrolled in the teacher's courses (was always empty)
+4. Teacher dashboard: click "Open student" on a My Students row → profile loads (not 403)
+5. Teacher profile: log in as **teacher**, visit own `/teachers/:id` → sidebar visible
+6. Teacher profile: log in as **student**, visit any `/teachers/:id` → sidebar visible
+7. Teacher profile: log in as **admin**, visit `/teachers/:id` → NO sidebar (public layout)
+8. Teacher profile: visit `/teachers/:id` without login → NO sidebar (public layout)
+
+**Priority 2 — Live verify session 25 + 26 fixes**
 1. Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill
 2. Admin calendar: Edit Session for a session with students → StudentPicker shows student chips; remove a student → save → chips update
 3. Admin calendar: private session → StudentPicker limits to 1 student
@@ -298,19 +311,17 @@ The FastAPI backend must be running at `http://localhost:8000`.
 6. Admin calendar: delete a recurring session → "Delete recurring session?" prompt → "This session only" deletes one; "This + all future" cascades
 7. Teacher calendar: session modal "When" field shows `"09:05 – 10:00 · Monday, Jun 9, 2026"` (not raw ISO)
 8. Dashboard (teacher): sessions show `display_title` and formatted time (not raw ISO)
-9. Dashboard (teacher): My Students section loads students from `GET /students`; error state shows if fetch fails
-10. Landing page: search shows courses only (no teacher tab); featured teachers section always renders
-11. Teacher profile: log in as admin, visit `/teachers/:id` → no sidebar (public layout)
-12. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates
+9. Landing page: search shows courses only (no teacher tab); featured teachers section always renders (max 3 cards)
+10. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates
 
-**Priority 2 — Live verify delta v13 profile phone numbers**
+**Priority 3 — Live verify delta v13 profile phone numbers**
 1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
 2. Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi"
 3. Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible
 4. Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa
 5. Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null)
 
-**Priority 3 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
+**Priority 4 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
 1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
 2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
 3. Click a private session → one student shown; group session → enrolled students shown
@@ -319,7 +330,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
 7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
 
-**Priority 4 — First production deploy (VPS setup)**
+**Priority 5 — First production deploy (VPS setup)**
 Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
 1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
 2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
@@ -330,12 +341,12 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
 8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
-**Priority 5 — Finish delta v9 (backend now shipped)**
+**Priority 6 — Finish delta v9 (backend now shipped)**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
 2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-**Priority 6 — Live verify accumulated features**
+**Priority 7 — Live verify accumulated features**
 1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
 2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
 3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
@@ -345,16 +356,16 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
 8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-**Priority 7 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+**Priority 8 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
 - `POST /auth/resend-verification` — add resend button to `/verify-email` page
 - `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
 - **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 8 — Runtime QA**
+**Priority 9 — Runtime QA**
 - Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
 - Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
 - Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
 - Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-**Priority 9 — Mobile + Visual QA**
+**Priority 10 — Mobile + Visual QA**
 - Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
