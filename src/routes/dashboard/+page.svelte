@@ -24,6 +24,7 @@
 
 	let students = $state<any[]>([]);
 	let studentsLoading = $state(true);
+	let studentsError = $state(false);
 
 	onMount(async () => {
 		if (!isTeacher) return;
@@ -31,7 +32,7 @@
 			const body = await api.get<PaginatedResponse<any>>('/students');
 			students = body.data;
 		} catch {
-			students = [];
+			studentsError = true;
 		} finally {
 			studentsLoading = false;
 		}
@@ -88,65 +89,36 @@
 			</div>
 		</Card>
 
-		<!-- Two-col row -->
-		<div class="grid lg:grid-cols-2 gap-6">
-			<!-- Private Students -->
-			<Card padding="none">
-				{#snippet head()}
-					<h2 class="font-semibold">{$t('dashboard.teacher.privateStudents')}</h2>
-				{/snippet}
-				<div class="divide-y divide-border">
-					{#if d.private_students?.length}
-						{#each d.private_students as student}
-							<div class="flex items-center gap-3 px-5 py-3">
-								<Avatar name={student.full_name} id={student.user_id} size="md" />
-								<div class="flex-1 min-w-0">
-									<div class="font-medium text-sm">{student.full_name}</div>
-									{#if student.last_session_at}
-									<div class="text-xs text-text2">{$t('dashboard.teacher.lastSession', { values: { when: student.last_session_at } })}</div>
-								{/if}
-								</div>
-								<Badge variant="violet" label={student.age_category ?? ''} />
-								<a href="/students/{student.user_id}" class="text-xs font-semibold text-primary">{$t('dashboard.teacher.openStudent')}</a>
+		<!-- Recent Reports -->
+		<Card padding="none">
+			{#snippet head()}
+				<h2 class="font-semibold">{$t('dashboard.teacher.recentReports')}</h2>
+			{/snippet}
+			<div class="divide-y divide-border">
+				{#if d.recent_reports?.length}
+					{#each d.recent_reports as report}
+						<div class="flex items-center gap-3 px-5 py-3">
+							<div class="w-8 h-8 rounded-pill bg-primary-light text-primary flex items-center justify-center flex-none">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+									<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+								</svg>
 							</div>
-						{/each}
-					{:else}
-						<p class="px-5 py-6 text-sm text-text2 text-center">{$t('dashboard.teacher.noPrivateStudents')}</p>
-					{/if}
-				</div>
-			</Card>
-
-			<!-- Recent Reports -->
-			<Card padding="none">
-				{#snippet head()}
-					<h2 class="font-semibold">{$t('dashboard.teacher.recentReports')}</h2>
-				{/snippet}
-				<div class="divide-y divide-border">
-					{#if d.recent_reports?.length}
-						{#each d.recent_reports as report}
-							<div class="flex items-center gap-3 px-5 py-3">
-								<div class="w-8 h-8 rounded-pill bg-primary-light text-primary flex items-center justify-center flex-none">
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-										<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-									</svg>
-								</div>
-								<div class="flex-1 min-w-0">
-									<div class="font-medium text-sm truncate">
-									{report.subject_name ?? 'No subject'} — {report.student_name ?? 'Unknown student'}
-								</div>
-								<div class="text-xs text-text2 tabular">
-									{formatDate(report.session_date ?? report.created_at)}
-								</div>
-								</div>
-								<a href="/reports/{report.student_id}" class="text-xs font-semibold text-primary">{$t('common.view')} →</a>
+							<div class="flex-1 min-w-0">
+								<div class="font-medium text-sm truncate">
+								{report.subject_name ?? 'No subject'} — {report.student_name ?? 'Unknown student'}
 							</div>
-						{/each}
-					{:else}
-						<p class="px-5 py-6 text-sm text-text2 text-center">{$t('dashboard.teacher.noRecentReports')}</p>
-					{/if}
-				</div>
-			</Card>
-		</div>
+							<div class="text-xs text-text2 tabular">
+								{formatDate(report.session_date ?? report.created_at)}
+							</div>
+							</div>
+							<a href="/reports/{report.student_id}" class="text-xs font-semibold text-primary">{$t('common.view')} →</a>
+						</div>
+					{/each}
+				{:else}
+					<p class="px-5 py-6 text-sm text-text2 text-center">{$t('dashboard.teacher.noRecentReports')}</p>
+				{/if}
+			</div>
+		</Card>
 
 		<!-- Quick Actions -->
 		<div>
@@ -176,14 +148,16 @@
 		<!-- My Students roster -->
 		<Card padding="none">
 			{#snippet head()}
-				<h2 class="font-semibold">My Students</h2>
+				<h2 class="font-semibold">{$t('dashboard.teacher.myStudents')}</h2>
 			{/snippet}
 			{#if studentsLoading}
 				<div class="flex justify-center py-10" role="status">
 					<div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
 				</div>
+			{:else if studentsError}
+				<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.teacher.studentsError')}</p>
 			{:else if students.length === 0}
-				<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.teacher.noPrivateStudents')}</p>
+				<p class="px-5 py-8 text-sm text-text2 text-center">{$t('dashboard.teacher.noMyStudents')}</p>
 			{:else}
 				<div class="divide-y divide-border">
 					{#each students as student}
