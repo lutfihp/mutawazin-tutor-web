@@ -113,7 +113,7 @@
 		ePrice = session.price != null ? String(session.price) : '';
 		eTeacherId = session.teacher_id ?? '';
 		eCourseId = session.course_id ?? '';
-		eStudentIds = session.student_ids ?? [];
+		eStudentIds = [...(session.student_ids ?? [])];
 		eError = '';
 		sessionActionError = '';
 		cancelConfirming = false;
