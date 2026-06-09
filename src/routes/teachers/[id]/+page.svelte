@@ -495,7 +495,7 @@
 		{/if}
 
 		<!-- ── Phone Number ── -->
-		{#if isOwn || isAdmin}
+		{#if data.user && (isOwn || isAdmin)}
 			<Card padding="lg" class="mb-4">
 				<div class="flex items-center gap-2.5 mb-3">
 					<span class="w-9 h-9 rounded-lg bg-bgGray text-text2 flex items-center justify-center flex-none" aria-hidden="true">
