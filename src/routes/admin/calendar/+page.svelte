@@ -166,13 +166,20 @@
 		}
 	}
 
-	async function deleteSession() {
+	async function deleteSession(future = false) {
 		if (!selectedSession) return;
 		sessionActionLoading = true;
 		sessionActionError = '';
 		try {
-			await api.delete(`/sessions/${selectedSession.id}`);
-			sessions = sessions.filter((s) => s.id !== selectedSession!.id);
+			const url = future
+				? `/sessions/${selectedSession.id}?delete_future=true`
+				: `/sessions/${selectedSession.id}`;
+			await api.delete(url);
+			if (future) {
+				await Promise.all([fetchSessions(), fetchRecurringTemplates()]);
+			} else {
+				sessions = sessions.filter((s) => s.id !== selectedSession!.id);
+			}
 			editOpen = false;
 		} catch (e: any) {
 			sessionActionError = e?.message ?? 'Failed to delete session.';
@@ -588,9 +595,16 @@
 				<Button variant="ghost" size="sm" onclick={() => (cancelConfirming = false)}>{$t('common.cancel')}</Button>
 				<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={cancelSession}>Confirm</Button>
 			{:else if deleteConfirming}
-				<span class="text-sm text-text2 mr-auto">Permanently delete?</span>
-				<Button variant="ghost" size="sm" onclick={() => (deleteConfirming = false)}>{$t('common.cancel')}</Button>
-				<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={deleteSession}>Delete</Button>
+				{#if selectedSession.recurring_template_id}
+					<span class="text-sm text-text2 mr-auto">Delete recurring session?</span>
+					<Button variant="ghost" size="sm" onclick={() => (deleteConfirming = false)}>{$t('common.cancel')}</Button>
+					<Button variant="ghost" size="sm" loading={sessionActionLoading} onclick={() => deleteSession(false)}>This session only</Button>
+					<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={() => deleteSession(true)}>This + all future</Button>
+				{:else}
+					<span class="text-sm text-text2 mr-auto">Permanently delete?</span>
+					<Button variant="ghost" size="sm" onclick={() => (deleteConfirming = false)}>{$t('common.cancel')}</Button>
+					<Button variant="danger" size="sm" loading={sessionActionLoading} onclick={() => deleteSession(false)}>Delete</Button>
+				{/if}
 			{:else}
 				{#if selectedSession.status === 'scheduled' || selectedSession.status === 'confirmed' || selectedSession.status === 'Confirmed'}
 					<Button variant="danger" size="sm" onclick={() => (cancelConfirming = true)}>{$t('calendar.modal.cancelSession')}</Button>

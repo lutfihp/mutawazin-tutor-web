@@ -21,11 +21,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-08 — session 24)
+## Current Status (as of 2026-06-09 — session 25)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 16 pre-existing warnings)
 
-### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed (sessions 12–15 commits local only, not yet pushed)
+### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed and up to date
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -79,6 +79,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Price — admin only (session 21) | Teacher calendar: price inputs removed from Add Session modal and Recurring modal entirely. Backend silently ignores price from teacher callers on sessions, recurring templates, and courses (stored as null / {}). Admin can still set price via their own calendar/course pages. | ✅ |
 | Admin delete session — admin calendar (session 21) | Admin calendar edit modal has a "Delete" button with two-step confirm: "Delete" (ghost) → "Permanently delete?" → "Delete" (danger). Calls `DELETE /sessions/:id`. On success: removes session from local state, closes modal. Backend: `DELETE /sessions/{session_id}` admin-only route; 409 if any Report references the session; hard delete + audit logged. | ✅ |
 | Photo upload 422 fix + `assetUrl` helper (session 22) | `api.ts` — `request()` was injecting `Content-Type: application/json` for ALL non-GET bodies including FormData, causing 422 on photo upload. Fixed: skip header when `options.body instanceof FormData`. `assetUrl(path)` helper added to `api.ts` — prefixes relative `/uploads/…` paths with `VITE_API_URL`; pass-through for absolute URLs or nullish values. | ✅ |
+| Session display fixes (session 25) | `formatSessionWindow(starts_at, ends_at, locale)` added to `date.ts`; teacher calendar session modal "When" field now shows `"09:05 – 10:00 · Monday, Jun 9, 2026"` (locale-aware). `eStudentIds = [...(session.student_ids ?? [])]` spread in admin `openSession` for reactivity. `StudentPicker` gains `max?: number` prop — private sessions auto-limit to 1 student; switching type private truncates excess. All pushed to `origin/main`. | ✅ |
+| Admin calendar student picker fix (session 25) | Root cause was `CalendarSessionItem` schema (backend) missing `student_ids` + `recurring_template_id` — FastAPI silently stripped both from `/calendar/admin` responses. Edit modal now correctly populates `eStudentIds` from the session, showing student chips in `StudentPicker`. Recurring `↻` badge now appears on calendar pills. Backend fix: `app/calendar/schemas.py`. | ✅ |
 | Photo crop modal — teacher + student profiles (session 22) | `PhotoCropModal.svelte` — cropperjs v1.6.2 (v2 has incompatible API — must stay on v1). Circular crop via `.cropper-view-box` + `.cropper-face` `border-radius: 50%` CSS. Drag-to-reposition, zoom slider. Teacher + student `[id]/+page.svelte`: camera button → `URL.createObjectURL` → open modal → confirm → `POST /teachers/me/photo` or `/students/me/photo` → `photoUrlOverride $state` updates avatar in place without reload. 5 commits local; not yet pushed to `origin/main`. | ✅ |
 | Session `student_ids` — admin multi-select + reports/new fix (session 23) | `src/routes/admin/calendar/+page.svelte` — Add Session and Edit Session modals both include a `<select multiple>` student picker; `student_ids: string[]` sent in both `POST /sessions` and `PUT /sessions/:id` payloads. State: `sStudentIds`/`eStudentIds`; `onchange` reads `HTMLSelectElement.selectedOptions` array. `src/routes/reports/new/+page.svelte` — student resolution simplified: reads `session.student_ids` directly for all session types (private and group); course fetch removed. Backend delta v16. | ✅ |
 | 204 No Content fix (session 24) | `src/lib/api.ts` — `request()` now returns `undefined as T` when `res.status === 204`, skipping the `.json()` call. Fixes "Unexpected end of JSON input" crash on course delete and any other endpoint returning 204 with empty body. | ✅ |
@@ -150,6 +152,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | **Server-side filter pattern (paginated)** | Admin pages with status filters (teachers, students) pass the filter as a query param to the API (`?status=active`) instead of doing client-side array filtering. `onchange` on the select resets `page = 1` then calls the fetch function. The old `filteredTeachers` / `filteredStudents` `$derived` values were removed — they are incompatible with server-side pagination. |
 | **Flicker-free loading pattern** | All list pages use a two-state loading display: (1) `{#if loading && list.length === 0}` → show skeleton rows or spinner only on first/empty load; (2) `class:opacity-50={loading} class:pointer-events-none={loading}` on the table/grid wrapper → dim existing content during filter/page refreshes. Never unconditionally replace the table with a skeleton on every fetch — that causes visible flicker. Applied to: admin/teachers, admin/students, audit-log, courses. |
 | **Courses SSR initial load pattern** | `src/routes/courses/+page.server.ts` fetches the first page SSR and returns `{ courses, totalPages }`. `+page.svelte` initializes state from `data` (no `onMount` fetch). Filter `<select>` elements use explicit `onchange` handlers (`() => { page = 1; scheduleRefetch(); }`) instead of a reactive `$effect` watching filter vars — `$effect` caused double-fetches on mount. Never use `$effect` to trigger side-effects on filter state changes. |
+| **StudentPicker component** | `src/lib/components/ui/StudentPicker.svelte` — search-and-chip multi-select for students. Props: `students: {id, full_name, username}[]`, `value: string[] = $bindable([])`, `max?: number`. `filtered` excludes already-selected IDs. `selected` maps IDs to student objects with fallback `{id, full_name: null, username: id}` if not found in the list. `max` hides the search input and shows "Private session — 1 student only" when at limit. Used in admin calendar Add Session and Edit Session modals. Always pass the full `adminStudents` list (only first 20 loaded — fallback renders UUID chips for students on page 2+; acceptable tradeoff). |
 | **`/reports/new` page pattern** | `src/routes/reports/new/` — teacher-only write-report flow. Has its own `+layout.svelte` (AuthLayout wrapper) because the parent `reports/[studentId]/+layout.svelte` is scoped to that route only. Three-step state machine: `step: 'sessions' \| 'students' \| 'form'`. On mount fetches `GET /calendar/me?from=<30d ago>&to=<today>` + `GET /students` in parallel. Session filter: `starts_at <= now` (not `status === 'completed'` — teacher may finish early). Student resolution: all sessions (private and group) use `session.student_ids` directly — resolved against `studentMap` from `GET /students`; no course fetch. Submit: `POST /sessions/:id/reports { student_id, scores, notes, understanding_level? }`. Success shows inline banner + "Write another" resets to step 1. |
 
 ---
@@ -172,7 +175,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │   │   ├── stores/sidebar.ts       ← writable<boolean> sidebarOpen
 │   │   ├── stores/adminBadge.ts    ← writable<number> pendingApprovalCount
 │   │   ├── utils/avatar.ts, date.ts, cn.ts
-│   │   ├── components/ui/          ← Badge, Avatar, Button, Card, Input, Modal, DropdownMenu, Pagination
+│   │   ├── components/ui/          ← Badge, Avatar, Button, Card, Input, Modal, DropdownMenu, Pagination, StudentPicker
 │   │   ├── components/ErrorState.svelte  ← full-page error state (tone variants, snippet props)
 │   │   └── components/layout/      ← Logo, Navbar, Sidebar, AuthLayout
 │   ├── locales/en.json, id.json
@@ -278,16 +281,17 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Live verify session 21–24 changes (display_title + price + admin delete + student_ids + availability)**
-1. Admin calendar: open a session — "Delete" button appears in footer; click → "Permanently delete?" confirm → session disappears from calendar
-2. Admin calendar: try deleting a session that has assigned students → should get a 409 error message
-3. Admin calendar: Add Session modal shows a multi-select student list; select one or more → save → session has `student_ids` set
-4. Admin calendar: Edit Session modal shows current students pre-selected in the multi-select → change selection → save persists
-5. Teacher calendar: Add Session modal has no price field; Recurring modal has no price field
-6. Dashboard (teacher): sessions show `display_title` (e.g. "Matematika — Budi") instead of blank or ID
-7. Reports/new: step 2 (student picker) shows students from `session.student_ids` for both private and group sessions — no course fetch
-8. Reports/new: step heading shows `session.display_title` correctly
-9. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates (weekly slots highlight the right weekday only, specific-date slots highlight only that date)
+**Priority 1 — Live verify session 25 fixes (student picker + display fixes)**
+1. Admin calendar: restart backend server first (schema change needs reload)
+2. Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill
+3. Admin calendar: Edit Session for a session with students → StudentPicker now shows student chips; remove a student → save → chips update
+4. Admin calendar: private session → StudentPicker limits to 1 student (shows "Private session — 1 student only" when filled); switch type group→private in Add modal → extra students truncated
+5. Admin calendar: session with students → Delete → 409 shown; remove student chip → save → Delete succeeds
+6. Admin calendar: recurring sessions show `↻` badge on calendar pills
+7. Teacher calendar: session modal "When" field shows `"09:05 – 10:00 · Monday, Jun 9, 2026"` (not raw ISO)
+8. Admin calendar: try deleting a session with no students → succeeds (no 409)
+9. Dashboard (teacher): sessions show `display_title` (e.g. "Matematika — Budi") instead of blank or ID
+10. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates (weekly slots highlight the right weekday only, specific-date slots highlight only that date)
 
 **Priority 2 — Live verify delta v13 profile phone numbers**
 1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
