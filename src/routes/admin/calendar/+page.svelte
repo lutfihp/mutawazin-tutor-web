@@ -223,6 +223,30 @@
 			? adminCourses.filter((c: any) => c.teacher_id === sTeacherId)
 			: adminCourses
 	);
+
+	// Students enrolled in the currently-selected course (add modal)
+	const sEnrolledStudents = $derived(
+		(() => {
+			if (!sCourseId) return [];
+			const course = adminCourses.find((c: any) => c.id === sCourseId);
+			const enrolledIds = new Set<string>(course?.enrolled_student_ids ?? []);
+			return adminStudents
+				.filter((s: any) => enrolledIds.has(s.user_id ?? s.id))
+				.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }));
+		})()
+	);
+
+	// Students enrolled in the currently-selected course (edit modal)
+	const eEnrolledStudents = $derived(
+		(() => {
+			if (!eCourseId) return [];
+			const course = adminCourses.find((c: any) => c.id === eCourseId);
+			const enrolledIds = new Set<string>(course?.enrolled_student_ids ?? []);
+			return adminStudents
+				.filter((s: any) => enrolledIds.has(s.user_id ?? s.id))
+				.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }));
+		})()
+	);
 	let sFormEl = $state<HTMLFormElement | null>(null);
 
 	function openAddSession() {
@@ -567,6 +591,7 @@
 			<div class="flex flex-col gap-1.5">
 				<label for="eCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
 				<select id="eCourseId" bind:value={eCourseId}
+					onchange={() => { eStudentIds = []; }}
 					class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary">
 					<option value="">— {$t('calendar.modal.courseLabel')}</option>
 					{#each adminCourses.filter((c: any) => !eTeacherId || c.teacher_id === eTeacherId) as course}
@@ -577,7 +602,7 @@
 			<div class="flex flex-col gap-1.5">
 				<label class="text-[13px] font-medium">Students</label>
 				<StudentPicker
-					students={adminStudents.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }))}
+					students={eEnrolledStudents}
 					bind:value={eStudentIds}
 					max={selectedSession?.type === 'private' ? 1 : undefined}
 				/>
@@ -655,6 +680,7 @@
 		<div class="flex flex-col gap-1.5">
 			<label for="sCourseId" class="text-[13px] font-medium">{$t('calendar.modal.courseLabel')}</label>
 			<select id="sCourseId" bind:value={sCourseId} required disabled={!sTeacherId}
+				onchange={() => { sStudentIds = []; }}
 				class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary disabled:opacity-60">
 				<option value="">{sTeacherId ? '— ' + $t('calendar.modal.courseLabel') : 'Select a teacher first'}</option>
 				{#each filteredCourses as course}
@@ -665,7 +691,7 @@
 		<div class="flex flex-col gap-1.5">
 			<label class="text-[13px] font-medium">Students</label>
 			<StudentPicker
-				students={adminStudents.map((s: any) => ({ id: s.user_id ?? s.id, full_name: s.full_name, username: s.username }))}
+				students={sEnrolledStudents}
 				bind:value={sStudentIds}
 				max={sType === 'private' ? 1 : undefined}
 			/>
