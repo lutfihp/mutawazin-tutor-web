@@ -275,7 +275,7 @@
 
 			{#if data.featuredTeachers?.length > 0}
 				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-					{#each data.featuredTeachers as teacher}
+					{#each data.featuredTeachers.slice(0, 3) as teacher}
 						<div class="bg-white border border-border rounded-DEFAULT shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 transition-all duration-150 flex flex-col">
 							<div class="p-5 flex-1">
 								<div class="flex items-center gap-3 mb-3">
@@ -310,6 +310,8 @@
 						</div>
 					{/each}
 				</div>
+			{:else}
+				<p class="text-center text-text2 py-10">{$t('landing.teachersEmpty')}</p>
 			{/if}
 
 			<div class="text-center">
