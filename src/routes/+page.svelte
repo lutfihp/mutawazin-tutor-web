@@ -20,26 +20,18 @@
 	// Public search
 	const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 	let searchQuery = $state('');
-	let searchTab = $state<'courses' | 'teachers'>('courses');
 	let courseResults = $state<any[]>([]);
-	let teacherResults = $state<any[]>([]);
 	let searchLoading = $state(false);
 	let searchDebounce: ReturnType<typeof setTimeout>;
 
 	async function runSearch(q: string) {
 		searchLoading = true;
 		try {
-			const [courses, teachers] = await Promise.all([
-				fetch(`${BASE}/search/courses${q ? `?q=${encodeURIComponent(q)}` : ''}`)
-					.then(r => r.ok ? r.json() : []),
-				fetch(`${BASE}/search/teachers${q ? `?q=${encodeURIComponent(q)}` : ''}`)
-					.then(r => r.ok ? r.json() : []),
-			]);
+			const res = await fetch(`${BASE}/search/courses${q ? `?q=${encodeURIComponent(q)}` : ''}`);
+			const courses = res.ok ? await res.json() : [];
 			courseResults = Array.isArray(courses) ? courses : [];
-			teacherResults = Array.isArray(teachers) ? teachers : [];
 		} catch {
 			courseResults = [];
-			teacherResults = [];
 		} finally {
 			searchLoading = false;
 		}
@@ -178,88 +170,36 @@
 				</button>
 			</div>
 
-			<!-- Tab switcher -->
-			<div class="flex gap-1 bg-bgGray border border-border rounded-sm p-0.5 w-fit mx-auto mb-8">
-				{#each ([['courses', $t('landing.searchTabCourses')], ['teachers', $t('landing.searchTabTeachers')]] as const) as [tab, label]}
-					<button
-						onclick={() => (searchTab = tab)}
-						class="px-4 py-2 text-sm font-medium rounded-sm transition-colors
-						       {searchTab === tab ? 'bg-white text-text shadow-sm' : 'text-text2 hover:text-text'}"
-						aria-pressed={searchTab === tab}
-					>
-						{label}
-					</button>
-				{/each}
-			</div>
-
 			<!-- Results -->
 			{#if searchLoading}
 				<div class="flex justify-center py-10" role="status">
 					<div class="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
 				</div>
-			{:else if searchTab === 'courses'}
-				{#if courseResults.length === 0}
-					<p class="text-center text-text2 py-10">
-						{searchQuery ? $t('landing.searchEmpty', { values: { q: searchQuery } }) : $t('landing.searchDefaultEmpty')}
-					</p>
-				{:else}
-					<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-						{#each courseResults as course}
-							<div class="bg-white border border-border rounded-DEFAULT shadow-sm p-5 flex flex-col gap-3">
-								<div class="flex flex-wrap gap-1.5">
-									<Badge variant="active" label={course.subject} />
-									{#each (course.age_categories ?? []) as age}
-										<Badge variant="violet" label={age} />
+			{:else if courseResults.length === 0}
+				<p class="text-center text-text2 py-10">
+					{searchQuery ? $t('landing.searchEmpty', { values: { q: searchQuery } }) : $t('landing.searchDefaultEmpty')}
+				</p>
+			{:else}
+				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+					{#each courseResults as course}
+						<div class="bg-white border border-border rounded-DEFAULT shadow-sm p-5 flex flex-col gap-3">
+							<div class="flex flex-wrap gap-1.5">
+								<Badge variant="active" label={course.subject} />
+								{#each (course.age_categories ?? []) as age}
+									<Badge variant="violet" label={age} />
+								{/each}
+							</div>
+							<div class="font-semibold text-base">{course.name}</div>
+							{#if course.teachers?.length}
+								<div class="flex -space-x-2">
+									{#each course.teachers.slice(0, 4) as teacher}
+										<Avatar name={teacher.full_name} id={teacher.user_id} size="sm" src={teacher.photo_url} class="border-2 border-white" />
 									{/each}
 								</div>
-								<div class="font-semibold text-base">{course.name}</div>
-								{#if course.teachers?.length}
-									<div class="flex -space-x-2">
-										{#each course.teachers.slice(0, 4) as teacher}
-											<Avatar name={teacher.full_name} id={teacher.user_id} size="sm" src={teacher.photo_url} class="border-2 border-white" />
-										{/each}
-									</div>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
-			{:else}
-				{#if teacherResults.length === 0}
-					<p class="text-center text-text2 py-10">
-						{searchQuery ? $t('landing.searchEmpty', { values: { q: searchQuery } }) : $t('landing.searchDefaultEmpty')}
-					</p>
-				{:else}
-					<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-						{#each teacherResults as teacher}
-							<div class="bg-white border border-border rounded-DEFAULT shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 flex flex-col p-5 gap-3">
-								<div class="flex items-center gap-3">
-									<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={teacher.photo_url} />
-									<div>
-										<div class="font-semibold">{teacher.full_name}</div>
-										<div class="text-xs text-text2 flex items-center gap-2">
-										{$t('landing.searchActiveCourses', { values: { n: teacher.active_course_count ?? 0 } })}
-										{#if teacher.average_rating && (teacher.total_ratings ?? 0) > 0}
-											<span class="text-[#F59E0B]">★</span>
-											<span>{Number(teacher.average_rating).toFixed(1)}</span>
-										{/if}
-									</div>
-									</div>
-								</div>
-								{#if teacher.subjects?.length}
-									<div class="flex flex-wrap gap-1.5">
-										{#each teacher.subjects.slice(0, 3) as subject}
-											<Badge variant="teal" label={subject} />
-										{/each}
-									</div>
-								{/if}
-								<a href="/teachers/{teacher.user_id}" class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
-									{$t('common.viewProfile')}
-								</a>
-							</div>
-						{/each}
-					</div>
-				{/if}
+							{/if}
+						</div>
+					{/each}
+				</div>
 			{/if}
 		</div>
 	</section>
