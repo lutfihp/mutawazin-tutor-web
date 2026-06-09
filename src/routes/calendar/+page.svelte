@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 	import { api, type PaginatedResponse } from '$lib/api';
-	import { calendarGrid, toISODate, formatMonth } from '$lib/utils/date';
+	import { calendarGrid, toISODate, formatMonth, formatSessionWindow } from '$lib/utils/date';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
@@ -595,7 +595,7 @@
 				</div>
 			</div>
 			<div class="grid grid-cols-2 gap-3 text-sm">
-				<div><span class="text-text2">{$t('calendar.modal.when')}</span><br/><span class="font-medium tabular">{selectedSession.starts_at}</span></div>
+				<div><span class="text-text2">{$t('calendar.modal.when')}</span><br/><span class="font-medium tabular">{formatSessionWindow(selectedSession.starts_at, selectedSession.ends_at, $locale ?? 'en')}</span></div>
 				<div><span class="text-text2">{$t('calendar.modal.status')}</span><br/>
 					<Badge variant={selectedSession.status === 'Confirmed' ? 'active' : selectedSession.status === 'Completed' ? 'gray' : 'error'} label={selectedSession.status} />
 				</div>
