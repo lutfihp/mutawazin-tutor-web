@@ -10,7 +10,6 @@
 
 	import { Menu, X } from 'lucide-svelte';
 	import { api } from '$lib/api';
-	import { goto } from '$app/navigation';
 
 	let scrolled = $state(false);
 	let currentLang = $derived($locale === 'id' ? 'id' : 'en');
@@ -34,8 +33,7 @@
 
 	async function logout() {
 		try { await fetch('/api/logout', { method: 'POST' }); } catch {}
-		user.set(null);
-		goto('/', { invalidateAll: true });
+		window.location.replace('/');
 	}
 
 	onMount(async () => {
