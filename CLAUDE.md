@@ -23,7 +23,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ## Current Status (as of 2026-06-10 — session 27)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings)
+### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 28 teacher simplification changes)
 
 ### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — branch `main` pushed and up to date
 
@@ -94,6 +94,10 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Admin calendar — StudentPicker enrollment filter (session 27) | Both Add Session and Edit Session modals now pass only students enrolled in the selected course to `StudentPicker` (derived from `course.enrolled_student_ids` already in `adminCourses` — no extra API call). Changing the course select clears the student selection via `onchange`. Previously passed all platform students, allowing unenrolled students to be added. | ✅ |
 | Teacher dashboard — My Students fix (session 27) | `GET /students` backend fix: was querying `StudentProfile` by `assigned_teacher_id` (field never set → always empty). Now queries via course enrollment: finds teacher's courses → collects `enrolled_student_ids` → returns those profiles. `GET /students/:id` teacher access also fixed from `assigned_teacher_id` check to course enrollment check. Backend: `app/students/service.py`. | ✅ |
 | Teacher profile — sidebar restored for teacher/student (session 27) | Corrects overly-broad session 26 fix. `teachers/[id]/+layout.svelte` now uses `<AuthLayout>` for `teacher`/`student` visitors (sidebar preserved) and public layout for `admin`/unauthenticated (admin sidebar stays off public pages). Previously all authenticated users lost their sidebar on teacher profile pages. | ✅ |
+| Admin calendar — recurring delete reappear fix (session 28) | `fetchRecurringTemplates` was missing `&is_active=true` so soft-deleted templates reappeared after delete. One-line fix in `src/routes/admin/calendar/+page.svelte`. | ✅ |
+| Teacher simplification — courses (session 28) | "Create New" course button (`src/routes/courses/+page.svelte`) gated to admin only (`isAdmin` derived). Teachers no longer see it; auto-create on register still works. | ✅ |
+| Teacher simplification — calendar (session 28) | `src/routes/calendar/+page.svelte`: "Add Session", "Add Recurring", recurring templates panel all removed for teachers. Session modal footer simplified: teachers only see "Mark Completed" (for confirmed sessions); "Cancel Session" removed entirely for teachers. | ✅ |
+| Teacher simplification — reports earnings page (session 28) | New `src/routes/reports/+page.server.ts` (teacher-only guard, admin/student → `/dashboard`) and `src/routes/reports/+page.svelte` (month navigation with Prev/Next, completed sessions table: Tanggal/Mata Pelajaran/Murid/Harga, totals footer: gross → 10% platform fee → "Yang diterima" in teal). Sidebar Reports link updated to `/reports`. Backend: `price` + `recurring_template_id` added to `CalendarSessionItem` and `_session_to_dict`. | ✅ |
 | Delta v13 — phone number (session 19) | Optional private `phone_number: string\|null` field added to teacher and student profiles. **Teacher profile:** new Phone Number card after Achievements (same per-section pencil pattern — `editingPhoneNumber`/`savingPhoneNumber`/`savePhoneNumber()`/`openSection('phoneNumber')`). Visible to `isOwn \|\| isAdmin`. Added `isAdmin = $derived(data.user?.role === 'admin')` to teacher profile. **Student profile:** inline phone row after DOB (same inline-edit pattern as DOB). Owner always sees field + pencil; admin sees field only when non-null; teacher callers see nothing (API returns null). Cross-cancel with DOB edit. **Types:** `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`. **i18n:** `profile.phoneNumber` + `profile.phoneNumberPlaceholder` added to `en.json` + `id.json`. 4 commits on `main`, not yet pushed. | ✅ (code done; live verify pending) |
 
 ### What is NOT done yet (known gaps)
@@ -292,7 +296,19 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Live verify session 27 bug fixes**
+**Priority 1 — Live verify session 28 teacher simplification**
+1. Log in as **teacher** → `/courses` → "Create New" button absent
+2. Log in as **teacher** → `/calendar` → no "Add Session" button, no "Add Recurring" button, no recurring templates panel
+3. Log in as **teacher** → open a confirmed session modal → only "Mark Completed" present (no "Cancel Session")
+4. Log in as **teacher** → sidebar "Laporan" link → navigates to `/reports`
+5. On `/reports` → Prev navigates to past months; Next disabled on current month
+6. On `/reports` → completed sessions appear with Tanggal, Mata Pelajaran, Murid, Harga columns
+7. On `/reports` → totals footer shows bruto, "Biaya platform (10%)" deduction, "Yang diterima" in teal
+8. On `/reports` → empty state shows "Tidak ada sesi selesai bulan ini." for months with no completed sessions
+9. Log in as **admin** → navigate to `/reports` → redirected to `/dashboard`
+10. Log in as **student** → navigate to `/reports` → redirected to `/dashboard`
+
+**Priority 2 — Live verify session 27 bug fixes**
 1. Admin calendar: Add Session → select a course → StudentPicker shows ONLY enrolled students (not all platform students)
 2. Admin calendar: change course in Add/Edit modal → student chips clear automatically
 3. Teacher dashboard: "My Students" section shows students enrolled in the teacher's courses (was always empty)
@@ -302,7 +318,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 7. Teacher profile: log in as **admin**, visit `/teachers/:id` → NO sidebar (public layout)
 8. Teacher profile: visit `/teachers/:id` without login → NO sidebar (public layout)
 
-**Priority 2 — Live verify session 25 + 26 fixes**
+**Priority 3 — Live verify session 25 + 26 fixes**
 1. Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill
 2. Admin calendar: Edit Session for a session with students → StudentPicker shows student chips; remove a student → save → chips update
 3. Admin calendar: private session → StudentPicker limits to 1 student
@@ -314,14 +330,14 @@ The FastAPI backend must be running at `http://localhost:8000`.
 9. Landing page: search shows courses only (no teacher tab); featured teachers section always renders (max 3 cards)
 10. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates
 
-**Priority 3 — Live verify delta v13 profile phone numbers**
+**Priority 4 — Live verify delta v13 profile phone numbers**
 1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
 2. Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi"
 3. Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible
 4. Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa
 5. Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null)
 
-**Priority 4 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
+**Priority 5 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
 1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
 2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
 3. Click a private session → one student shown; group session → enrolled students shown
@@ -330,7 +346,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
 7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
 
-**Priority 5 — First production deploy (VPS setup)**
+**Priority 6 — First production deploy (VPS setup)**
 Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
 1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
 2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
@@ -341,12 +357,12 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
 8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
-**Priority 6 — Finish delta v9 (backend now shipped)**
+**Priority 7 — Finish delta v9 (backend now shipped)**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
 2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-**Priority 7 — Live verify accumulated features**
+**Priority 8 — Live verify accumulated features**
 1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
 2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
 3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
@@ -356,16 +372,16 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
 8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-**Priority 8 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+**Priority 9 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
 - `POST /auth/resend-verification` — add resend button to `/verify-email` page
 - `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
 - **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 9 — Runtime QA**
+**Priority 10 — Runtime QA**
 - Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
 - Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
 - Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
 - Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-**Priority 10 — Mobile + Visual QA**
+**Priority 11 — Mobile + Visual QA**
 - Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
