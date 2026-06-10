@@ -198,7 +198,7 @@
   },
   "dashboard": {
     "teacher": {
-      "welcome": "Good morning, {name} 👋",
+      "welcome": "Hi, {name}",
       "sessionMeta": "Wednesday · You have {count} sessions coming up this week",
       "upcomingSessions": "Upcoming Sessions",
       "noSessions": "No upcoming sessions.",
@@ -218,7 +218,7 @@
       "openStudent": "Open →"
     },
     "student": {
-      "welcome": "Good morning, {name} 👋",
+      "welcome": "Hi, {name}",
       "streakMeta": "{weeks}-week streak 🔥",
       "upcomingSessions": "Upcoming Sessions",
       "noSessions": "No upcoming sessions.",

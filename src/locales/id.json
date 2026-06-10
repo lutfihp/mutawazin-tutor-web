@@ -198,7 +198,7 @@
   },
   "dashboard": {
     "teacher": {
-      "welcome": "Selamat pagi, {name} 👋",
+      "welcome": "Halo, {name}",
       "sessionMeta": "Rabu · Anda memiliki {count} sesi minggu ini",
       "upcomingSessions": "Sesi Mendatang",
       "noSessions": "Tidak ada sesi mendatang.",
@@ -218,7 +218,7 @@
       "openStudent": "Buka →"
     },
     "student": {
-      "welcome": "Selamat pagi, {name} 👋",
+      "welcome": "Halo, {name}",
       "streakMeta": "Streak {weeks} minggu 🔥",
       "upcomingSessions": "Sesi Mendatang",
       "noSessions": "Tidak ada sesi mendatang.",
