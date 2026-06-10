@@ -230,9 +230,9 @@
 									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 3h20v18H2z"/><path d="M12 3v18"/></svg>
 								</div>
 								<div class="flex-1 min-w-0">
-									<div class="font-medium text-sm truncate">{course.title}</div>
+									<div class="font-medium text-sm truncate">{course.name}</div>
 									<div class="text-xs text-text2">
-										{$t('dashboard.student.withTeacher', { values: { name: course.teacher_id } })}
+										{$t('dashboard.student.withTeacher', { values: { name: course.teacher_name ?? course.teacher_id } })}
 										{#if course.next_session} · {$t('dashboard.student.nextSession', { values: { when: course.next_session } })}{/if}
 									</div>
 								</div>
