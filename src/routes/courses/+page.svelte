@@ -203,9 +203,7 @@
 	<div class="flex items-center justify-between mb-5 flex-wrap gap-3">
 		<div>
 			<h1 class="text-2xl font-bold">{$t('courses.title')}</h1>
-			{#if !loading}
 				<p class="text-sm text-text2 mt-0.5">{$t('courses.resultCount', { values: { n: courses.length } })}</p>
-			{/if}
 		</div>
 		{#if isAdmin}
 			<Button variant="primary" onclick={() => { createOpen = true; loadSubjects(); }}>
@@ -281,7 +279,7 @@
 			<p class="text-text2">{$t('courses.noResults')}</p>
 		</div>
 	{:else}
-		<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5" class:opacity-50={loading} class:pointer-events-none={loading}>
+		<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5 transition-opacity duration-200" class:opacity-50={loading} class:pointer-events-none={loading}>
 			{#each courses as course}
 				{@const bandClass = bandVariant(course.id ?? 'default')}
 				<div class="bg-white border border-border rounded-DEFAULT shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 flex flex-col overflow-hidden">
