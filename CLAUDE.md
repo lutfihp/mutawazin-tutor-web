@@ -397,8 +397,8 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
 **Priority 10 — Live verify accumulated features**
-1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
-2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
+1. ✅ **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject. *(verified live 2026-06-10)*
+2. ✅ **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar. *(verified live 2026-06-10)*
 3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
 4. **Reports page** — teacher view: no attendance filter, card titles are "subject — teacher", score tiles raw number only, date from `created_at`.
 5. **Public share page** — `/report/share/:token`: date and scores render correctly, no attendance badge.
