@@ -19,6 +19,7 @@
     "settings": "Settings",
     "subjects": "Subjects",
     "auditLog": "Audit Log",
+    "adminReports": "Payment Reports",
     "logout": "Sign out"
   },
   "auth": {
@@ -375,6 +376,9 @@
     }
   },
   "reports": {
+    "admin": {
+      "selectTeacher": "Select a teacher to view their report"
+    },
     "titleTeacher": "{name}'s Reports",
     "titleStudent": "My Reports",
     "createReport": "+ Create Report",

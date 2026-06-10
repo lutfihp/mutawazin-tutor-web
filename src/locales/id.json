@@ -19,6 +19,7 @@
     "settings": "Pengaturan",
     "subjects": "Mata Pelajaran",
     "auditLog": "Log Audit",
+    "adminReports": "Laporan Pembayaran",
     "logout": "Keluar"
   },
   "auth": {
@@ -375,6 +376,9 @@
     }
   },
   "reports": {
+    "admin": {
+      "selectTeacher": "Pilih guru untuk melihat laporan"
+    },
     "titleTeacher": "Laporan {name}",
     "titleStudent": "Laporan Saya",
     "createReport": "+ Buat Laporan",
