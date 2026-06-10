@@ -231,10 +231,12 @@
 								</div>
 								<div class="flex-1 min-w-0">
 									<div class="font-medium text-sm truncate">{course.name}</div>
-									<div class="text-xs text-text2">
-										{$t('dashboard.student.withTeacher', { values: { name: course.teacher_name ?? course.teacher_id } })}
-										{#if course.next_session} · {$t('dashboard.student.nextSession', { values: { when: course.next_session } })}{/if}
-									</div>
+									{#if course.teacher_name}
+										<div class="text-xs text-text2">
+											{$t('dashboard.student.withTeacher', { values: { name: course.teacher_name } })}
+											{#if course.next_session} · {$t('dashboard.student.nextSession', { values: { when: course.next_session } })}{/if}
+										</div>
+									{/if}
 								</div>
 								<a href="/courses" class="text-xs font-semibold text-primary">{$t('common.view')} →</a>
 							</div>
