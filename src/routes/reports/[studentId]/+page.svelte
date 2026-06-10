@@ -116,10 +116,8 @@
 		if (scores.length > 1) scores = scores.filter((_, idx) => idx !== i);
 	}
 
-	onMount(fetchReports);
-
 	$effect(() => {
-		fromDate; toDate;
+		data.studentId; fromDate; toDate;
 		page = 1;
 		fetchReports();
 	});
