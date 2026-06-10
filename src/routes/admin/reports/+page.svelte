@@ -15,7 +15,6 @@
 	let selectedTeacherId = $state('');
 	let sessions = $state<any[]>([]);
 	let loading = $state(false);
-	let studentMap = $state<Record<string, string>>({});
 
 	const isCurrentMonth = $derived(year === now.getFullYear() && month === now.getMonth());
 
@@ -54,18 +53,8 @@
 
 	onMount(async () => {
 		try {
-			const [teachersRes, studentsRes] = await Promise.allSettled([
-				api.get<PaginatedResponse<any>>('/admin/teachers'),
-				api.get<PaginatedResponse<any>>('/students'),
-			]);
-			if (teachersRes.status === 'fulfilled') {
-				teachers = teachersRes.value.data ?? [];
-			}
-			if (studentsRes.status === 'fulfilled') {
-				for (const s of studentsRes.value.data ?? []) {
-					studentMap[s.user_id ?? s.id] = s.full_name;
-				}
-			}
+			const body = await api.get<PaginatedResponse<any>>('/admin/teachers');
+			teachers = body.data ?? [];
 		} catch {}
 	});
 </script>
@@ -84,7 +73,7 @@
 			bind:value={selectedTeacherId}
 			class="w-full bg-white border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/15"
 		>
-			<option value="">Pilih guru...</option>
+			<option value="">{$t('reports.earnings.selectTeacher')}</option>
 			{#each teachers as teacher}
 				<option value={teacher.user_id ?? teacher.id}>{teacher.full_name ?? teacher.email}</option>
 			{/each}
@@ -100,15 +89,15 @@
 			<button
 				onclick={prevMonth}
 				class="border border-border bg-white rounded-md px-3 py-1.5 text-sm text-text2 hover:text-text hover:bg-bgGray"
-			>‹ Prev</button>
+			>{$t('reports.earnings.prevMonth')}</button>
 			<span class="text-base font-semibold text-text min-w-40 text-center capitalize">{monthLabel()}</span>
 			<button
 				onclick={nextMonth}
 				disabled={isCurrentMonth}
 				class="border border-border bg-white rounded-md px-3 py-1.5 text-sm text-text2 hover:text-text hover:bg-bgGray disabled:opacity-40 disabled:cursor-not-allowed"
-			>Next ›</button>
+			>{$t('reports.earnings.nextMonth')}</button>
 		</div>
 
-		<EarningsTable {sessions} {loading} {studentMap} />
+		<EarningsTable {sessions} {loading} />
 	{/if}
 </div>

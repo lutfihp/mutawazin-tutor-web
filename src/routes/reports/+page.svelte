@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { t } from 'svelte-i18n';
 	import AuthLayout from '$lib/components/layout/AuthLayout.svelte';
 	import EarningsTable from '$lib/components/EarningsTable.svelte';
 	import { api } from '$lib/api';
-	import type { PaginatedResponse } from '$lib/api';
 
 	let { data } = $props();
 	const role = $derived((data.user?.role ?? 'teacher') as 'admin' | 'teacher' | 'student');
@@ -14,7 +13,6 @@
 
 	let sessions = $state<any[]>([]);
 	let loading = $state(false);
-	let studentMap = $state<Record<string, string>>({});
 
 	const isCurrentMonth = $derived(year === now.getFullYear() && month === now.getMonth());
 
@@ -50,35 +48,27 @@
 
 	$effect(() => { year; month; fetchSessions(); });
 
-	onMount(async () => {
-		try {
-			const body = await api.get<PaginatedResponse<any>>('/students');
-			for (const s of body.data ?? []) {
-				studentMap[s.user_id ?? s.id] = s.full_name;
-			}
-		} catch {}
-	});
 </script>
 
 <AuthLayout {role} userId={data.user?.id ?? ''}>
 	<div class="max-w-app mx-auto">
 		<div class="mb-6">
-			<h1 class="text-2xl font-bold text-text">Laporan Sesi</h1>
+			<h1 class="text-2xl font-bold text-text">{$t('reports.earnings.title')}</h1>
 		</div>
 
 		<div class="flex items-center gap-3 mb-5">
 			<button
 				onclick={prevMonth}
 				class="border border-border bg-white rounded-md px-3 py-1.5 text-sm text-text2 hover:text-text hover:bg-bgGray"
-			>‹ Prev</button>
+			>{$t('reports.earnings.prevMonth')}</button>
 			<span class="text-base font-semibold text-text min-w-40 text-center capitalize">{monthLabel()}</span>
 			<button
 				onclick={nextMonth}
 				disabled={isCurrentMonth}
 				class="border border-border bg-white rounded-md px-3 py-1.5 text-sm text-text2 hover:text-text hover:bg-bgGray disabled:opacity-40 disabled:cursor-not-allowed"
-			>Next ›</button>
+			>{$t('reports.earnings.nextMonth')}</button>
 		</div>
 
-		<EarningsTable {sessions} {loading} {studentMap} />
+		<EarningsTable {sessions} {loading} />
 	</div>
 </AuthLayout>

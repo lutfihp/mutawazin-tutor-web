@@ -425,6 +425,22 @@
       "saved": "Laporan berhasil disimpan.",
       "writeAnother": "Tulis laporan lain",
       "saveError": "Gagal menyimpan laporan. Silakan coba lagi."
+    },
+    "earnings": {
+      "title": "Laporan Sesi",
+      "sessionCount": "{count} sesi selesai",
+      "loading": "Memuat...",
+      "noSessions": "Tidak ada sesi selesai bulan ini.",
+      "colDate": "Tanggal",
+      "colSubject": "Mata Pelajaran",
+      "colStudent": "Murid",
+      "colPrice": "Harga",
+      "totalBruto": "Total bruto",
+      "platformFee": "Biaya platform (10%)",
+      "netAmount": "Yang diterima",
+      "prevMonth": "‹ Prev",
+      "nextMonth": "Next ›",
+      "selectTeacher": "Pilih guru..."
     }
   },
   "profile": {

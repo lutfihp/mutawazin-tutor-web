@@ -425,6 +425,22 @@
       "saved": "Report saved successfully.",
       "writeAnother": "Write another report",
       "saveError": "Failed to save report. Please try again."
+    },
+    "earnings": {
+      "title": "Session Report",
+      "sessionCount": "{count} completed sessions",
+      "loading": "Loading...",
+      "noSessions": "No completed sessions this month.",
+      "colDate": "Date",
+      "colSubject": "Subject",
+      "colStudent": "Student",
+      "colPrice": "Price",
+      "totalBruto": "Total gross",
+      "platformFee": "Platform fee (10%)",
+      "netAmount": "You receive",
+      "prevMonth": "‹ Prev",
+      "nextMonth": "Next ›",
+      "selectTeacher": "Select teacher..."
     }
   },
   "profile": {
