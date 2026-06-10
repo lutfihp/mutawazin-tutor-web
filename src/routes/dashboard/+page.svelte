@@ -123,9 +123,8 @@
 		<!-- Quick Actions -->
 		<div>
 			<h2 class="font-semibold mb-4">{$t('dashboard.teacher.quickActions')}</h2>
-			<div class="grid sm:grid-cols-3 gap-4">
+			<div class="grid sm:grid-cols-2 gap-4">
 				{#each [
-					{ titleKey: 'dashboard.teacher.createCourse',       descKey: 'dashboard.teacher.createCourseDesc',       href: '/courses',  icon: 'M2 3h20v18H2z M12 3v18' },
 					{ titleKey: 'dashboard.teacher.manageAvailability', descKey: 'dashboard.teacher.manageAvailabilityDesc', href: '/calendar', icon: 'M3 4h18v18H3z M16 2v4M8 2v4M3 10h18' },
 					{ titleKey: 'dashboard.teacher.writeReport',        descKey: 'dashboard.teacher.writeReportDesc',        href: '/reports/new', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
 				] as action}
