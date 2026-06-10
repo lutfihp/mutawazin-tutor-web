@@ -37,7 +37,7 @@
 	function hasAvailability(date: Date): boolean {
 		const key = toISODate(date);
 		return availability.some((a) =>
-			a.specific_date ? a.specific_date === key : a.day_of_week === date.getUTCDay()
+			a.specific_date ? a.specific_date === key : a.day_of_week === (date.getUTCDay() + 6) % 7
 		);
 	}
 
