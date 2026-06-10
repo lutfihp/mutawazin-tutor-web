@@ -289,6 +289,15 @@
 						</ul>
 					</nav>
 				{/each}
+
+				<nav aria-label={$t('landing.footerContact')}>
+					<h3 class="text-[13px] font-semibold uppercase tracking-[0.06em] mb-4">{$t('landing.footerContact')}</h3>
+					<ul class="flex flex-col gap-2">
+						<li>
+							<a href="mailto:info@mutawazinprivate.com" class="text-sm hover:text-white transition-colors break-all" style="color:#94A3B8;">{$t('landing.footerEmailUs')}</a>
+						</li>
+					</ul>
+				</nav>
 			</div>
 
 			<div class="pt-6 flex items-center justify-between gap-4 flex-wrap" style="border-top:1px solid #1E293B;">
