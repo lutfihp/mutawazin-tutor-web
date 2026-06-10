@@ -353,32 +353,32 @@ The FastAPI backend must be running at `http://localhost:8000`.
 8. ✅ Teacher profile: visit `/teachers/:id` without login → NO sidebar (public layout). *(verified live 2026-06-10)*
 
 **Priority 5 — Live verify session 25 + 26 fixes**
-1. Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill
-2. Admin calendar: Edit Session for a session with students → StudentPicker shows student chips; remove a student → save → chips update
-3. Admin calendar: private session → StudentPicker limits to 1 student
-4. Admin calendar: session with students → Delete → 409 shown; remove student chip → save → Delete succeeds
-5. Admin calendar: recurring sessions show `↻` badge on calendar pills
-6. Admin calendar: delete a recurring session → "Delete recurring session?" prompt → "This session only" deletes one; "This + all future" cascades
-7. Teacher calendar: session modal "When" field shows `"09:05 – 10:00 · Monday, Jun 9, 2026"` (not raw ISO)
-8. Dashboard (teacher): sessions show `display_title` and formatted time (not raw ISO)
-9. Landing page: search shows courses only (no teacher tab); featured teachers section always renders (max 3 cards)
-10. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates
+1. ✅ Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill. *(verified live 2026-06-10)*
+2. ✅ Admin calendar: Edit Session for a session with students → StudentPicker shows student chips; remove a student → save → chips update. *(verified live 2026-06-10)*
+3. ✅ Admin calendar: private session → StudentPicker limits to 1 student. Search bar disappears after 1 student added, preventing a second. *(verified live 2026-06-10)*
+4. ✅ Admin calendar: session with students → Delete → 409 shown; remove student chip → save → Delete succeeds. *(verified live 2026-06-10)*
+5. ✅ Admin calendar: recurring sessions show `↻` badge on calendar pills. *(verified live 2026-06-10)*
+6. ✅ Admin calendar: delete a recurring session → "Delete recurring session?" prompt → "This session only" deletes one; "This + all future" cascades. *(verified live 2026-06-10)*
+7. ✅ Teacher calendar: session modal "When" field shows formatted time e.g. `"02:00 – 02:30 · Wednesday, Jun 10, 2026"` (not raw ISO). *(verified live 2026-06-10)*
+8. ✅ Dashboard (teacher): sessions show `display_title` and formatted time e.g. `"Mengaji — Budi · 22:00 – 22:30 · Wednesday, Jun 10, 2026"` (not raw ISO). *(verified live 2026-06-10)*
+9. ✅ Landing page: search shows courses only (no teacher tab); featured teachers section always renders (max 3 cards). *(verified live 2026-06-10)*
+10. ✅ **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates. *(verified live 2026-06-10)*
 
 **Priority 6 — Live verify delta v13 profile phone numbers**
-1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
-2. Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi"
-3. Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible
-4. Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa
-5. Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null)
+1. ✅ Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value. *(verified live 2026-06-10)*
+2. ✅ Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi". *(verified live 2026-06-10)*
+3. ✅ Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible. *(verified live 2026-06-10)*
+4. ✅ Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa. *(verified live 2026-06-10)*
+5. ✅ Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null). *(verified live 2026-06-10)*
 
 **Priority 7 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
-1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
-2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
-3. Click a private session → one student shown; group session → enrolled students shown
-4. Click a student → report form → fill + submit → success banner → "Write another" resets to step 1
-5. Back arrow: form → students → sessions
-6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
-7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
+1. ✅ Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`. *(verified live 2026-06-10)*
+2. ✅ Session list: confirm past sessions appear sorted newest first; future sessions NOT shown. *(verified live 2026-06-10)*
+3. ✅ Click a private session → one student shown; group session → enrolled students shown. *(verified live 2026-06-10)*
+4. ✅ Click a student → report form → fill + submit → success banner → "Write another" resets to step 1. *(verified live 2026-06-10)*
+5. ✅ Back arrow: form → students → sessions. *(verified live 2026-06-10)*
+6. ✅ Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max). *(verified live 2026-06-10)*
+7. ✅ Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`. *(verified live 2026-06-10)*
 
 **Priority 8 — First production deploy (VPS setup)**
 Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
