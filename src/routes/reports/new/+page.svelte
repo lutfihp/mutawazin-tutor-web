@@ -46,6 +46,11 @@
 			const nowMs = Date.now();
 			sessions = all
 				.filter((s: any) => new Date(s.starts_at).getTime() <= nowMs)
+				.filter((s: any) => {
+					const total = s.student_ids?.length ?? 0;
+					const reported = s.reported_student_ids?.length ?? 0;
+					return total === 0 || reported < total;
+				})
 				.sort((a: any, b: any) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime());
 		}
 
@@ -68,10 +73,13 @@
 
 		try {
 			const ids: string[] = session.student_ids ?? [];
-			sessionStudents = ids.map((id: string) => ({
-				id,
-				name: studentMap[id] ?? id.slice(0, 8),
-			}));
+			const reported = new Set<string>(session.reported_student_ids ?? []);
+			sessionStudents = ids
+				.filter((id: string) => !reported.has(id))
+				.map((id: string) => ({
+					id,
+					name: studentMap[id] ?? id.slice(0, 8),
+				}));
 		} catch {
 			sessionStudents = [];
 		} finally {
