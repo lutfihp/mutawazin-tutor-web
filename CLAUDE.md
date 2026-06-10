@@ -21,7 +21,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-10 — session 30)
+## Current Status (as of 2026-06-10 — session 32)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 31 logout cookie domain fix)
 
@@ -100,6 +100,12 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Teacher simplification — reports earnings page (session 28) | New `src/routes/reports/+page.server.ts` (teacher-only guard, admin/student → `/dashboard`) and `src/routes/reports/+page.svelte` (month navigation with Prev/Next, completed sessions table: Tanggal/Mata Pelajaran/Murid/Harga, totals footer: gross → 10% platform fee → "Yang diterima" in teal). Sidebar Reports link updated to `/reports`. Backend: `price` + `recurring_template_id` added to `CalendarSessionItem` and `_session_to_dict`. | ✅ |
 | Admin payment reports page (session 29) | New `src/routes/admin/reports/+page.svelte` — teacher picker (`GET /admin/teachers`), month navigation, reuses `EarningsTable`. Guard: `src/routes/admin/reports/+page.server.ts` (admin-only, others → `/dashboard`). Pass-through layout file. Sidebar item "Payment Reports" (`nav.adminReports`) added to admin nav between calendar and audit-log. i18n keys added to both `en.json` and `id.json`: `nav.adminReports`, `reports.admin.selectTeacher`. | ✅ |
 | Shared EarningsTable component (session 29) | `src/lib/components/EarningsTable.svelte` — presentational component. Props: `sessions: any[]`, `loading: boolean`, `studentMap: Record<string, string>`. Computes totals internally (gross, 10% fee, net). Used by both `/reports` (teacher) and `/admin/reports` (admin). Teacher reports page refactored to use it. | ✅ |
+| Reports stale data fix (session 32) | `src/routes/reports/[studentId]/+page.svelte` — `$effect` now has `data.studentId;` as a dependency. SvelteKit reuses the component on navigation between students; `onMount` never re-runs, but `$effect` retriggers on param change. Removed duplicate `onMount(fetchReports)`. | ✅ |
+| EarningsTable — i18n + column fixes (session 32) | `EarningsTable.svelte`: removed `studentMap` prop entirely; added `import { t } from 'svelte-i18n'`; all hardcoded column headers replaced with `$t('reports.earnings.*')` keys; subject column uses `display_title?.split(' — ')[0] ?? ''`; student column uses `display_title?.split(' — ')[1] ?? '—'`. Both teacher `/reports` and admin `/admin/reports` pages updated to drop `studentMap` and `GET /students` calls. | ✅ |
+| Dashboard greeting shows name (session 32) | `dashboard/+page.svelte` greeting now works: backend `get_teacher_dashboard` and `get_student_dashboard` both return `full_name` in the response. Frontend uses `d.full_name`. i18n keys changed from `"Good morning, 👋"` pattern to `"Hi, {name}"` / `"Halo, {name}"` in both locales. | ✅ |
+| Student dashboard enrolled courses — name + teacher (session 32) | Enrolled courses now show subject name (e.g. "Math") and teacher name instead of raw MongoDB ID. Backend `_course_dict` in `app/dashboard/service.py` now resolves `TeacherProfile.full_name` and returns `teacher_name`. `DashboardEnrolledCourseItem` schema got `teacher_name: Optional[str] = None`. Frontend: `course.title` → `course.name`; subtitle renders `{#if course.teacher_name}` only (no fallback to raw ID). | ✅ |
+| Teacher dashboard recent reports dedup (session 32) | `get_teacher_dashboard` in `app/dashboard/service.py` fetches 25 reports then deduplicates by `student_id`, keeping only 5 unique students. Fixes duplicate links when 2+ students share a group session. | ✅ |
+| Landing footer — 4-column symmetry + Contact (session 32) | `src/routes/+page.svelte` footer — added 4th Contact `<nav>` column (`mailto:info@mutawazinprivate.com`) to fill the `lg:grid-cols-4` grid. Added `landing.footerContact` + `landing.footerEmailUs` i18n keys to both `en.json` and `id.json`. Commit `b79303b` — **local only, not yet pushed**. | ✅ |
 | Write report — stale student fix (session 29) | `src/routes/reports/new/+page.svelte`: after `saveReport()` succeeds, the reported student is removed from `sessionStudents` and the session's `reported_student_ids` is updated locally. Sessions where all students are reported are also filtered out. This prevents the just-reported student from reappearing when clicking "Write another". | ✅ |
 | Logout cookie fix — same-origin deletion (session 29) | Root cause: `Navbar.svelte` was calling `api.post('/auth/logout')` cross-origin to `localhost:8000`. The backend's `Set-Cookie: Max-Age=0` deletion was not reliably honored by the browser, so the `access_token` cookie persisted. `+layout.server.ts` read the stale cookie and returned `data.user` as authenticated, making the sidebar and edit icons appear even after logout. **Fix:** New `src/routes/api/logout/+server.ts` — same-origin SvelteKit endpoint that reads the token from cookies, forwards it to the backend via `Authorization: Bearer` (for server-side session cleanup), then deletes both cookies via `event.cookies.delete()`. `Navbar.svelte` now calls `fetch('/api/logout', { method: 'POST' })`. | ✅ |
 | Logout navigation fix — hard reload (session 30) | Root cause: `goto('/', { invalidateAll: true })` is SvelteKit client-side navigation. It re-runs `+layout.ts` on the client, which calls `user.set(data.user)`. If the cookie was not yet deleted (Vite HMR didn't pick up the new `+server.ts` route, or same-URL navigation was skipped), `data.user` came back non-null and the store was re-written to authenticated. **Fix:** Replaced `goto` + `user.set(null)` with `window.location.replace('/')` — a hard page reload that bypasses SvelteKit's store layer entirely. The browser makes a fresh GET, the server reads the (now-deleted) cookies, and the page renders from scratch as unauthenticated. Removed unused `goto` import from `Navbar.svelte`. | ✅ |
@@ -197,7 +203,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │   │   ├── stores/adminBadge.ts    ← writable<number> pendingApprovalCount
 │   │   ├── utils/avatar.ts, date.ts, cn.ts
 │   │   ├── components/ui/          ← Badge, Avatar, Button, Card, Input, Modal, DropdownMenu, Pagination, StudentPicker
-│   ├── components/EarningsTable.svelte  ← Shared earnings table (sessions + totals). Props: sessions, loading, studentMap
+│   ├── components/EarningsTable.svelte  ← Shared earnings table (sessions + totals). Props: sessions, loading. Subject/student resolved from display_title. No studentMap.
 │   │   ├── components/ErrorState.svelte  ← full-page error state (tone variants, snippet props)
 │   │   └── components/layout/      ← Logo, Navbar, Sidebar, AuthLayout
 │   ├── locales/en.json, id.json
@@ -306,13 +312,25 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 1 — Live verify session 29–30 fixes**
+**Priority 0 — Push session 32 footer fix**
+- Run `git push origin main` in `mutawazin-tutor-web` to push commit `b79303b` (landing footer 4-column fix + Contact email). User has tested this locally and shut down servers. Waiting for explicit "push" instruction.
+
+**Priority 1 — Live verify session 32 fixes**
+1. **Enrolled courses:** Log in as student → dashboard → enrolled courses section shows subject name ("Math") and teacher name, not a MongoDB ID.
+2. **EarningsTable i18n:** Log in as teacher → `/reports` → column headers appear in the active locale (Bahasa Indonesia). Log in as admin → `/admin/reports` → same.
+3. **EarningsTable subject/student columns:** Subject column shows "Math" (not "Math — Joe"). Student column shows "Joe" (not a MongoDB ID).
+4. **Dashboard greeting:** Log in as teacher or student → dashboard greeting shows "Hi, [Full Name]" (not "Hi, " with blank name).
+5. **Reports stale data:** Navigate from one student's report page to another → data updates correctly (no stale student shown).
+6. **Teacher recent reports:** Teacher dashboard → "Recent Reports" section → no duplicate links when multiple students in same group session.
+7. **Landing footer:** Footer has 4 columns — Mutawazin description, Platform, Getting Started, Contact. Contact column shows `info@mutawazinprivate.com` email link.
+
+**Priority 2 — Live verify session 29–30 fixes**
 1. **Logout (session 30 fix):** Log in as teacher → log out → confirm redirected to `/` with NO sidebar, NO edit icons on the landing navbar → navigate back to own profile URL → still no sidebar → hard refresh → still no sidebar
 2. **Admin payment reports (session 29):** Log in as admin → sidebar shows "Payment Reports" link → click it → select a teacher → completed sessions appear with correct prices → totals footer shows bruto, fee, net
 3. **Price in reports (session 29):** A session where admin never set explicit price should show the course's `price_by_age_category` minimum as the price (not Rp 0)
 4. **Write report stale student fix (session 29):** Submit a report → click "Write another" → the student just reported is no longer in the picker
 
-**Priority 2 — Live verify session 28 teacher simplification**
+**Priority 3 — Live verify session 28 teacher simplification**
 1. Log in as **teacher** → `/courses` → "Create New" button absent
 2. Log in as **teacher** → `/calendar` → no "Add Session" button, no "Add Recurring" button, no recurring templates panel
 3. Log in as **teacher** → open a confirmed session modal → only "Mark Completed" present (no "Cancel Session")
@@ -324,7 +342,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 9. Log in as **admin** → navigate to `/reports` → redirected to `/dashboard`
 10. Log in as **student** → navigate to `/reports` → redirected to `/dashboard`
 
-**Priority 3 — Live verify session 27 bug fixes**
+**Priority 4 — Live verify session 27 bug fixes**
 1. Admin calendar: Add Session → select a course → StudentPicker shows ONLY enrolled students (not all platform students)
 2. Admin calendar: change course in Add/Edit modal → student chips clear automatically
 3. Teacher dashboard: "My Students" section shows students enrolled in the teacher's courses (was always empty)
@@ -334,7 +352,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 7. Teacher profile: log in as **admin**, visit `/teachers/:id` → NO sidebar (public layout)
 8. Teacher profile: visit `/teachers/:id` without login → NO sidebar (public layout)
 
-**Priority 4 — Live verify session 25 + 26 fixes**
+**Priority 5 — Live verify session 25 + 26 fixes**
 1. Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill
 2. Admin calendar: Edit Session for a session with students → StudentPicker shows student chips; remove a student → save → chips update
 3. Admin calendar: private session → StudentPicker limits to 1 student
@@ -346,14 +364,14 @@ The FastAPI backend must be running at `http://localhost:8000`.
 9. Landing page: search shows courses only (no teacher tab); featured teachers section always renders (max 3 cards)
 10. **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates
 
-**Priority 5 — Live verify delta v13 profile phone numbers**
+**Priority 6 — Live verify delta v13 profile phone numbers**
 1. Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value
 2. Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi"
 3. Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible
 4. Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa
 5. Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null)
 
-**Priority 6 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
+**Priority 7 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
 1. Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`
 2. Session list: confirm past sessions appear sorted newest first; future sessions NOT shown
 3. Click a private session → one student shown; group session → enrolled students shown
@@ -362,7 +380,7 @@ The FastAPI backend must be running at `http://localhost:8000`.
 6. Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max)
 7. Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`
 
-**Priority 7 — First production deploy (VPS setup)**
+**Priority 8 — First production deploy (VPS setup)**
 Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
 1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
 2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
@@ -373,12 +391,12 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
 8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
 
-**Priority 8 — Finish delta v9 (backend now shipped)**
+**Priority 9 — Finish delta v9 (backend now shipped)**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
 2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-**Priority 9 — Live verify accumulated features**
+**Priority 10 — Live verify accumulated features**
 1. **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject.
 2. **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar.
 3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
@@ -388,16 +406,16 @@ Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and 
 7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
 8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-**Priority 10 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+**Priority 11 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
 - `POST /auth/resend-verification` — add resend button to `/verify-email` page
 - `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
 - **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 11 — Runtime QA**
+**Priority 12 — Runtime QA**
 - Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
 - Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
 - Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
 - Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-**Priority 12 — Mobile + Visual QA**
+**Priority 13 — Mobile + Visual QA**
 - Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
