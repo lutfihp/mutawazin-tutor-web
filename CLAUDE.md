@@ -21,7 +21,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-10 — session 32)
+## Current Status (as of 2026-06-11 — session 33)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 31 logout cookie domain fix)
 
@@ -312,110 +312,29 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 0 — Push session 32 footer fix**
-- Run `git push origin main` in `mutawazin-tutor-web` to push commit `b79303b` (landing footer 4-column fix + Contact email). User has tested this locally and shut down servers. Waiting for explicit "push" instruction.
-
-**Priority 1 — Live verify session 32 fixes**
-1. ✅ **Enrolled courses:** Log in as student → dashboard → enrolled courses section shows subject name ("Math") and teacher name, not a MongoDB ID. *(verified live 2026-06-10)*
-2. ✅ **EarningsTable i18n:** Log in as teacher → `/reports` → column headers appear in the active locale (Bahasa Indonesia). Log in as admin → `/admin/reports` → same. *(verified live 2026-06-10)*
-3. ✅ **EarningsTable subject/student columns:** Subject column shows "Math" (not "Math — Joe"). Student column shows student name(s); totals calculation correct. *(verified live 2026-06-10)*
-4. ✅ **Dashboard greeting:** Log in as teacher or student → dashboard greeting shows "Hi, [Full Name]" (not "Hi, " with blank name). *(verified live 2026-06-10)*
-5. ✅ **Reports stale data:** Navigate from one student's report page to another → data updates correctly (no stale student shown). *(verified live 2026-06-10)*
-6. ✅ **Teacher recent reports:** Teacher dashboard → "Recent Reports" section → no duplicate links when multiple students in same group session. Each unique student appears once. *(verified live 2026-06-10)*
-7. ✅ **Landing footer:** Footer has 4 columns — Mutawazin description, Platform, Getting Started, Contact. Contact column shows `info@mutawazinprivate.com` email link. *(verified live 2026-06-10)*
-
-**Priority 2 — Live verify session 29–30 fixes**
-1. ✅ **Logout (session 30 fix):** Log in as teacher → log out → confirm redirected to `/` with NO sidebar, NO edit icons on the landing navbar → navigate back to own profile URL → still no sidebar → hard refresh → still no sidebar. *(verified live 2026-06-10)*
-2. ✅ **Admin payment reports (session 29):** Log in as admin → sidebar shows "Payment Reports" link → click it → select a teacher → completed sessions appear with correct prices → totals footer shows bruto, fee, net. *(verified live 2026-06-10)*
-3. ✅ **Price in reports (session 29):** A session where admin never set explicit price should show the course's `price_by_age_category` minimum as the price (not Rp 0). *(verified live 2026-06-10)*
-4. ✅ **Write report stale student fix (session 29):** Submit a report → click "Write another" → the student just reported is no longer in the picker. When last student in a session is reported, session is removed and form resets to empty state. *(verified live 2026-06-10)*
-
-**Priority 3 — Live verify session 28 teacher simplification**
-1. ✅ Log in as **teacher** → `/courses` → "Create New" button absent. *(verified live 2026-06-10)*
-2. ✅ Log in as **teacher** → `/calendar` → no "Add Session" button, no "Add Recurring" button, no recurring templates panel. *(verified live 2026-06-10)*
-3. ✅ Log in as **teacher** → open a confirmed session modal → no "Cancel Session" button. **Design decision (2026-06-10):** "Mark Completed" button also removed — teacher flow uses report writing as the completion signal. Simpler UX, same outcome. *(verified live 2026-06-10)*
-4. ✅ Log in as **teacher** → sidebar "Laporan" link → navigates to `/reports` (payment/earnings page). *(verified live 2026-06-10)*
-5. ✅ On `/reports` → Prev navigates to past months; Next disabled on current month. *(verified live 2026-06-10)*
-6. ✅ On `/reports` → completed sessions appear with Tanggal, Mata Pelajaran, Murid, Harga columns. *(verified live 2026-06-10)*
-7. ✅ On `/reports` → totals footer shows bruto, "Biaya platform (10%)" deduction, "Yang diterima" in teal. *(verified live 2026-06-10)*
-8. ✅ On `/reports` → empty state shows "Tidak ada sesi selesai bulan ini." for months with no completed sessions. *(verified live 2026-06-10)*
-9. ✅ Log in as **admin** → navigate to `/reports` → redirected to `/dashboard`. *(verified live 2026-06-10)*
-10. ✅ Log in as **student** → navigate to `/reports` → redirected to `/dashboard`. *(verified live 2026-06-10)*
-
-**Priority 4 — Live verify session 27 bug fixes**
-1. ✅ Admin calendar: Add Session → select a course → StudentPicker shows ONLY enrolled students (not all platform students). *(verified live 2026-06-10)*
-2. ✅ Admin calendar: change course in Add/Edit modal → student chips clear automatically. *(verified live 2026-06-10)*
-3. ✅ Teacher dashboard: "My Students" section shows students enrolled in the teacher's courses (was always empty). *(verified live 2026-06-10)*
-4. ✅ Teacher dashboard: click "Open student" on a My Students row → profile loads (not 403). *(verified live 2026-06-10)*
-5. ✅ Teacher profile: log in as **teacher**, visit own `/teachers/:id` → sidebar visible. *(verified live 2026-06-10)*
-6. ✅ Teacher profile: log in as **student**, visit any `/teachers/:id` → sidebar visible. *(verified live 2026-06-10)*
-7. ✅ Teacher profile: log in as **admin**, visit `/teachers/:id` → NO sidebar (public layout). *(verified live 2026-06-10)*
-8. ✅ Teacher profile: visit `/teachers/:id` without login → NO sidebar (public layout). *(verified live 2026-06-10)*
-
-**Priority 5 — Live verify session 25 + 26 fixes**
-1. ✅ Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill. *(verified live 2026-06-10)*
-2. ✅ Admin calendar: Edit Session for a session with students → StudentPicker shows student chips; remove a student → save → chips update. *(verified live 2026-06-10)*
-3. ✅ Admin calendar: private session → StudentPicker limits to 1 student. Search bar disappears after 1 student added, preventing a second. *(verified live 2026-06-10)*
-4. ✅ Admin calendar: session with students → Delete → 409 shown; remove student chip → save → Delete succeeds. *(verified live 2026-06-10)*
-5. ✅ Admin calendar: recurring sessions show `↻` badge on calendar pills. *(verified live 2026-06-10)*
-6. ✅ Admin calendar: delete a recurring session → "Delete recurring session?" prompt → "This session only" deletes one; "This + all future" cascades. *(verified live 2026-06-10)*
-7. ✅ Teacher calendar: session modal "When" field shows formatted time e.g. `"02:00 – 02:30 · Wednesday, Jun 10, 2026"` (not raw ISO). *(verified live 2026-06-10)*
-8. ✅ Dashboard (teacher): sessions show `display_title` and formatted time e.g. `"Mengaji — Budi · 22:00 – 22:30 · Wednesday, Jun 10, 2026"` (not raw ISO). *(verified live 2026-06-10)*
-9. ✅ Landing page: search shows courses only (no teacher tab); featured teachers section always renders (max 3 cards). *(verified live 2026-06-10)*
-10. ✅ **Availability calendar** — log in as teacher → `/calendar` → availability panel shows slots; calendar highlights the correct days/dates. *(verified live 2026-06-10)*
-
-**Priority 6 — Live verify delta v13 profile phone numbers**
-1. ✅ Log in as **teacher** (own profile `/teachers/:id`): Phone Number card appears after Achievements, pencil opens tel input, save persists value. *(verified live 2026-06-10)*
-2. ✅ Log in as **admin**: Phone Number card visible on teacher + student profiles (no pencil), shows value or "Belum diisi". *(verified live 2026-06-10)*
-3. ✅ Log in as **another teacher**: view a peer's teacher profile → Phone Number card NOT visible. *(verified live 2026-06-10)*
-4. ✅ Log in as **student** (own profile): phone row appears below DOB, pencil opens inline edit, opening DOB closes phone and vice versa. *(verified live 2026-06-10)*
-5. ✅ Log in as **admin**, view student with no phone set → phone row hidden (only shows when non-null). *(verified live 2026-06-10)*
-
-**Priority 7 — Live verify `/reports/new` + reports page changes (sessions 17–18)**
-1. ✅ Log in as teacher → `/dashboard` → "Write Report" → confirm navigates to `/reports/new`. *(verified live 2026-06-10)*
-2. ✅ Session list: confirm past sessions appear sorted newest first; future sessions NOT shown. *(verified live 2026-06-10)*
-3. ✅ Click a private session → one student shown; group session → enrolled students shown. *(verified live 2026-06-10)*
-4. ✅ Click a student → report form → fill + submit → success banner → "Write another" resets to step 1. *(verified live 2026-06-10)*
-5. ✅ Back arrow: form → students → sessions. *(verified live 2026-06-10)*
-6. ✅ Open a student's report list (`/reports/:studentId`): confirm card titles show "Matematika — Ahmad Fauzi" format, no average score text, score tiles show raw number only (no bar, no / max). *(verified live 2026-06-10)*
-7. ✅ Log in as student/admin → visit `/reports/new` → confirm redirect to `/dashboard`. *(verified live 2026-06-10)*
-
-**Priority 8 — First production deploy (VPS setup)**
-Follow `docs/deployment-guide.md` step by step (references `mutawazin` user and existing `github_deploy` SSH keypair):
-1. SSH in: `ssh mutawazin@YOUR_DROPLET_IP`
-2. Create deploy dir: `mkdir -p /home/mutawazin/mutawazin-web && echo "ORIGIN=https://mutawazinprivate.com" > /home/mutawazin/mutawazin-web/.env`
-3. Confirm existing SSH key: `ls ~/.ssh/github_deploy.pub` — reuse it (already authorized from backend CI)
-4. Print private key and add to **this** GitHub repo's secrets: `cat ~/.ssh/github_deploy`
-5. Add 5 GitHub secrets: `SSH_HOST`, `SSH_USER=mutawazin`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH=/home/mutawazin/mutawazin-web`, `VITE_API_URL=https://api.mutawazinprivate.com`
-6. Configure Nginx on VPS to proxy `mutawazinprivate.com` → `localhost:3000` (SSL via Certbot)
-7. Enable workflow: `git mv .github/workflows/deploy.yml.disabled .github/workflows/deploy.yml && git commit -m "ci: enable deploy workflow" && git push origin main`
-8. Watch Actions tab — should complete in ~2-3 min. Verify with `curl -I http://localhost:3000` on VPS.
-
-**Priority 9 — Finish delta v9 (backend now shipped)**
+**Priority 1 — Finish delta v9**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
 2. **Teacher profile stats — verify live** — Log in as teacher, open own profile. Confirm "X yrs experience · Y sessions completed" shows real numbers (not 0 · 0).
 3. **Student DOB edit — live verify** — Log in as student, open own profile. Age badge shows a number, pencil opens date input, save calls `PUT /students/me { date_of_birth }`.
 
-**Priority 10 — Live verify accumulated features**
-1. ✅ **Admin dashboard** — `/admin`: "Active Courses" card shows non-zero count; pending teacher/student tables show Approve/Reject buttons; pending subject suggestions show Approve/Reject. *(verified live 2026-06-10)*
-2. ✅ **Navbar avatar** — Teacher/student: avatar appears, clicking links to own profile. Admin: no avatar. *(verified live 2026-06-10)*
-3. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
-4. **Reports page** — teacher view: no attendance filter, card titles are "subject — teacher", score tiles raw number only, date from `created_at`.
-5. **Public share page** — `/report/share/:token`: date and scores render correctly, no attendance badge.
-6. **Admin calendar** — sessions load, teacher filter works, session edit modal saves via `PUT /sessions/:id`.
-7. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
-8. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
+**Priority 2 — Live verify accumulated features**
+1. **Course detail page** — `/courses/:id`: loads without 404, shows teacher name + pricing grid, enrolled badge for students.
+2. **Reports page** — teacher view: no attendance filter, card titles are "subject — teacher", score tiles raw number only, date from `created_at`.
+3. **Public share page** — `/report/share/:token`: date and scores render correctly, no attendance badge.
+4. **Admin calendar** — sessions load, teacher filter works, session edit modal saves via `PUT /sessions/:id`.
+5. **Teacher profile** — per-section editing works, SVG icons render, chips row shows mode + city.
+6. **Error page smoke test** — `/nonexistent` → 404 page with correct icon and buttons.
 
-**Priority 11 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
+**Priority 3 — Known API gaps to implement (see `docs/api-gap-analysis.md`)**
 - `POST /auth/resend-verification` — add resend button to `/verify-email` page
 - `PUT /teachers/me/credentials` — wire credentials section save in teacher profile
 - **Admin Courses — student enrollment management** — enroll/unenroll UI using `POST /courses/:id/enroll` + `DELETE /courses/:id/enroll/:student_id`
 
-**Priority 12 — Runtime QA**
+**Priority 4 — Runtime QA**
 - Test delta v4: email check on register pages, username check on admin create modals, Delete on all three admin table pages
 - Test Calendar Add Session end-to-end (`POST /sessions`, session appears on calendar)
 - Test Availability CRUD (Add/Edit/Delete slots — verify `slot.id` field)
 - Courses SSR: verify `access_token` cookie forwarding works (not 401 on SSR fetch)
 
-**Priority 13 — Mobile + Visual QA**
+**Priority 5 — Mobile + Visual QA**
 - Open DevTools at 375px, test hamburger sidebar drawer, verify all pages are usable
