@@ -316,41 +316,41 @@ The FastAPI backend must be running at `http://localhost:8000`.
 - Run `git push origin main` in `mutawazin-tutor-web` to push commit `b79303b` (landing footer 4-column fix + Contact email). User has tested this locally and shut down servers. Waiting for explicit "push" instruction.
 
 **Priority 1 — Live verify session 32 fixes**
-1. **Enrolled courses:** Log in as student → dashboard → enrolled courses section shows subject name ("Math") and teacher name, not a MongoDB ID.
-2. **EarningsTable i18n:** Log in as teacher → `/reports` → column headers appear in the active locale (Bahasa Indonesia). Log in as admin → `/admin/reports` → same.
-3. **EarningsTable subject/student columns:** Subject column shows "Math" (not "Math — Joe"). Student column shows "Joe" (not a MongoDB ID).
-4. **Dashboard greeting:** Log in as teacher or student → dashboard greeting shows "Hi, [Full Name]" (not "Hi, " with blank name).
-5. **Reports stale data:** Navigate from one student's report page to another → data updates correctly (no stale student shown).
-6. **Teacher recent reports:** Teacher dashboard → "Recent Reports" section → no duplicate links when multiple students in same group session.
-7. **Landing footer:** Footer has 4 columns — Mutawazin description, Platform, Getting Started, Contact. Contact column shows `info@mutawazinprivate.com` email link.
+1. ✅ **Enrolled courses:** Log in as student → dashboard → enrolled courses section shows subject name ("Math") and teacher name, not a MongoDB ID. *(verified live 2026-06-10)*
+2. ✅ **EarningsTable i18n:** Log in as teacher → `/reports` → column headers appear in the active locale (Bahasa Indonesia). Log in as admin → `/admin/reports` → same. *(verified live 2026-06-10)*
+3. ✅ **EarningsTable subject/student columns:** Subject column shows "Math" (not "Math — Joe"). Student column shows student name(s); totals calculation correct. *(verified live 2026-06-10)*
+4. ✅ **Dashboard greeting:** Log in as teacher or student → dashboard greeting shows "Hi, [Full Name]" (not "Hi, " with blank name). *(verified live 2026-06-10)*
+5. ✅ **Reports stale data:** Navigate from one student's report page to another → data updates correctly (no stale student shown). *(verified live 2026-06-10)*
+6. ✅ **Teacher recent reports:** Teacher dashboard → "Recent Reports" section → no duplicate links when multiple students in same group session. Each unique student appears once. *(verified live 2026-06-10)*
+7. ✅ **Landing footer:** Footer has 4 columns — Mutawazin description, Platform, Getting Started, Contact. Contact column shows `info@mutawazinprivate.com` email link. *(verified live 2026-06-10)*
 
 **Priority 2 — Live verify session 29–30 fixes**
-1. **Logout (session 30 fix):** Log in as teacher → log out → confirm redirected to `/` with NO sidebar, NO edit icons on the landing navbar → navigate back to own profile URL → still no sidebar → hard refresh → still no sidebar
-2. **Admin payment reports (session 29):** Log in as admin → sidebar shows "Payment Reports" link → click it → select a teacher → completed sessions appear with correct prices → totals footer shows bruto, fee, net
-3. **Price in reports (session 29):** A session where admin never set explicit price should show the course's `price_by_age_category` minimum as the price (not Rp 0)
-4. **Write report stale student fix (session 29):** Submit a report → click "Write another" → the student just reported is no longer in the picker
+1. ✅ **Logout (session 30 fix):** Log in as teacher → log out → confirm redirected to `/` with NO sidebar, NO edit icons on the landing navbar → navigate back to own profile URL → still no sidebar → hard refresh → still no sidebar. *(verified live 2026-06-10)*
+2. ✅ **Admin payment reports (session 29):** Log in as admin → sidebar shows "Payment Reports" link → click it → select a teacher → completed sessions appear with correct prices → totals footer shows bruto, fee, net. *(verified live 2026-06-10)*
+3. ✅ **Price in reports (session 29):** A session where admin never set explicit price should show the course's `price_by_age_category` minimum as the price (not Rp 0). *(verified live 2026-06-10)*
+4. ✅ **Write report stale student fix (session 29):** Submit a report → click "Write another" → the student just reported is no longer in the picker. When last student in a session is reported, session is removed and form resets to empty state. *(verified live 2026-06-10)*
 
 **Priority 3 — Live verify session 28 teacher simplification**
-1. Log in as **teacher** → `/courses` → "Create New" button absent
-2. Log in as **teacher** → `/calendar` → no "Add Session" button, no "Add Recurring" button, no recurring templates panel
-3. Log in as **teacher** → open a confirmed session modal → only "Mark Completed" present (no "Cancel Session")
-4. Log in as **teacher** → sidebar "Laporan" link → navigates to `/reports`
-5. On `/reports` → Prev navigates to past months; Next disabled on current month
-6. On `/reports` → completed sessions appear with Tanggal, Mata Pelajaran, Murid, Harga columns
-7. On `/reports` → totals footer shows bruto, "Biaya platform (10%)" deduction, "Yang diterima" in teal
-8. On `/reports` → empty state shows "Tidak ada sesi selesai bulan ini." for months with no completed sessions
-9. Log in as **admin** → navigate to `/reports` → redirected to `/dashboard`
-10. Log in as **student** → navigate to `/reports` → redirected to `/dashboard`
+1. ✅ Log in as **teacher** → `/courses` → "Create New" button absent. *(verified live 2026-06-10)*
+2. ✅ Log in as **teacher** → `/calendar` → no "Add Session" button, no "Add Recurring" button, no recurring templates panel. *(verified live 2026-06-10)*
+3. ✅ Log in as **teacher** → open a confirmed session modal → no "Cancel Session" button. **Design decision (2026-06-10):** "Mark Completed" button also removed — teacher flow uses report writing as the completion signal. Simpler UX, same outcome. *(verified live 2026-06-10)*
+4. ✅ Log in as **teacher** → sidebar "Laporan" link → navigates to `/reports` (payment/earnings page). *(verified live 2026-06-10)*
+5. ✅ On `/reports` → Prev navigates to past months; Next disabled on current month. *(verified live 2026-06-10)*
+6. ✅ On `/reports` → completed sessions appear with Tanggal, Mata Pelajaran, Murid, Harga columns. *(verified live 2026-06-10)*
+7. ✅ On `/reports` → totals footer shows bruto, "Biaya platform (10%)" deduction, "Yang diterima" in teal. *(verified live 2026-06-10)*
+8. ✅ On `/reports` → empty state shows "Tidak ada sesi selesai bulan ini." for months with no completed sessions. *(verified live 2026-06-10)*
+9. ✅ Log in as **admin** → navigate to `/reports` → redirected to `/dashboard`. *(verified live 2026-06-10)*
+10. ✅ Log in as **student** → navigate to `/reports` → redirected to `/dashboard`. *(verified live 2026-06-10)*
 
 **Priority 4 — Live verify session 27 bug fixes**
-1. Admin calendar: Add Session → select a course → StudentPicker shows ONLY enrolled students (not all platform students)
-2. Admin calendar: change course in Add/Edit modal → student chips clear automatically
-3. Teacher dashboard: "My Students" section shows students enrolled in the teacher's courses (was always empty)
-4. Teacher dashboard: click "Open student" on a My Students row → profile loads (not 403)
-5. Teacher profile: log in as **teacher**, visit own `/teachers/:id` → sidebar visible
-6. Teacher profile: log in as **student**, visit any `/teachers/:id` → sidebar visible
-7. Teacher profile: log in as **admin**, visit `/teachers/:id` → NO sidebar (public layout)
-8. Teacher profile: visit `/teachers/:id` without login → NO sidebar (public layout)
+1. ✅ Admin calendar: Add Session → select a course → StudentPicker shows ONLY enrolled students (not all platform students). *(verified live 2026-06-10)*
+2. ✅ Admin calendar: change course in Add/Edit modal → student chips clear automatically. *(verified live 2026-06-10)*
+3. ✅ Teacher dashboard: "My Students" section shows students enrolled in the teacher's courses (was always empty). *(verified live 2026-06-10)*
+4. ✅ Teacher dashboard: click "Open student" on a My Students row → profile loads (not 403). *(verified live 2026-06-10)*
+5. ✅ Teacher profile: log in as **teacher**, visit own `/teachers/:id` → sidebar visible. *(verified live 2026-06-10)*
+6. ✅ Teacher profile: log in as **student**, visit any `/teachers/:id` → sidebar visible. *(verified live 2026-06-10)*
+7. ✅ Teacher profile: log in as **admin**, visit `/teachers/:id` → NO sidebar (public layout). *(verified live 2026-06-10)*
+8. ✅ Teacher profile: visit `/teachers/:id` without login → NO sidebar (public layout). *(verified live 2026-06-10)*
 
 **Priority 5 — Live verify session 25 + 26 fixes**
 1. Admin calendar: Add Session with StudentPicker — type a student name, select, save → session shows student name in calendar pill
