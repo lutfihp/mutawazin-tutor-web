@@ -75,7 +75,7 @@
 		} catch {}
 	});
 
-	const totalBruto = $derived(sessions.reduce((sum: number, s: any) => sum + (s.price ?? 0), 0));
+	const totalBruto = $derived(sessions.reduce((sum: number, s: any) => sum + (s.price ?? 0) * (s.student_ids?.length ?? 1), 0));
 	const platformFee = $derived(totalBruto * 0.1);
 	const yangDiterima = $derived(totalBruto * 0.9);
 </script>
@@ -126,7 +126,7 @@
 								<td class="px-5 py-3 text-text2 whitespace-nowrap">{formatDate(session.starts_at)}</td>
 								<td class="px-2 py-3 font-medium text-text">{session.display_title}</td>
 								<td class="px-2 py-3 text-text2">{resolveStudents(session.student_ids)}</td>
-								<td class="px-5 py-3 text-right font-semibold text-text">{formatRupiah(session.price ?? 0)}</td>
+								<td class="px-5 py-3 text-right font-semibold text-text">{formatRupiah((session.price ?? 0) * (session.student_ids?.length ?? 1))}</td>
 							</tr>
 						{/each}
 					</tbody>
