@@ -33,9 +33,9 @@
 	const isLanding = $derived(!$user);
 
 	async function logout() {
-		try { await api.post('/auth/logout', {}); } catch {}
+		try { await fetch('/api/logout', { method: 'POST' }); } catch {}
 		user.set(null);
-		goto('/');
+		goto('/', { invalidateAll: true });
 	}
 
 	onMount(async () => {
