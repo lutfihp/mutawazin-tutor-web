@@ -334,8 +334,8 @@
 		if (!sDate || !sStartTime || !sEndTime) return;
 		sLoading = true;
 		try {
-			const starts_at = new Date(`${sDate}T${sStartTime}:00`).toISOString();
-			const ends_at = new Date(`${sDate}T${sEndTime}:00`).toISOString();
+			const starts_at = `${sDate}T${sStartTime}:00`;
+			const ends_at = `${sDate}T${sEndTime}:00`;
 			await api.post('/sessions', {
 				type: sType,
 				starts_at,

@@ -127,10 +127,10 @@
 		eError = '';
 		try {
 			const starts_at = eDate && eStartTime
-				? new Date(`${eDate}T${eStartTime}:00`).toISOString()
+				? `${eDate}T${eStartTime}:00`
 				: undefined;
 			const ends_at = eDate && eEndTime
-				? new Date(`${eDate}T${eEndTime}:00`).toISOString()
+				? `${eDate}T${eEndTime}:00`
 				: undefined;
 			await api.put(`/sessions/${selectedSession.id}`, {
 				starts_at,
@@ -263,8 +263,8 @@
 		if (!sTeacherId) return;
 		sLoading = true;
 		try {
-			const starts_at = new Date(`${sDate}T${sStartTime}:00`).toISOString();
-			const ends_at = new Date(`${sDate}T${sEndTime}:00`).toISOString();
+			const starts_at = `${sDate}T${sStartTime}:00`;
+			const ends_at = `${sDate}T${sEndTime}:00`;
 			await api.post('/sessions', {
 				type: sType,
 				starts_at,
