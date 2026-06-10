@@ -118,6 +118,25 @@
 				notes,
 				understanding_level: understandingLevel || undefined,
 			});
+
+			const reportedId = selectedStudent!.id;
+
+			// Update sessions array so re-selecting the same session excludes this student
+			sessions = sessions
+				.map(s =>
+					s.id === selectedSession!.id
+						? { ...s, reported_student_ids: [...(s.reported_student_ids ?? []), reportedId] }
+						: s
+				)
+				.filter(s => {
+					const total = s.student_ids?.length ?? 0;
+					const reported = s.reported_student_ids?.length ?? 0;
+					return total === 0 || reported < total;
+				});
+
+			// Update sessionStudents so the back-arrow path (form → students) also excludes this student
+			sessionStudents = sessionStudents.filter(s => s.id !== reportedId);
+
 			savedOk = true;
 		} catch {
 			saveError = 'Failed to save report. Please try again.';
