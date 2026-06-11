@@ -21,7 +21,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-11 — session 33)
+## Current Status (as of 2026-06-11 — session 34)
 
 ### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 31 logout cookie domain fix)
 
@@ -105,6 +105,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Dashboard greeting shows name (session 32) | `dashboard/+page.svelte` greeting now works: backend `get_teacher_dashboard` and `get_student_dashboard` both return `full_name` in the response. Frontend uses `d.full_name`. i18n keys changed from `"Good morning, 👋"` pattern to `"Hi, {name}"` / `"Halo, {name}"` in both locales. | ✅ |
 | Student dashboard enrolled courses — name + teacher (session 32) | Enrolled courses now show subject name (e.g. "Math") and teacher name instead of raw MongoDB ID. Backend `_course_dict` in `app/dashboard/service.py` now resolves `TeacherProfile.full_name` and returns `teacher_name`. `DashboardEnrolledCourseItem` schema got `teacher_name: Optional[str] = None`. Frontend: `course.title` → `course.name`; subtitle renders `{#if course.teacher_name}` only (no fallback to raw ID). | ✅ |
 | Teacher dashboard recent reports dedup (session 32) | `get_teacher_dashboard` in `app/dashboard/service.py` fetches 25 reports then deduplicates by `student_id`, keeping only 5 unique students. Fixes duplicate links when 2+ students share a group session. | ✅ |
+| Teacher-view UI cleanup (session 34) | `reports/[studentId]/+page.svelte` — "Create Report" button + `openCreate()` fn + broken create path (`session_id = null`) removed; report creation is now `/reports/new` only. `students/[id]/+page.svelte` — "Message Student" button removed (was dead — no href/onclick). Both committed to `main`, 0 type errors. | ✅ |
 | Landing footer — 4-column symmetry + Contact (session 32) | `src/routes/+page.svelte` footer — added 4th Contact `<nav>` column (`mailto:info@mutawazinprivate.com`) to fill the `lg:grid-cols-4` grid. Added `landing.footerContact` + `landing.footerEmailUs` i18n keys to both `en.json` and `id.json`. Commit `b79303b` — **local only, not yet pushed**. | ✅ |
 | Write report — stale student fix (session 29) | `src/routes/reports/new/+page.svelte`: after `saveReport()` succeeds, the reported student is removed from `sessionStudents` and the session's `reported_student_ids` is updated locally. Sessions where all students are reported are also filtered out. This prevents the just-reported student from reappearing when clicking "Write another". | ✅ |
 | Logout cookie fix — same-origin deletion (session 29) | Root cause: `Navbar.svelte` was calling `api.post('/auth/logout')` cross-origin to `localhost:8000`. The backend's `Set-Cookie: Max-Age=0` deletion was not reliably honored by the browser, so the `access_token` cookie persisted. `+layout.server.ts` read the stale cookie and returned `data.user` as authenticated, making the sidebar and edit icons appear even after logout. **Fix:** New `src/routes/api/logout/+server.ts` — same-origin SvelteKit endpoint that reads the token from cookies, forwards it to the backend via `Authorization: Bearer` (for server-side session cleanup), then deletes both cookies via `event.cookies.delete()`. `Navbar.svelte` now calls `fetch('/api/logout', { method: 'POST' })`. | ✅ |
@@ -311,6 +312,9 @@ The FastAPI backend must be running at `http://localhost:8000`.
 ---
 
 ## What to Do Next Session
+
+**Priority 0 — Push pending commits**
+- Session 34 commits (teacher-view UI cleanup) are local only — run `git push origin main` in `mutawazin-tutor-web/` when ready.
 
 **Priority 1 — Finish delta v9**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
