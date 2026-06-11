@@ -5,10 +5,10 @@
 
 	let { data, children }: { data: App.PageData; children?: Snippet } = $props();
 
-	// Teachers and students keep their sidebar when viewing a teacher profile.
-	// Admin and unauthenticated visitors get the public layout (no sidebar).
+	// Teachers, students, and admins keep their sidebar when viewing a teacher profile.
+	// Unauthenticated visitors get the public layout (no sidebar).
 	const role = $derived(data.user?.role as 'admin' | 'teacher' | 'student' | undefined);
-	const useAuthLayout = $derived(role === 'teacher' || role === 'student');
+	const useAuthLayout = $derived(role === 'teacher' || role === 'student' || role === 'admin');
 </script>
 
 {#if useAuthLayout}
