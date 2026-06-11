@@ -70,14 +70,6 @@
 		}
 	}
 
-	function openCreate() {
-		editingReport = null;
-		scores = [{ topic: '', score: '', max: '10' }];
-		notes = '';
-		understandingLevel = '';
-		modalOpen = true;
-	}
-
 	function openEdit(report: any) {
 		editingReport = report;
 		scores = report.scores?.map((s: any) => ({ topic: s.topic, score: String(s.score), max: String(s.max_score) })) ?? [{ topic: '', score: '', max: '10' }];
@@ -96,11 +88,7 @@
 				notes,
 				understanding_level: understandingLevel || undefined,
 			};
-			if (editingReport) {
-				await api.put(`/reports/${editingReport.id}`, payload);
-			} else {
-				await api.post(`/sessions/${null}/reports`, payload);
-			}
+			await api.put(`/reports/${editingReport.id}`, payload);
 			modalOpen = false;
 			await fetchReports();
 		} finally {
@@ -135,10 +123,7 @@
 				{isOwnStudent ? $t('reports.titleStudent') : $t('reports.titleTeacher', { values: { name: 'Student' } })}
 			</h1>
 		</div>
-		{#if isTeacher}
-			<Button variant="primary" onclick={openCreate}>{$t('reports.createReport')}</Button>
-		{/if}
-	</div>
+</div>
 
 	<!-- Filters -->
 	<div class="flex gap-3 items-center flex-wrap mb-6">
