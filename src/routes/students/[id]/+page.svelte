@@ -217,9 +217,6 @@
 				{#if canShowEmail}
 					<Button variant="teal" href="/account/step-up">{$t('profile.student.setUpEmail')}</Button>
 				{/if}
-				{#if !isOwn && data.user?.role === 'teacher'}
-					<Button variant="primary">{$t('profile.student.messageStudent')}</Button>
-				{/if}
 			</div>
 		</div>
 
