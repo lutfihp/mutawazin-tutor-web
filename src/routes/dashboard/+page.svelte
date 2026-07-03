@@ -267,7 +267,7 @@
 							</div>
 						{/if}
 						{#if d.latest_report.notes}
-							<blockquote class="text-sm text-text2 italic border-l-[3px] border-primary-light pl-3 mb-4">{d.latest_report.notes}</blockquote>
+							<blockquote class="text-sm text-text2 italic border-l-[3px] border-primary-light pl-3 mb-4 whitespace-pre-line">{d.latest_report.notes}</blockquote>
 						{/if}
 						<a href="/reports/{data.user?.id}" class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
 							{$t('dashboard.student.viewFullReport')}

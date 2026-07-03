@@ -68,7 +68,7 @@
 				{/if}
 
 				{#if report.notes}
-					<blockquote class="text-sm text-text2 italic border-l-[3px] border-primary-light pl-3">
+					<blockquote class="text-sm text-text2 italic border-l-[3px] border-primary-light pl-3 whitespace-pre-line">
 						{report.notes}
 					</blockquote>
 				{/if}

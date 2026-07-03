@@ -9,7 +9,7 @@
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 
 	import { Menu, X } from 'lucide-svelte';
-	import { api } from '$lib/api';
+	import { api, assetUrl } from '$lib/api';
 
 	let scrolled = $state(false);
 	let currentLang = $derived($locale === 'id' ? 'id' : 'en');
@@ -44,7 +44,7 @@
 				: `/students/${$user.id}`;
 			const profile = await api.get<{ full_name?: string; photo_url?: string }>(endpoint);
 			profileName = profile?.full_name ?? '';
-			profileSrc = profile?.photo_url ?? '';
+			profileSrc = assetUrl(profile?.photo_url) ?? '';
 		} catch {
 			// Avatar renders as blank colored circle — acceptable fallback
 		}

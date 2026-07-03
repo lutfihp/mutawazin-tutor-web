@@ -30,6 +30,15 @@
 	let notes = $state('');
 	let understandingLevel = $state<'A' | 'B' | 'C' | 'D' | 'E' | ''>('');
 	let saveLoading = $state(false);
+
+	// View modal (read-only)
+	let viewOpen = $state(false);
+	let viewingReport = $state<any | null>(null);
+
+	function openView(report: any) {
+		viewingReport = report;
+		viewOpen = true;
+	}
 	let shareLoading = $state<string | null>(null);
 	let shareData = $state<Record<string, { url: string; expires_at: string }>>({});
 	let copiedId = $state<string | null>(null);
@@ -149,7 +158,13 @@
 	{:else}
 		<div class="flex flex-col gap-4">
 			{#each reports as report}
-				<div class="bg-white border border-border rounded-DEFAULT shadow-sm p-5">
+				<div
+					class="bg-white border border-border rounded-DEFAULT shadow-sm p-5 cursor-pointer hover:border-slate-300 hover:shadow-md transition-all"
+					role="button"
+					tabindex="0"
+					onclick={() => openView(report)}
+					onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openView(report); } }}
+				>
 					<!-- Head -->
 					<div class="flex items-center justify-between mb-3 flex-wrap gap-2">
 						<div>
@@ -178,31 +193,35 @@
 
 					<!-- Notes -->
 					{#if report.notes}
-						<blockquote class="text-sm text-text2 italic border-l-[3px] border-primary-light pl-3 mb-4 line-clamp-2">
+						<blockquote class="text-sm text-text2 italic border-l-[3px] border-primary-light pl-3 mb-4 line-clamp-2 whitespace-pre-line">
 							{report.notes}
 						</blockquote>
 					{/if}
 
 					<!-- Footer -->
-					{#if isTeacher}
 					<div class="flex items-center gap-3 pt-3 border-t border-border">
-						<button onclick={() => openEdit(report)} class="text-sm font-medium text-text2 hover:text-text">
-							{$t('reports.editReport')}
+						<button onclick={(e) => { e.stopPropagation(); openView(report); }} class="text-sm font-medium text-primary hover:text-primary-dark">
+							{$t('reports.viewReport')}
 						</button>
-						<button onclick={() => handleShare(report.id)}
-							class="text-sm font-medium text-primary hover:text-primary-dark"
-							disabled={shareLoading === report.id}>
-							{shareLoading === report.id ? '…' : $t('reports.share')}
-						</button>
+						{#if isTeacher}
+							<button onclick={(e) => { e.stopPropagation(); openEdit(report); }} class="text-sm font-medium text-text2 hover:text-text">
+								{$t('reports.editReport')}
+							</button>
+							<button onclick={(e) => { e.stopPropagation(); handleShare(report.id); }}
+								class="text-sm font-medium text-text2 hover:text-text"
+								disabled={shareLoading === report.id}>
+								{shareLoading === report.id ? '…' : $t('reports.share')}
+							</button>
+						{/if}
 					</div>
-					{/if}
 					{#if shareData[report.id]}
 						<div class="mt-2 p-3 bg-bgGray border border-border rounded-sm text-sm flex flex-col gap-2">
 							<p class="text-xs font-medium text-text2">{$t('reports.shareLinkTitle')}</p>
 							<div class="flex items-center gap-2">
 								<input type="text" readonly value={shareData[report.id].url}
+									onclick={(e) => e.stopPropagation()}
 									class="flex-1 bg-white border border-border rounded-sm px-2.5 py-1.5 text-xs text-text focus:outline-none" />
-								<button onclick={() => copyShareLink(report.id)}
+								<button onclick={(e) => { e.stopPropagation(); copyShareLink(report.id); }}
 									class="px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-sm hover:bg-primary-dark transition-colors">
 									{copiedId === report.id ? $t('reports.shareCopied') : $t('reports.shareCopy')}
 								</button>
@@ -294,5 +313,61 @@
 		<Button variant="primary" size="sm" loading={saveLoading} onclick={(e: MouseEvent) => { const f = document.querySelector('form'); f?.requestSubmit(); }}>
 			{editingReport ? $t('common.save') : $t('reports.modal.createTitle')}
 		</Button>
+	{/snippet}
+</Modal>
+
+<!-- Read-only view modal -->
+<Modal
+	open={viewOpen}
+	title={$t('reports.viewTitle')}
+	onclose={() => (viewOpen = false)}
+	maxWidth="lg"
+>
+	{#if viewingReport}
+		<div class="flex flex-col gap-5">
+			<div class="flex items-start justify-between flex-wrap gap-2">
+				<div>
+					<div class="font-semibold text-base">{[viewingReport.subject_name, viewingReport.teacher_name].filter(Boolean).join(' — ') || 'Session'}</div>
+					<div class="text-xs text-text2 mt-0.5 tabular">
+						{viewingReport.created_at ? formatDate(viewingReport.created_at) : ''}
+					</div>
+				</div>
+				{#if viewingReport.understanding_level}
+					{@const ulVariant = viewingReport.understanding_level === 'A' ? 'success' : viewingReport.understanding_level === 'B' ? 'active' : viewingReport.understanding_level === 'C' ? 'warning' : 'error'}
+					<Badge variant={ulVariant} label={`${viewingReport.understanding_level} — ${$t(`reports.understanding_${viewingReport.understanding_level}`)}`} />
+				{/if}
+			</div>
+
+			{#if viewingReport.scores?.length}
+				<div>
+					<p class="text-[11px] uppercase font-medium text-text2 tracking-wide mb-2">{$t('reports.modal.scoresSection')}</p>
+					<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+						{#each viewingReport.scores as sc}
+							<div class="bg-bgGray rounded-sm px-3.5 py-3">
+								<div class="text-[11px] uppercase font-medium text-text2 tracking-wide mb-1">{sc.topic}</div>
+								<div class="text-xl font-bold tabular">{sc.score}<span class="text-sm font-normal text-text2"> / {sc.max_score}</span></div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			{#if viewingReport.notes}
+				<div>
+					<p class="text-[11px] uppercase font-medium text-text2 tracking-wide mb-2">{$t('reports.modal.notesLabel')}</p>
+					<blockquote class="text-sm text-text2 italic border-l-[3px] border-primary-light pl-3 whitespace-pre-line">
+						{viewingReport.notes}
+					</blockquote>
+				</div>
+			{/if}
+		</div>
+	{/if}
+	{#snippet footer()}
+		<Button variant="secondary" size="sm" onclick={() => (viewOpen = false)}>{$t('common.close')}</Button>
+		{#if isTeacher && viewingReport}
+			<Button variant="primary" size="sm" onclick={() => { viewOpen = false; openEdit(viewingReport); }}>
+				{$t('reports.editReport')}
+			</Button>
+		{/if}
 	{/snippet}
 </Modal>

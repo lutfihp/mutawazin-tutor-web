@@ -5,6 +5,7 @@
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { assetUrl } from '$lib/api';
 
 	const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
@@ -50,7 +51,7 @@
 					<div class="bg-white border border-border rounded-DEFAULT shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 transition-all duration-150 flex flex-col">
 						<div class="p-5 flex-1">
 							<div class="flex items-center gap-3 mb-3">
-								<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={teacher.photo_url} />
+								<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={assetUrl(teacher.photo_url)} />
 								<div>
 									<div class="font-semibold">{teacher.full_name}</div>
 									<div class="text-xs text-text2">{$t('common.tutor')}</div>

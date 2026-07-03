@@ -387,6 +387,8 @@
     "to": "to",
     "averageScore": "Average {score} / {max}",
     "editReport": "Edit Report",
+    "viewReport": "View Report",
+    "viewTitle": "Report Details",
     "viewFull": "View Full →",
     "noReports": "No reports found.",
     "understandingLevel": "Understanding Level",

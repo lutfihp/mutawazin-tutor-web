@@ -387,6 +387,8 @@
     "to": "hingga",
     "averageScore": "Rata-rata {score} / {max}",
     "editReport": "Edit Laporan",
+    "viewReport": "Lihat Laporan",
+    "viewTitle": "Detail Laporan",
     "viewFull": "Lihat Lengkap →",
     "noReports": "Tidak ada laporan.",
     "understandingLevel": "Tingkat Pemahaman",

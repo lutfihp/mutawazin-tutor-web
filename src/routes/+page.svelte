@@ -6,6 +6,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
+	import { assetUrl } from '$lib/api';
 
 	let { data } = $props();
 
@@ -193,7 +194,7 @@
 							{#if course.teachers?.length}
 								<div class="flex -space-x-2">
 									{#each course.teachers.slice(0, 4) as teacher}
-										<Avatar name={teacher.full_name} id={teacher.user_id} size="sm" src={teacher.photo_url} class="border-2 border-white" />
+										<Avatar name={teacher.full_name} id={teacher.user_id} size="sm" src={assetUrl(teacher.photo_url)} class="border-2 border-white" />
 									{/each}
 								</div>
 							{/if}
@@ -219,7 +220,7 @@
 						<div class="bg-white border border-border rounded-DEFAULT shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 transition-all duration-150 flex flex-col">
 							<div class="p-5 flex-1">
 								<div class="flex items-center gap-3 mb-3">
-									<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={teacher.photo_url} />
+									<Avatar name={teacher.full_name} id={teacher.user_id} size="lg" src={assetUrl(teacher.photo_url)} />
 									<div>
 										<div class="font-semibold">{teacher.full_name}</div>
 										<div class="text-xs text-text2">{$t('common.tutor')}</div>
