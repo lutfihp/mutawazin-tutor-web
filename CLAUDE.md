@@ -21,11 +21,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-06-11 — session 35)
+## Current Status (as of 2026-07-03 — session 36)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 35 admin sidebar fix)
+### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 36 report view modal + avatar fix)
 
-### GitHub remote: ⚠️ `https://github.com/lutfihp/mutawazin-tutor-web` — 3 local commits ahead of `origin/main` (sessions 34 + 35, not yet pushed)
+### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — up to date with `origin/main` (session 36 pushed as `4b31be2`)
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -107,6 +107,9 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Teacher dashboard recent reports dedup (session 32) | `get_teacher_dashboard` in `app/dashboard/service.py` fetches 25 reports then deduplicates by `student_id`, keeping only 5 unique students. Fixes duplicate links when 2+ students share a group session. | ✅ |
 | Teacher-view UI cleanup (session 34) | `reports/[studentId]/+page.svelte` — "Create Report" button + `openCreate()` fn + broken create path (`session_id = null`) removed; report creation is now `/reports/new` only. `students/[id]/+page.svelte` — "Message Student" button removed (was dead — no href/onclick). Both committed to `main`, 0 type errors. | ✅ |
 | Admin sidebar on teacher profile (session 35) | `src/routes/teachers/[id]/+layout.svelte` — `useAuthLayout` condition extended to include `admin` role. Admins now keep their sidebar when viewing any teacher profile. Unauthenticated visitors are unaffected (still get public Navbar-only layout). Architecture decision note in `CLAUDE.md` updated: constraint is now "unauthenticated visitors" not "admin". | ✅ |
+| Avatar `assetUrl` — all non-profile call sites (session 36) | Profile picture was broken everywhere except Teacher/Student My Profile because callers passed the raw `/uploads/...` relative path from the API into `<Avatar src>`, so the browser tried to load it from the app origin instead of the API origin. Fixed by wrapping `src` with `assetUrl()` at four sites: `Navbar.svelte` (`profileSrc = assetUrl(profile?.photo_url) ?? ''`), landing `+page.svelte` search-result teacher chips and featured-teacher cards, and `/teachers/+page.svelte` directory grid. Follows the established caller-applies convention — no change to `Avatar.svelte` itself. | ✅ |
+| Report notes `whitespace-pre-line` (session 36) | DB stores newlines in `report.notes`, but the `<blockquote>{report.notes}</blockquote>` renders collapse `\n` into a single space by default. Added `whitespace-pre-line` to every notes render: report list card (`reports/[studentId]/+page.svelte`), public share page (`report/share/[token]/+page.svelte`), dashboard latest-report card, and the new view modal. `pre-line` (not `pre-wrap`) — preserves newlines but still wraps normally and collapses runs of spaces, which matches teacher input intent. | ✅ |
+| Report view modal — read-only, mobile-friendly (session 36) | On mobile the list card clamped notes to 2 lines with no way to see the rest, and the edit modal was teacher-only. `reports/[studentId]/+page.svelte` now: (1) makes each report card clickable (`role="button"`, `tabindex="0"`, Enter/Space keys) → opens a new read-only `<Modal maxWidth="lg">` with full scores + full notes (`whitespace-pre-line`), scrollable body via existing `max-h-[90vh]`; (2) adds an explicit "View Report" button in the card footer, visible to both teacher and student; (3) footer of the view modal shows "Close" always, and "Edit Report" for teachers (which closes view + opens the existing edit modal on the same report); (4) `stopPropagation()` on the edit/share buttons and on the inline share-panel input/copy button so tapping them does NOT re-trigger the card's view-modal open. New i18n keys: `reports.viewReport` + `reports.viewTitle` in both `en.json` and `id.json`. No backend change. | ✅ |
 | Landing footer — 4-column symmetry + Contact (session 32) | `src/routes/+page.svelte` footer — added 4th Contact `<nav>` column (`mailto:info@mutawazinprivate.com`) to fill the `lg:grid-cols-4` grid. Added `landing.footerContact` + `landing.footerEmailUs` i18n keys to both `en.json` and `id.json`. Commit `b79303b` — **local only, not yet pushed**. | ✅ |
 | Write report — stale student fix (session 29) | `src/routes/reports/new/+page.svelte`: after `saveReport()` succeeds, the reported student is removed from `sessionStudents` and the session's `reported_student_ids` is updated locally. Sessions where all students are reported are also filtered out. This prevents the just-reported student from reappearing when clicking "Write another". | ✅ |
 | Logout cookie fix — same-origin deletion (session 29) | Root cause: `Navbar.svelte` was calling `api.post('/auth/logout')` cross-origin to `localhost:8000`. The backend's `Set-Cookie: Max-Age=0` deletion was not reliably honored by the browser, so the `access_token` cookie persisted. `+layout.server.ts` read the stale cookie and returned `data.user` as authenticated, making the sidebar and edit icons appear even after logout. **Fix:** New `src/routes/api/logout/+server.ts` — same-origin SvelteKit endpoint that reads the token from cookies, forwards it to the backend via `Authorization: Bearer` (for server-side session cleanup), then deletes both cookies via `event.cookies.delete()`. `Navbar.svelte` now calls `fetch('/api/logout', { method: 'POST' })`. | ✅ |
@@ -314,8 +317,10 @@ The FastAPI backend must be running at `http://localhost:8000`.
 
 ## What to Do Next Session
 
-**Priority 0 — Push pending commits**
-- Sessions 34 + 35 commits are local only (3 commits total) — run `git push origin main` in `mutawazin-tutor-web/` when ready.
+**Priority 0 — Live-verify session 36 fixes**
+- **Profile picture** — as teacher AND as student: reload the app, avatar should appear in Navbar (top-right), landing search-result teacher chips, landing Featured Teachers cards, and `/teachers` directory. Previously all four were broken (raw relative path loading from app origin).
+- **Report notes newlines** — open any report that was saved with multi-line notes (either via `/reports/{id}` list card preview *or* dashboard latest-report card *or* public share page *or* the new view modal). Newlines from the DB should now be preserved.
+- **Report view modal** — on mobile (375px): tap a report card → view modal opens; scores render in 2-col grid; long notes scroll inside the modal. As teacher, "Edit Report" button in the modal footer swaps to the existing edit form. Share panel "Copy link" should copy without opening the view modal.
 
 **Priority 1 — Finish delta v9**
 1. **Admin students age column — one-line code fix** — Replace the IIFE formula at `admin/students/+page.svelte` Age column with `user.age != null ? String(user.age) : '—'`.
