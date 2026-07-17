@@ -148,7 +148,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Decision | What it is |
 |---|---|
 | **Svelte 5 runes mode** | Enforced by `svelte.config.js`. Use `$props()`, `$state()`, `$derived()`, `$effect()`, `{@render children()}`. No `export let`, no `<slot>`. |
-| **svelte-i18n** | Cookie-based lang (no URL prefix changes). `$t('key')` everywhere. EN/ID toggle in Navbar. |
+| **svelte-i18n + URL-based locale on public pages** | Indonesian = unprefixed URLs (default/x-default), English = `/en` prefix, stripped by the `reroute` hook in `src/hooks.ts` (no route files move). Locale resolution in `hooks.server.ts`: `/en/*` → en; other public paths → id (URL-authoritative, never redirect); authenticated paths → `lang` cookie. Public-page links use `$lhref('/path')` from `src/lib/i18n.ts`; the Navbar toggle is a crawlable `<a data-sveltekit-reload>` when logged out, a button when logged in. `SeoAlternates.svelte` emits canonical + hreflang. `+layout.ts` awaits `waitLocale()` so SSR HTML is always translated. `$t('key')` usage everywhere is unchanged. |
 | **Tailwind v3** (not v4) | v4 was installed by default and downgraded. Config is in `tailwind.config.js`. |
 | **Sub-layouts per route group** | Each authenticated route group has its own `+layout.svelte` wrapping `<AuthLayout>`. |
 | **CSR for feature pages** | Courses/Calendar/Reports load data in `onMount`, not SSR. Auth guard in `+page.server.ts` only. |
