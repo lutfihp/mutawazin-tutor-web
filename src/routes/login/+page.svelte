@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { lhref } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { user } from '$lib/stores/auth';
 	import { api } from '$lib/api';
@@ -45,7 +46,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-bgGray flex flex-col items-center justify-center py-10 px-6">
-	<a href="/" class="mb-6" aria-label="Mutawazin home">
+	<a href={$lhref('/')} class="mb-6" aria-label="Mutawazin home">
 		<Logo />
 	</a>
 
@@ -104,7 +105,7 @@
 			</div>
 
 			<div class="flex justify-end mb-6">
-				<a href="/forgot-password" class="text-[13px] text-primary font-semibold hover:text-primary-dark hover:underline">
+				<a href={$lhref('/forgot-password')} class="text-[13px] text-primary font-semibold hover:text-primary-dark hover:underline">
 					{$t('auth.login.forgotPassword')}
 				</a>
 			</div>
@@ -117,11 +118,11 @@
 		<div class="mt-6 pt-5 border-t border-border text-sm text-text2 text-center">
 			{$t('auth.login.noAccount')}
 			<div class="mt-1.5 flex items-center justify-center gap-3">
-				<a href="/register/teacher" class="font-semibold text-primary hover:text-primary-dark hover:underline">
+				<a href={$lhref('/register/teacher')} class="font-semibold text-primary hover:text-primary-dark hover:underline">
 					{$t('nav.joinTeacher')}
 				</a>
 				<span class="text-border" aria-hidden="true">·</span>
-				<a href="/register/student" class="font-semibold text-primary hover:text-primary-dark hover:underline">
+				<a href={$lhref('/register/student')} class="font-semibold text-primary hover:text-primary-dark hover:underline">
 					{$t('nav.joinStudent')}
 				</a>
 			</div>

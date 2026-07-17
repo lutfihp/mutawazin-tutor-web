@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { lhref } from '$lib/i18n';
 	import Logo from '$lib/components/Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -49,7 +50,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-bgGray flex flex-col items-center justify-center py-10 px-6">
-	<a href="/" class="mb-6"><Logo /></a>
+	<a href={$lhref('/')} class="mb-6"><Logo /></a>
 
 	<div class="w-full max-w-auth bg-white border border-border rounded-lg shadow-sm p-8">
 		{#if success}
@@ -70,7 +71,7 @@
 				<div class="mb-4 p-3 bg-errorBg rounded-sm text-sm text-errorText" role="alert" aria-live="assertive">
 					{error}
 					{#if error === $t('auth.resetPassword.expiredToken')}
-						<a href="/forgot-password" class="ml-1 font-semibold underline">{$t('auth.resetPassword.requestNew')}</a>
+						<a href={$lhref('/forgot-password')} class="ml-1 font-semibold underline">{$t('auth.resetPassword.requestNew')}</a>
 					{/if}
 				</div>
 			{/if}

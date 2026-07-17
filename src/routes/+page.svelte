@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import { lhref } from '$lib/i18n';
 
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -89,10 +90,10 @@
 					</p>
 
 					<div class="flex flex-wrap gap-3 mb-8">
-						<Button variant="primary" size="lg" href="/register/student">
+						<Button variant="primary" size="lg" href={$lhref('/register/student')}>
 							{$t('nav.joinStudent')}
 						</Button>
-						<Button variant="secondary" size="lg" href="/register/teacher">
+						<Button variant="secondary" size="lg" href={$lhref('/register/teacher')}>
 							{$t('nav.joinTeacher')}
 						</Button>
 					</div>
@@ -244,7 +245,7 @@
 								<span class="text-xs text-text2 tabular">
 									{#if teacher.rating}⭐ {teacher.rating}{/if}
 								</span>
-								<a href="/teachers/{teacher.user_id}" class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
+								<a href={$lhref(`/teachers/${teacher.user_id}`)} class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline">
 									{$t('common.viewProfile')}
 								</a>
 							</div>
@@ -256,7 +257,7 @@
 			{/if}
 
 			<div class="text-center">
-				<Button variant="secondary" size="lg" href="/teachers">
+				<Button variant="secondary" size="lg" href={$lhref('/teachers')}>
 					{$t('landing.browseAll')}
 				</Button>
 			</div>

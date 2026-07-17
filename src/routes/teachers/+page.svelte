@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import { lhref } from '$lib/i18n';
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -78,7 +79,7 @@
 								{/if}
 							</span>
 							<a
-								href="/teachers/{teacher.user_id}"
+								href={$lhref(`/teachers/${teacher.user_id}`)}
 								class="text-sm font-semibold text-primary hover:text-primary-dark hover:underline"
 							>
 								{$t('common.viewProfile')}
@@ -90,7 +91,7 @@
 		{/if}
 
 		<div class="mt-10 text-center">
-			<Button variant="secondary" href="/">{$t('landing.footerHome')} ←</Button>
+			<Button variant="secondary" href={$lhref('/')}>{$t('landing.footerHome')} ←</Button>
 		</div>
 	</main>
 </div>

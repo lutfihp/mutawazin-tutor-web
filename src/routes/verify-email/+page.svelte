@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { lhref } from '$lib/i18n';
 	import Logo from '$lib/components/Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -63,7 +64,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-bgGray flex flex-col items-center justify-center py-10 px-6">
-	<a href="/" class="mb-6"><Logo /></a>
+	<a href={$lhref('/')} class="mb-6"><Logo /></a>
 
 	<div class="w-full max-w-auth bg-white border border-border rounded-lg shadow-sm p-8 text-center">
 		<div class="w-16 h-16 {cfg.iconBg} rounded-pill flex items-center justify-center mx-auto mb-5">
@@ -81,7 +82,7 @@
 
 		<h1 class="text-[22px] font-semibold mb-3">{$t(cfg.titleKey)}</h1>
 		<p class="text-sm text-text2 mb-8 max-w-sm mx-auto">{$t(cfg.bodyKey)}</p>
-		<Button variant={cfg.ctaVariant} href={cfg.ctaHref} class="min-w-[180px]">
+		<Button variant={cfg.ctaVariant} href={$lhref(cfg.ctaHref)} class="min-w-[180px]">
 			{$t(cfg.ctaKey)}
 		</Button>
 	</div>

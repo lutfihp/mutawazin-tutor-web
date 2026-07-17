@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { lhref } from '$lib/i18n';
 	import { api } from '$lib/api';
 	import Logo from '$lib/components/Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -46,7 +47,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-bgGray flex flex-col items-center justify-center py-10 px-6">
-	<a href="/" class="mb-6"><Logo /></a>
+	<a href={$lhref('/')} class="mb-6"><Logo /></a>
 
 	<div class="w-full max-w-auth bg-white border border-border rounded-lg shadow-sm p-8">
 		{#if success}
@@ -58,7 +59,7 @@
 				</div>
 				<h1 class="text-[22px] font-semibold mb-2">{$t('auth.registerStudent.successTitle')}</h1>
 				<p class="text-sm text-text2 mb-6">{$t('auth.registerStudent.success')}</p>
-				<Button variant="secondary" href="/">{$t('auth.verifyEmail.successRegister.cta')}</Button>
+				<Button variant="secondary" href={$lhref('/')}>{$t('auth.verifyEmail.successRegister.cta')}</Button>
 			</div>
 		{:else}
 			<h1 class="text-[22px] font-semibold tracking-tight">{$t('auth.registerStudent.title')}</h1>
@@ -122,7 +123,7 @@
 
 			<div class="mt-6 pt-5 border-t border-border text-sm text-text2 text-center">
 				{$t('auth.registerStudent.alreadyHaveAccount')}
-				<a href="/login" class="ml-1 font-semibold text-primary hover:text-primary-dark hover:underline">
+				<a href={$lhref('/login')} class="ml-1 font-semibold text-primary hover:text-primary-dark hover:underline">
 					{$t('auth.registerStudent.logIn')}
 				</a>
 			</div>
