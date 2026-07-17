@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { lhref } from '$lib/i18n';
+	import SeoAlternates from '$lib/components/SeoAlternates.svelte';
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -25,6 +26,8 @@
 		}
 	});
 </script>
+
+<SeoAlternates />
 
 <svelte:head>
 	<title>{$t('nav.teachers')} — Mutawazin</title>

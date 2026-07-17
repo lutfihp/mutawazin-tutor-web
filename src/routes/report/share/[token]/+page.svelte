@@ -17,6 +17,7 @@
 
 <svelte:head>
 	<title>Report — Mutawazin</title>
+	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <div class="min-h-screen bg-bgGray py-10 px-6">

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { lhref } from '$lib/i18n';
+	import SeoAlternates from '$lib/components/SeoAlternates.svelte';
 
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -46,6 +47,8 @@
 
 	onMount(() => runSearch(''));
 </script>
+
+<SeoAlternates />
 
 <svelte:head>
 	<title>Mutawazin — Online Tutoring Platform</title>

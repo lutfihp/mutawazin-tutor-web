@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { lhref } from '$lib/i18n';
+	import SeoAlternates from '$lib/components/SeoAlternates.svelte';
 	import { api, type PaginatedResponse } from '$lib/api';
 	import Logo from '$lib/components/Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -59,6 +60,8 @@
 		}
 	}
 </script>
+
+<SeoAlternates />
 
 <svelte:head>
 	<title>{$t('auth.registerTeacher.title')} — Mutawazin</title>

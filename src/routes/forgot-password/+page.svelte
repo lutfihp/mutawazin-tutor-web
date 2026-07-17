@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { lhref } from '$lib/i18n';
+	import SeoAlternates from '$lib/components/SeoAlternates.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -26,6 +27,8 @@
 		}
 	}
 </script>
+
+<SeoAlternates />
 
 <svelte:head>
 	<title>{$t('auth.forgotPassword.title')} — Mutawazin</title>

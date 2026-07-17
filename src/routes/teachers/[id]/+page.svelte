@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import SeoAlternates from '$lib/components/SeoAlternates.svelte';
 	import { api } from '$lib/api';
 	import { AGE_KEYS } from '$lib/utils/ageCategories';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
@@ -165,6 +166,8 @@
 		}
 	}
 </script>
+
+<SeoAlternates />
 
 {#if cropSrc}
 	<PhotoCropModal

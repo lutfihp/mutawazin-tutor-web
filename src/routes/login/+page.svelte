@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { lhref } from '$lib/i18n';
+	import SeoAlternates from '$lib/components/SeoAlternates.svelte';
 	import { onMount } from 'svelte';
 	import { user } from '$lib/stores/auth';
 	import { api } from '$lib/api';
@@ -40,6 +41,8 @@
 		}
 	}
 </script>
+
+<SeoAlternates />
 
 <svelte:head>
 	<title>Log in — Mutawazin</title>
