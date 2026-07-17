@@ -93,7 +93,21 @@ language versions of every public page instead of one cookie-dependent page.
 - **`/report/share/[token]`** gets `<meta name="robots" content="noindex">`
   instead — token URLs must not be indexed.
 
-### 4. Cleanup rolled in
+### 4. SSR completeness fixes (required for the SEO work to pay off)
+
+- **`await waitLocale()` in `src/routes/+layout.ts`** — svelte-i18n loads
+  locale JSON asynchronously and the layout load currently returns without
+  waiting, so server-rendered HTML can contain raw i18n keys instead of
+  translated text. `setupI18n(lang)` followed by `await waitLocale()` ensures
+  every server response contains fully translated content.
+- **`/teachers` directory becomes SSR-loaded** — new
+  `src/routes/teachers/+page.server.ts` fetches `GET /teachers/featured`
+  server-side; `+page.svelte` initializes from `data` and drops the `onMount`
+  fetch. Crawlers currently receive an empty grid; after this they get the
+  full teacher list (names + profile links) in the initial HTML. Follows the
+  existing courses-SSR pattern (`src/routes/courses/+page.server.ts`).
+
+### 5. Cleanup rolled in
 
 - Remove the localStorage read in `detectLang()` and the localStorage write in
   `setLang()` — the `lang` cookie becomes the single client-side persistence.
@@ -132,3 +146,7 @@ language versions of every public page instead of one cookie-dependent page.
   4. Log in from `/en/login` → dashboard is English; from `/login` →
      dashboard is Indonesian.
   5. `/report/share/<token>` responds with the noindex meta tag.
+  6. View-source (not devtools) of `/` and `/en` contains real translated
+     text — no raw i18n keys (verifies `waitLocale`).
+  7. View-source of `/teachers` contains the featured teachers' names and
+     profile links (verifies the SSR data load).
