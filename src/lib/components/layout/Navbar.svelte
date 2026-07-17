@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { user } from '$lib/stores/auth';
 	import { sidebarOpen } from '$lib/stores/sidebar';
-	import { setLang, type Lang } from '$lib/i18n';
+	import { setLang, altLangHref, lhref, type Lang } from '$lib/i18n';
 	import { locale, t } from 'svelte-i18n';
 	import Logo from '$lib/components/Logo.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
@@ -76,15 +76,15 @@
 		</button>
 	{/if}
 
-	<Logo />
+	<Logo href={$lhref('/')} />
 
 	<!-- Landing nav links (desktop only) -->
 	{#if isLanding}
 		<nav class="hidden nav-collapse:flex items-center gap-1 ml-4" aria-label="Main navigation">
-			<a href="/" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.home')}</a>
-			<a href="/#courses" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.courses')}</a>
-			<a href="/#teachers" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.teachers')}</a>
-			<a href="/#about" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.about')}</a>
+			<a href={$lhref('/')} class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.home')}</a>
+			<a href="{$lhref('/')}#courses" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.courses')}</a>
+			<a href="{$lhref('/')}#teachers" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.teachers')}</a>
+			<a href="{$lhref('/')}#about" class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">{$t('nav.about')}</a>
 		</nav>
 	{/if}
 
@@ -97,17 +97,36 @@
 		aria-label="Language selection"
 	>
 		{#each (['en', 'id'] as Lang[]) as lang}
-			<button
-				onclick={() => switchLang(lang)}
-				class="px-2.5 py-1 text-xs font-medium rounded-pill transition-all duration-120
-				       {currentLang === lang
-					? 'bg-white text-text shadow-sm'
-					: 'text-text2 hover:text-text'}"
-				aria-pressed={currentLang === lang}
-				aria-label={lang === 'en' ? 'English' : 'Bahasa Indonesia'}
-			>
-				{lang.toUpperCase()}
-			</button>
+			{#if $user}
+				<button
+					onclick={() => switchLang(lang)}
+					class="px-2.5 py-1 text-xs font-medium rounded-pill transition-all duration-120
+					       {currentLang === lang
+						? 'bg-white text-text shadow-sm'
+						: 'text-text2 hover:text-text'}"
+					aria-pressed={currentLang === lang}
+					aria-label={lang === 'en' ? 'English' : 'Bahasa Indonesia'}
+				>
+					{lang.toUpperCase()}
+				</button>
+			{:else}
+				<!-- Public pages: real links so crawlers discover both language versions.
+				     data-sveltekit-reload forces SSR so the server re-resolves the locale.
+				     onclick sets the cookie so an explicit switch survives into the app. -->
+				<a
+					href={altLangHref($page.url.pathname, lang)}
+					data-sveltekit-reload
+					onclick={() => setLang(lang)}
+					class="px-2.5 py-1 text-xs font-medium rounded-pill transition-all duration-120
+					       {currentLang === lang
+						? 'bg-white text-text shadow-sm'
+						: 'text-text2 hover:text-text'}"
+					aria-current={currentLang === lang ? 'page' : undefined}
+					aria-label={lang === 'en' ? 'English' : 'Bahasa Indonesia'}
+				>
+					{lang.toUpperCase()}
+				</a>
+			{/if}
 		{/each}
 	</div>
 
@@ -127,7 +146,7 @@
 		</button>
 	{:else}
 		<!-- Landing CTAs -->
-		<a href="/login" class="inline-flex items-center px-3 py-1.5 text-sm font-semibold text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">
+		<a href={$lhref('/login')} class="inline-flex items-center px-3 py-1.5 text-sm font-semibold text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors">
 			{$t('nav.login')}
 		</a>
 	{/if}
