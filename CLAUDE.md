@@ -21,11 +21,11 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-07-03 — session 36)
+## Current Status (as of 2026-07-18 — session 37)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 36 report view modal + avatar fix)
+### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 37 URL-based language routing)
 
-### GitHub remote: ✅ `https://github.com/lutfihp/mutawazin-tutor-web` — up to date with `origin/main` (session 36 pushed as `4b31be2`)
+### GitHub remote: ⚠️ `https://github.com/lutfihp/mutawazin-tutor-web` — **12 local commits not yet pushed** (session 37: URL-based language routing, `5bb2634..b947fd0`). Do not push without explicit user instruction.
 
 ### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
 
@@ -110,6 +110,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Avatar `assetUrl` — all non-profile call sites (session 36) | Profile picture was broken everywhere except Teacher/Student My Profile because callers passed the raw `/uploads/...` relative path from the API into `<Avatar src>`, so the browser tried to load it from the app origin instead of the API origin. Fixed by wrapping `src` with `assetUrl()` at four sites: `Navbar.svelte` (`profileSrc = assetUrl(profile?.photo_url) ?? ''`), landing `+page.svelte` search-result teacher chips and featured-teacher cards, and `/teachers/+page.svelte` directory grid. Follows the established caller-applies convention — no change to `Avatar.svelte` itself. | ✅ |
 | Report notes `whitespace-pre-line` (session 36) | DB stores newlines in `report.notes`, but the `<blockquote>{report.notes}</blockquote>` renders collapse `\n` into a single space by default. Added `whitespace-pre-line` to every notes render: report list card (`reports/[studentId]/+page.svelte`), public share page (`report/share/[token]/+page.svelte`), dashboard latest-report card, and the new view modal. `pre-line` (not `pre-wrap`) — preserves newlines but still wraps normally and collapses runs of spaces, which matches teacher input intent. | ✅ |
 | Report view modal — read-only, mobile-friendly (session 36) | On mobile the list card clamped notes to 2 lines with no way to see the rest, and the edit modal was teacher-only. `reports/[studentId]/+page.svelte` now: (1) makes each report card clickable (`role="button"`, `tabindex="0"`, Enter/Space keys) → opens a new read-only `<Modal maxWidth="lg">` with full scores + full notes (`whitespace-pre-line`), scrollable body via existing `max-h-[90vh]`; (2) adds an explicit "View Report" button in the card footer, visible to both teacher and student; (3) footer of the view modal shows "Close" always, and "Edit Report" for teachers (which closes view + opens the existing edit modal on the same report); (4) `stopPropagation()` on the edit/share buttons and on the inline share-panel input/copy button so tapping them does NOT re-trigger the card's view-modal open. New i18n keys: `reports.viewReport` + `reports.viewTitle` in both `en.json` and `id.json`. No backend change. | ✅ |
+| URL-based language routing + SEO (session 37) | Indonesian = unprefixed URLs, English = `/en` prefix on public pages. New: `src/hooks.ts` (reroute strips `/en`), `SeoAlternates.svelte` (canonical + hreflang id/en/x-default), `teachers/+page.server.ts` (SSR grid). Changed: `hooks.server.ts` (locale resolution + cookie rules + `<html lang>` via `transformPageChunk`), `app.html` (`%lang%`), `+layout.server.ts` (lang from locals), `+layout.ts` (`waitLocale()`), `i18n.ts` (`lhref`/`altLangHref`/`stripLangPrefix`, cookie-only persistence, `detectLang` deleted), Navbar (toggle = crawlable `<a data-sveltekit-reload>` when logged out), ~22 public-page hrefs wrapped in `$lhref()`, `noindex` on `/report/share/[token]`. Spec: `docs/superpowers/specs/2026-07-17-url-based-language-design.md`; plan: `docs/superpowers/plans/2026-07-17-url-based-language-routing.md`. Curl-verified: `<html lang>`, canonical/hreflang on `/` + `/en`, translated SSR text both languages, cookie set/no-overwrite rules, `/en/en` → 404. | ✅ (curl-verified; browser + production verify pending) |
 | Landing footer — 4-column symmetry + Contact (session 32) | `src/routes/+page.svelte` footer — added 4th Contact `<nav>` column (`mailto:info@mutawazinprivate.com`) to fill the `lg:grid-cols-4` grid. Added `landing.footerContact` + `landing.footerEmailUs` i18n keys to both `en.json` and `id.json`. Commit `b79303b` — **local only, not yet pushed**. | ✅ |
 | Write report — stale student fix (session 29) | `src/routes/reports/new/+page.svelte`: after `saveReport()` succeeds, the reported student is removed from `sessionStudents` and the session's `reported_student_ids` is updated locally. Sessions where all students are reported are also filtered out. This prevents the just-reported student from reappearing when clicking "Write another". | ✅ |
 | Logout cookie fix — same-origin deletion (session 29) | Root cause: `Navbar.svelte` was calling `api.post('/auth/logout')` cross-origin to `localhost:8000`. The backend's `Set-Cookie: Max-Age=0` deletion was not reliably honored by the browser, so the `access_token` cookie persisted. `+layout.server.ts` read the stale cookie and returned `data.user` as authenticated, making the sidebar and edit icons appear even after logout. **Fix:** New `src/routes/api/logout/+server.ts` — same-origin SvelteKit endpoint that reads the token from cookies, forwards it to the backend via `Authorization: Bearer` (for server-side session cleanup), then deletes both cookies via `event.cookies.delete()`. `Navbar.svelte` now calls `fetch('/api/logout', { method: 'POST' })`. | ✅ |
@@ -118,6 +119,8 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 | Delta v13 — phone number (session 19) | Optional private `phone_number: string\|null` field added to teacher and student profiles. **Teacher profile:** new Phone Number card after Achievements (same per-section pencil pattern — `editingPhoneNumber`/`savingPhoneNumber`/`savePhoneNumber()`/`openSection('phoneNumber')`). Visible to `isOwn \|\| isAdmin`. Added `isAdmin = $derived(data.user?.role === 'admin')` to teacher profile. **Student profile:** inline phone row after DOB (same inline-edit pattern as DOB). Owner always sees field + pencil; admin sees field only when non-null; teacher callers see nothing (API returns null). Cross-cancel with DOB edit. **Types:** `TeacherProfileResponse`, `UpdateTeacherProfileRequest`, `StudentProfileResponse`, `UpdateStudentProfileRequest` added to `src/lib/api.ts`. **i18n:** `profile.phoneNumber` + `profile.phoneNumberPlaceholder` added to `en.json` + `id.json`. 4 commits on `main`, not yet pushed. | ✅ (code done; live verify pending) |
 
 ### What is NOT done yet (known gaps)
+
+0. **URL-based language routing — remaining verification (session 37)** — Curl checks all passed; still pending: (a) browser check — EN/ID toggle round-trip on `/teachers`, log in from `/en/login` → dashboard stays English, log in from `/login` → Indonesian; (b) `/teachers` grid with real data (local dev DB had zero featured teachers — API returned `[]`, so only the SSR empty state was verified); (c) production after deploy — canonical URLs must show `https://mutawazinprivate.com` (built from request origin; existing `ORIGIN` env handles it, no new env vars). Also: **12 commits await explicit push approval.** SEO follow-ups deliberately deferred: sitemap.xml, robots.txt.
 
 1. **Admin Courses — student enrollment management** — enroll/unenroll students per course (`POST /courses/:id/enroll`, `DELETE /courses/:id/enroll/:student_id`). Deferred to follow-up; the page exists but has no student management UI yet.
 
@@ -198,7 +201,8 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │   ├── app.html
 │   ├── app.css
 │   ├── app.d.ts
-│   ├── hooks.server.ts             ← ⚠️ Sets locals.user from JWT cookie on EVERY request
+│   ├── hooks.ts                    ← reroute: strips /en prefix so /en/* matches existing routes
+│   ├── hooks.server.ts             ← ⚠️ Sets locals.user + locals.lang on EVERY request; lang cookie rules; <html lang> stamp
 │   ├── lib/
 │   │   ├── api.ts
 │   │   ├── i18n.ts
@@ -210,6 +214,7 @@ mutawazin-tutor-web/          ← repo root = GitHub repo
 │   │   ├── components/ui/          ← Badge, Avatar, Button, Card, Input, Modal, DropdownMenu, Pagination, StudentPicker
 │   ├── components/EarningsTable.svelte  ← Shared earnings table (sessions + totals). Props: sessions, loading. Subject/student resolved from display_title. No studentMap.
 │   │   ├── components/ErrorState.svelte  ← full-page error state (tone variants, snippet props)
+│   │   ├── components/SeoAlternates.svelte  ← canonical + hreflang id/en/x-default tags (public pages)
 │   │   └── components/layout/      ← Logo, Navbar, Sidebar, AuthLayout
 │   ├── locales/en.json, id.json
 │   └── routes/
