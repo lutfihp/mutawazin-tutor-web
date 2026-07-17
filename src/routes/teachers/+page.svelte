@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { lhref } from '$lib/i18n';
 	import SeoAlternates from '$lib/components/SeoAlternates.svelte';
@@ -9,22 +8,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { assetUrl } from '$lib/api';
 
-	const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
-
-	let teachers = $state<any[]>([]);
-	let loading = $state(true);
-
-	onMount(async () => {
-		try {
-			const res = await fetch(`${BASE}/teachers/featured`);
-			const data = res.ok ? await res.json() : [];
-			teachers = Array.isArray(data) ? data : [];
-		} catch {
-			teachers = [];
-		} finally {
-			loading = false;
-		}
-	});
+	let { data } = $props();
+	const teachers = $derived(data.featuredTeachers ?? []);
 </script>
 
 <SeoAlternates />
@@ -43,11 +28,7 @@
 			<p class="text-text2 mt-1">{$t('landing.teachersSub')}</p>
 		</div>
 
-		{#if loading}
-			<div class="flex justify-center py-20" role="status">
-				<div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-			</div>
-		{:else if teachers.length === 0}
+		{#if teachers.length === 0}
 			<p class="text-center text-text2 py-20">{$t('common.noResults')}</p>
 		{:else}
 			<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
