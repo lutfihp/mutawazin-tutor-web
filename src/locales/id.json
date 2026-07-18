@@ -339,6 +339,7 @@
     "recurringTitle": "Sesi Berulang",
     "addRecurring": "+ Berulang",
     "noRecurring": "Tidak ada sesi berulang.",
+    "noSessionsDay": "Tidak ada sesi pada hari ini.",
     "recurringBadge": "Bagian dari seri berulang",
     "deleteRecurringConfirm": "Ini akan menghapus semua sesi mendatang dalam seri ini. Lanjutkan?",
     "daysShort": ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],

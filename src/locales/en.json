@@ -339,6 +339,7 @@
     "recurringTitle": "Recurring Sessions",
     "addRecurring": "+ Recurring",
     "noRecurring": "No recurring sessions.",
+    "noSessionsDay": "No sessions on this day.",
     "recurringBadge": "Part of a recurring series",
     "deleteRecurringConfirm": "This will delete all future sessions in this series. Continue?",
     "daysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
