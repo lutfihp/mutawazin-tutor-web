@@ -126,6 +126,8 @@
 		role="dialog"
 		aria-modal="true"
 		aria-label="Navigation menu"
+		tabindex="-1"
+		onkeydown={handleKeydown}
 		use:focusTrap
 	>
 		<div class="flex items-center justify-between px-4 h-16 border-b border-border">

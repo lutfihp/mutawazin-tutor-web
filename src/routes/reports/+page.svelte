@@ -50,6 +50,8 @@
 
 </script>
 
+<svelte:head><title>{$t('reports.earnings.title')} — Mutawazin</title></svelte:head>
+
 <AuthLayout {role} userId={data.user?.id ?? ''}>
 	<div class="max-w-app mx-auto">
 		<div class="mb-6">

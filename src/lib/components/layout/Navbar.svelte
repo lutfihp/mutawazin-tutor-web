@@ -76,7 +76,7 @@
 		</button>
 	{/if}
 
-	<Logo href={$lhref('/')} />
+	<Logo href={$lhref('/')} compact={!!$user} />
 
 	<!-- Landing nav links (desktop only) -->
 	{#if isLanding}
@@ -140,7 +140,7 @@
 		{/if}
 		<button
 			onclick={logout}
-			class="px-3 py-1.5 text-sm font-medium text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors"
+			class="px-3 py-1.5 text-sm font-medium whitespace-nowrap text-text2 hover:text-text rounded-sm hover:bg-bgGray transition-colors"
 		>
 			{$t('nav.logout')}
 		</button>

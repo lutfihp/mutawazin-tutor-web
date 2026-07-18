@@ -2,9 +2,12 @@
 	let {
 		href = '/',
 		class: extraClass = '',
+		compact = false,
 	}: {
 		href?: string;
 		class?: string;
+		/** Hide the wordmark below sm — for tight navbars (authenticated mobile). */
+		compact?: boolean;
 	} = $props();
 </script>
 
@@ -26,5 +29,5 @@
 		<path d="M32 33 C 25 26, 23 16, 31 6 C 41 16, 39 26, 32 33 Z" fill="#9bb39a" />
 		<circle cx="31.5" cy="6.5" r="1.4" fill="#c9a35a" />
 	</svg>
-	<span>Mutawazin</span>
+	<span class={compact ? 'hidden sm:inline' : ''}>Mutawazin</span>
 </a>

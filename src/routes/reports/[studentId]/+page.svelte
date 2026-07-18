@@ -136,7 +136,7 @@
 
 	<!-- Filters -->
 	<div class="flex gap-3 items-center flex-wrap mb-6">
-		<div class="flex items-center gap-2 text-sm text-text2">
+		<div class="flex items-center gap-2 text-sm text-text2 flex-wrap">
 			<span>{$t('reports.from')}</span>
 			<input type="date" bind:value={fromDate} aria-label="From date"
 				class="h-10 px-3 bg-white border border-border rounded-sm text-sm focus:outline-none focus:border-primary" />

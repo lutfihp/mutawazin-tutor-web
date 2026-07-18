@@ -49,9 +49,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-bgGray flex flex-col items-center justify-center py-10 px-6">
-	<a href={$lhref('/')} class="mb-6" aria-label="Mutawazin home">
-		<Logo />
-	</a>
+	<Logo href={$lhref('/')} class="mb-6" />
 
 	<div class="w-full max-w-auth bg-white border border-border rounded-lg shadow-sm p-8">
 		<h1 class="text-[22px] font-semibold tracking-tight">{$t('auth.login.title')}</h1>
