@@ -60,7 +60,7 @@ At 360px: month grid fits without overflow, dots visible, day tap opens panel, s
 
 1. **Extend `src/lib/components/SeoAlternates.svelte`** with optional props `title`, `description`, `image`. When provided, additionally emit `<meta name="description">`, Open Graph (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:locale` from current lang), and Twitter card (`summary_large_image`). Existing call sites without the new props keep emitting only canonical/hreflang — backward compatible.
 2. **Public pages** pass localized descriptions via i18n keys (EN + ID): landing, `/teachers`, `/teachers/[id]` (description derived from teacher bio when present), `/login`, both registers, `/forgot-password`. `/report/share/[token]` keeps `noindex` and gets no OG tags.
-3. **`static/og-image.png`** — 1200×630, brand mark on brand background, produced from existing `static/brand-kit/` assets. `og:image` emitted as absolute URL built from the request/page origin.
+3. **OG image** — the brand kit already ships `static/brand-kit/png/social-card-1200x630.png` (1200×630); use it as the default `og:image` (absolute URL built from the page origin). No new image is produced.
 4. **`static/robots.txt`** — allow all, `Sitemap:` pointing at `/sitemap.xml`.
 5. **`src/routes/sitemap.xml/+server.ts`** — emits public routes (both language variants: unprefixed ID + `/en` prefix) and featured teacher profile URLs from `GET /teachers/featured`. Origin taken from the request URL.
 
