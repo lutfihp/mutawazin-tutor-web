@@ -54,7 +54,7 @@
 <svelte:window onscroll={handleScroll} />
 
 <header
-	class="sticky top-0 z-40 h-16 flex items-center gap-4 px-6
+	class="sticky top-0 z-40 h-16 flex items-center gap-2 sm:gap-4 px-4 sm:px-6
 	       {isLanding
 		? `bg-white/80 backdrop-blur-md transition-shadow duration-150 ${scrolled ? 'border-b border-border shadow-sm' : ''}`
 		: 'bg-white border-b border-border'}"

@@ -34,7 +34,7 @@
 		<main
 			id="main-content"
 			tabindex="-1"
-			class="flex-1 sidebar-collapse:ml-60 p-6 lg:p-8 focus:outline-none"
+			class="flex-1 sidebar-collapse:ml-60 p-4 sm:p-6 lg:p-8 focus:outline-none"
 		>
 			<div class="max-w-app mx-auto">
 				{#if children}{@render children()}{/if}
