@@ -1,3 +1,10 @@
-# allow crawling everything by default
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /calendar
+Disallow: /courses
+Disallow: /reports
+
+Sitemap: https://mutawazinprivate.com/sitemap.xml
