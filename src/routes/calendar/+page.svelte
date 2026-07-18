@@ -29,6 +29,28 @@
 	const monthLabel = $derived(formatMonth(year, month));
 	const today = toISODate(new Date());
 
+	let selectedDayKey = $state<string | null>(null);
+
+	const selectedDaySessions = $derived(
+		selectedDayKey ? sessions.filter((s) => s.starts_at?.startsWith(selectedDayKey)) : []
+	);
+
+	function dotClass(type: string, status: string): string {
+		if (['Completed', 'completed', 'Cancelled', 'cancelled'].includes(status)) return 'bg-text3';
+		if (type === 'group') return 'bg-primary';
+		return 'bg-teal';
+	}
+
+	function dayPanelLabel(key: string): string {
+		return new Intl.DateTimeFormat($locale === 'id' ? 'id-ID' : 'en-US', {
+			weekday: 'long',
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric',
+			timeZone: 'UTC',
+		}).format(new Date(key + 'T00:00:00Z'));
+	}
+
 	function sessionsByDate(date: Date): any[] {
 		const key = toISODate(date);
 		return sessions.filter((s) => s.starts_at?.startsWith(key));
@@ -155,6 +177,11 @@
 	}
 
 	$effect(() => { year; month; fetchSessions(); });
+
+	$effect(() => {
+		const isNowMonth = year === now.getFullYear() && month === now.getMonth();
+		selectedDayKey = isNowMonth ? today : null;
+	});
 
 	// Recurring templates (teacher only)
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -419,13 +446,22 @@
 					{@const isCurrentMonth = cell?.getUTCMonth() === month}
 					{@const daySessions = cell ? sessionsByDate(cell) : []}
 					{@const hasAvail = cell && isTeacher && hasAvailability(cell)}
+					{@const dayKey = cell ? toISODate(cell) : ''}
 
 					<div
-						class="min-h-[120px] border-r border-b border-border last:border-r-0 p-1.5 relative
+						class="min-h-[64px] md:min-h-[120px] border-r border-b border-border last:border-r-0 p-1.5 relative
 						       {!isCurrentMonth ? 'bg-[#FAFBFC]' : ''}
-						       {hasAvail ? 'ring-inset ring-2 ring-primary/20' : ''}"
+						       {hasAvail ? 'ring-inset ring-2 ring-primary/20' : ''}
+						       {cell && selectedDayKey === dayKey ? 'max-md:bg-primary-light/40' : ''}"
 					>
 						{#if cell}
+							<!-- Mobile: whole cell is a tap target -->
+							<button
+								class="md:hidden absolute inset-0 z-10"
+								onclick={() => (selectedDayKey = dayKey)}
+								aria-label={dayPanelLabel(dayKey)}
+							></button>
+
 							<span
 								class="inline-flex items-center justify-center w-6 h-6 text-sm mb-1 rounded-full
 								       {isToday ? 'bg-primary text-white font-semibold' : isCurrentMonth ? 'text-text' : 'text-text3'}"
@@ -433,7 +469,18 @@
 								{cell.getUTCDate()}
 							</span>
 
-							<div class="flex flex-col gap-0.5">
+							<!-- Mobile: session dots -->
+							<div class="flex md:hidden flex-wrap items-center gap-0.5 px-0.5">
+								{#each daySessions.slice(0, 3) as session}
+									<span class="w-1.5 h-1.5 rounded-full {dotClass(session.type, session.status)}" aria-hidden="true"></span>
+								{/each}
+								{#if daySessions.length > 3}
+									<span class="text-[9px] text-text2 leading-none">+{daySessions.length - 3}</span>
+								{/if}
+							</div>
+
+							<!-- Desktop: session pills -->
+							<div class="hidden md:flex flex-col gap-0.5">
 								{#each daySessions.slice(0, 2) as session}
 									<button
 										onclick={() => openSession(session)}
@@ -457,6 +504,27 @@
 				{/each}
 			</div>
 		</div>
+
+		<!-- Mobile: selected day sessions -->
+		{#if selectedDayKey}
+			<section class="md:hidden bg-white border border-border rounded-DEFAULT p-4" aria-label={dayPanelLabel(selectedDayKey)}>
+				<h2 class="font-semibold mb-3">{dayPanelLabel(selectedDayKey)}</h2>
+				{#if selectedDaySessions.length === 0}
+					<p class="text-sm text-text2">{$t('calendar.noSessionsDay')}</p>
+				{:else}
+					<div class="flex flex-col gap-1.5">
+						{#each selectedDaySessions as session}
+							<button
+								onclick={() => openSession(session)}
+								class="w-full text-left text-sm rounded-sm px-3 py-2 tabular {pillClass(session.type, session.status)}"
+							>
+								{session.recurring_template_id ? '↻ ' : ''}{session.starts_at?.slice(11, 16)}–{session.ends_at?.slice(11, 16)} · {session.display_title}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</section>
+		{/if}
 
 		<!-- Right panel -->
 		<div class="flex flex-col gap-4">
