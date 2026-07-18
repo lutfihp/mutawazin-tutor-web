@@ -21,13 +21,15 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ---
 
-## Current Status (as of 2026-07-18 — session 37)
+## Current Status (as of 2026-07-18 — session 38)
 
-### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings — confirmed after session 37 URL-based language routing)
+### Build status: ✅ Passes `npm run check` (0 errors, 18 pre-existing warnings) and `npm run build` — confirmed after session 38 mobile/SEO pass
 
-### GitHub remote: ⚠️ `https://github.com/lutfihp/mutawazin-tutor-web` — **12 local commits not yet pushed** (session 37: URL-based language routing, `5bb2634..b947fd0`). Do not push without explicit user instruction.
+### GitHub remote: ⚠️ `https://github.com/lutfihp/mutawazin-tutor-web` — **27 local commits not yet pushed** (sessions 37 + 38: URL-based language routing, first-load glitch fix, self-hosted fonts, mobile pass, mobile calendar, SEO/OG/sitemap — through `69de3d0`). Do not push without explicit user instruction.
 
-### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`
+### Login flow: ✅ Confirmed working end-to-end with `admin@mutawazin.com` / `changeme123`. Dev QA accounts also exist: teacher `devteacher360` / `Teacher123!`, student `devstudent360` / `Student123!` (username auth, created via admin API session 38; the student is enrolled in a Matematika course with test sessions on 2026-07-18)
+
+### Browser verification (session 38): ✅ Global Playwright 1.59 (`NODE_PATH=$(npm root -g)`) drives the dev server headless — all 28 routes verified at 360×740 for all three roles, calendars verified at 360 + 1280, throttled cold-load verified 0 spinner/blank frames and 0 external requests. Gotcha: wait ~1.5s after networkidle on /login before clicking submit (pre-hydration click native-submits the form as GET).
 
 ### What is complete
 
@@ -125,7 +127,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 ### What is NOT done yet (known gaps)
 
-0. **URL-based language routing — remaining verification (session 37)** — Curl checks all passed; still pending: (a) browser check — EN/ID toggle round-trip on `/teachers`, log in from `/en/login` → dashboard stays English, log in from `/login` → Indonesian; (b) `/teachers` grid with real data (local dev DB had zero featured teachers — API returned `[]`, so only the SSR empty state was verified); (c) production after deploy — canonical URLs must show `https://mutawazinprivate.com` (built from request origin; existing `ORIGIN` env handles it, no new env vars). Also: **12 commits await explicit push approval.** SEO follow-ups deliberately deferred: sitemap.xml, robots.txt.
+0. **Push + production verification (sessions 37+38)** — **27 commits await explicit push approval.** After deploy, verify in production: (a) incognito first load on a phone — no flash/spinner (the session 38 glitch fix); (b) EN/ID toggle round-trip on `/teachers`, log in from `/en/login` → dashboard stays English, log in from `/login` → Indonesian; (c) `/teachers` grid with real data (dev DB had zero featured teachers); (d) canonical/og:url/sitemap URLs must show `https://mutawazinprivate.com` (all built from request origin; existing `ORIGIN` env handles it, no new env vars); (e) WhatsApp link preview shows the brand social card (og:image). Session 37's deferred sitemap.xml + robots.txt were DONE in session 38.
 
 1. **Admin Courses — student enrollment management** — enroll/unenroll students per course (`POST /courses/:id/enroll`, `DELETE /courses/:id/enroll/:student_id`). Deferred to follow-up; the page exists but has no student management UI yet.
 
@@ -133,7 +135,7 @@ Mutawazin (Arabic for "balanced") is an online tutoring platform frontend built 
 
 3. **Availability slot `id` field** — not yet tested live. If edit/delete fail, fix `{@const slotId = slot.id ?? slot.slot_id ?? ''}` in `src/routes/calendar/+page.svelte`.
 
-4. **Mobile testing** — hamburger sidebar untested at 375px viewport.
+4. **Mobile testing** — ✅ CLOSED in session 38: all 28 routes verified at 360×740 via Playwright for all three roles (drawer open/Escape-close included); both calendars got a dedicated mobile treatment (dots + day panel).
 
 5. **Teacher profile — live verify** — redesign + chips row edit not yet tested against live backend. Confirm `GET /teachers/:user_id` returns `courses[]` with `name`, `age_categories`, `description`, and that `PUT /teachers/me` accepts per-section payloads (bio, university, experience, achievements, teaching_mode, city).
 
