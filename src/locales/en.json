@@ -1,4 +1,13 @@
 {
+  "seo": {
+    "landing": "Mutawazin connects students with verified teachers for group courses and personalized 1-on-1 sessions.",
+    "teachers": "Browse Mutawazin's featured, verified private tutors and find the right teacher for you.",
+    "teacherProfile": "View {name}'s teaching profile, subjects, and experience on Mutawazin.",
+    "login": "Log in to your Mutawazin account to manage courses, sessions, and reports.",
+    "registerTeacher": "Join Mutawazin as a teacher and teach group courses and 1-on-1 sessions.",
+    "registerStudent": "Create a Mutawazin student account to join courses and book private tutoring.",
+    "forgotPassword": "Reset your Mutawazin account password."
+  },
   "nav": {
     "home": "Home",
     "courses": "Courses",

@@ -167,7 +167,10 @@
 	}
 </script>
 
-<SeoAlternates />
+<SeoAlternates
+	title="{profile?.full_name ?? 'Teacher'} — Mutawazin"
+	description={profile?.bio || $t('seo.teacherProfile', { values: { name: profile?.full_name ?? '' } })}
+/>
 
 {#if cropSrc}
 	<PhotoCropModal

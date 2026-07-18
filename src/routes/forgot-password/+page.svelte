@@ -28,7 +28,7 @@
 	}
 </script>
 
-<SeoAlternates />
+<SeoAlternates description={$t('seo.forgotPassword')} />
 
 <svelte:head>
 	<title>{$t('auth.forgotPassword.title')} — Mutawazin</title>

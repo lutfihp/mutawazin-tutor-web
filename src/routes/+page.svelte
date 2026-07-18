@@ -48,11 +48,10 @@
 	onMount(() => runSearch(''));
 </script>
 
-<SeoAlternates />
+<SeoAlternates title="Mutawazin" description={$t('seo.landing')} />
 
 <svelte:head>
 	<title>Mutawazin — Online Tutoring Platform</title>
-	<meta name="description" content="Mutawazin connects students with verified teachers for group courses and personalized 1-on-1 sessions." />
 </svelte:head>
 
 <div class="min-h-screen flex flex-col">

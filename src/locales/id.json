@@ -1,4 +1,13 @@
 {
+  "seo": {
+    "landing": "Mutawazin menghubungkan murid dengan guru terverifikasi untuk kursus kelompok dan sesi privat 1-on-1.",
+    "teachers": "Jelajahi guru privat unggulan dan terverifikasi Mutawazin, temukan guru yang tepat untuk Anda.",
+    "teacherProfile": "Lihat profil mengajar, mata pelajaran, dan pengalaman {name} di Mutawazin.",
+    "login": "Masuk ke akun Mutawazin Anda untuk mengelola kursus, sesi, dan laporan.",
+    "registerTeacher": "Bergabunglah dengan Mutawazin sebagai guru untuk kursus kelompok dan sesi privat.",
+    "registerStudent": "Buat akun murid Mutawazin untuk mengikuti kursus dan memesan les privat.",
+    "forgotPassword": "Atur ulang kata sandi akun Mutawazin Anda."
+  },
   "nav": {
     "home": "Beranda",
     "courses": "Kursus",

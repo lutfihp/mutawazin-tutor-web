@@ -42,7 +42,7 @@
 	}
 </script>
 
-<SeoAlternates />
+<SeoAlternates description={$t('seo.login')} />
 
 <svelte:head>
 	<title>Log in — Mutawazin</title>

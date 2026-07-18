@@ -43,7 +43,7 @@
 	}
 </script>
 
-<SeoAlternates />
+<SeoAlternates description={$t('seo.registerStudent')} />
 
 <svelte:head>
 	<title>{$t('auth.registerStudent.title')} — Mutawazin</title>

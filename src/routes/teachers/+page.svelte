@@ -12,11 +12,10 @@
 	const teachers = $derived(data.featuredTeachers ?? []);
 </script>
 
-<SeoAlternates />
+<SeoAlternates description={$t('seo.teachers')} />
 
 <svelte:head>
 	<title>{$t('nav.teachers')} — Mutawazin</title>
-	<meta name="description" content="Browse featured Mutawazin teachers." />
 </svelte:head>
 
 <div class="min-h-screen flex flex-col bg-bgGray">
