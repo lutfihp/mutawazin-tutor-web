@@ -41,6 +41,7 @@
 	{:else if sessions.length === 0}
 		<div class="px-5 py-10 text-center text-text2 text-sm">{$t('reports.earnings.noSessions')}</div>
 	{:else}
+		<div class="overflow-x-auto">
 		<table class="w-full text-sm border-collapse">
 			<thead>
 				<tr class="bg-bgGray border-b border-border">
@@ -61,17 +62,18 @@
 				{/each}
 			</tbody>
 		</table>
+		</div>
 
 		<div class="px-5 py-4 border-t-2 border-border bg-bgGray">
-			<div class="flex justify-end gap-14 text-sm text-text2 mb-1.5">
+			<div class="flex justify-end gap-6 sm:gap-14 text-sm text-text2 mb-1.5">
 				<span>{$t('reports.earnings.totalBruto')}</span>
 				<span class="font-semibold text-text min-w-24 text-right">{formatRupiah(totalBruto)}</span>
 			</div>
-			<div class="flex justify-end gap-14 text-sm text-text2 mb-3">
+			<div class="flex justify-end gap-6 sm:gap-14 text-sm text-text2 mb-3">
 				<span>{$t('reports.earnings.platformFee')}</span>
 				<span class="text-error min-w-24 text-right">− {formatRupiah(platformFee)}</span>
 			</div>
-			<div class="flex justify-end gap-14 border-t border-border pt-3">
+			<div class="flex justify-end gap-6 sm:gap-14 border-t border-border pt-3">
 				<span class="font-bold text-text">{$t('reports.earnings.netAmount')}</span>
 				<span class="font-bold text-primary min-w-24 text-right text-base">{formatRupiah(yangDiterima)}</span>
 			</div>
